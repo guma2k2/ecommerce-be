@@ -1,0 +1,33 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: system
+  # Jackson data config
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  # Upload config
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 10MB
+
+# Swagger config
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+
+
+
+
+

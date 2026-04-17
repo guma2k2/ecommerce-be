@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/ecommerce-db
+    username: root
+    password: password
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+app:
+  jwt:
+    secret: abc123456
+    access-token-expiration-ms: 86400000
+    refresh-token-expiration-ms: 86400000
