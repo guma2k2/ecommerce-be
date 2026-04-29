@@ -1,4 +1,4 @@
-package com.yas.system.auth.internal.entity;
+package com.yas.system.customer.internal.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -7,20 +7,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(name = "customers")
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
 @Getter
-public class User {
-
+public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String email;
-    private String password;
-    private String firstName;
-    private String lastName;
-    private int role;
-
 }

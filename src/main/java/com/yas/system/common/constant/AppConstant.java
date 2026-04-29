@@ -4,6 +4,11 @@ public class AppConstant {
 
     public static final String BEARER  = "Bearer ";
 
+    enum ConsoleType {
+        ADMIN,
+        CUSTOMER
+    }
+
     enum Status{
         PENDING("PENDING", 2),
         ACTIVE("ACTIVE", 1),

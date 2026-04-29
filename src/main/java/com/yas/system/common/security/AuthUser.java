@@ -1,17 +1,25 @@
 package com.yas.system.common.security;
 
+import com.yas.system.auth.internal.entity.User;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 public record AuthUser(
-        String id,
+        String email,
         String roleName,
         Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
+
+    public static AuthUser fromUser(User user) {
+        return new AuthUser(user.getEmail(), user.getRole() + "", Collections.emptyList());
+    }
+
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
@@ -24,7 +32,7 @@ public record AuthUser(
 
     @Override
     public String getUsername() {
-        return id;
+        return email;
     }
 
     @Override

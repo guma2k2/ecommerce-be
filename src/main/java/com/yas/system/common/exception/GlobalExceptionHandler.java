@@ -17,16 +17,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse
                         .error(APIStatus.ERR_BAD_REQUEST.getCode(),
-                                errorMessage,
-                                APIStatus.ERR_BAD_REQUEST.getDescription()));
+                                errorMessage
+                        ));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleException(Exception ex){
+    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(Exception ex){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse
-                        .error(APIStatus.ERR_INTERNAL_SERVER.getCode(),
-                                ex.getMessage(),
-                                APIStatus.ERR_INTERNAL_SERVER.getDescription()));
+                        .error(ErrorCode.UNAUTHENTICATED.getCode(),
+                                ErrorCode.UNAUTHENTICATED.getMessage()));
     }
 }
