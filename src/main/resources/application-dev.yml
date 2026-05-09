@@ -28,3 +28,15 @@ openapi:
     server: http://localhost:8080
     title: API Service
     version: 1.0.0
+
+  mail:
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: 'true'
+          auth: 'true'
+    host: smtp.example.com
+    username: your-username
+    password: your-password
+    port: '587'

@@ -5,6 +5,7 @@ import com.yas.system.auth.internal.dto.request.SignUpRequest;
 import com.yas.system.auth.internal.dto.response.AuthResponse;
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.helper.UserHelper;
+import com.yas.system.auth.internal.redis.service.RefreshTokenService;
 import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.service.AuthService;
 import com.yas.system.common.security.AuthUser;
@@ -26,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     PasswordEncoder passwordEncoder;
     JwtService jwtService;
     UserHelper  userHelper;
+    RefreshTokenService refreshTokenService;
 
     @Override
     public AuthResponse signIn(SignInRequest signInRequest) {
@@ -50,4 +52,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void signOut() {}
+
+    @Override
+    public String refreshToken(String refreshToken, AuthUser authUser) {
+        // validate refresh token
+        refreshTokenService.getRefreshTokenByToken(refreshToken).orElseThrow(() -> new RuntimeException(""));
+        // generate access token
+        String email = authUser.email();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException(""));
+        AuthUser userDetails = AuthUser.fromUser(user);
+        String accessToken = jwtService.generateAccessToken(userDetails);
+        return accessToken;
+    }
 }
