@@ -18,6 +18,7 @@ public class UserHelper {
         newUser.setPassword(passwordEncoder.encode(signUpRequest.password()));
         newUser.setFirstName(signUpRequest.firstName());
         newUser.setLastName(signUpRequest.lastName());
+        newUser.setVerified(false);
         return newUser;
     }
 }

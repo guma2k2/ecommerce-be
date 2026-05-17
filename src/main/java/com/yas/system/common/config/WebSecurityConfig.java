@@ -22,14 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity // enables @PreAuthorize, @PostAuthorize
 @RequiredArgsConstructor
 public class WebSecurityConfig {
-    private final JwtAuthFilter jwtAuthFilter;
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration
-    ) {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -48,6 +42,13 @@ public class WebSecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authenticationConfiguration
+    ) {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean

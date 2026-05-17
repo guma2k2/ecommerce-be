@@ -2,16 +2,15 @@ package com.yas.system.auth.controller;
 
 import com.yas.system.auth.internal.dto.request.SignInRequest;
 import com.yas.system.auth.internal.dto.request.SignUpRequest;
-import com.yas.system.auth.internal.dto.response.AuthResponse;
+import com.yas.system.auth.internal.dto.response.SignInResponse;
 import com.yas.system.auth.internal.service.AuthService;
-import com.yas.system.auth.internal.util.CookieUtil;
+import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.security.AuthUser;
 import com.yas.system.common.security.annotation.ActiveUser;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/v1/auth")
@@ -22,14 +21,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/sign-in")
-    public ApiResponse<AuthResponse> signIn(
+    public ApiResponse<SignInResponse> signIn(
             @Valid @RequestBody SignInRequest signInRequest,
             HttpServletResponse response
     ) {
-        AuthResponse authResponse = authService.signIn(signInRequest);
-        ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(authResponse.refreshToken(), false);
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-        return ApiResponse.success(authResponse);
+        SignInResponse signInResponse = authService.signIn(signInRequest, response);
+        return ApiResponse.success(signInResponse);
     }
 
     @PostMapping("/sign-up")
@@ -39,16 +36,21 @@ public class AuthController {
     }
 
     // refresh token
-    @PostMapping("/refresh-token")
+    @PostMapping("/refresh")
     public ApiResponse<String> refreshToken(
             @ActiveUser AuthUser authUser,
-            @CookieValue(name = "refresh_token", required = false) String cookieToken
+            @CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken
     ) {
         String accessToken = authService.refreshToken(cookieToken, authUser);
-        return ApiResponse.success("");
+        return ApiResponse.success(accessToken);
     }
 
     // logout
+    @PostMapping("/sign-out")
+    public ApiResponse<String> signOut(@CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken) {
+        authService.signOut(cookieToken);
+        return ApiResponse.success("ok");
+    }
 
     // forgot password
 
