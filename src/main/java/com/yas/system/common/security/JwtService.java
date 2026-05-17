@@ -3,6 +3,7 @@ package com.yas.system.common.security;
 import com.yas.system.common.config.AppConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Service
@@ -34,10 +37,12 @@ public class JwtService {
     }
 
     private String buildToken(UserDetails userDetails, long expiration) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .claim("roles", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
-                .issuedAt(new Date())
+                .claims(claims)
+                .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
@@ -55,8 +60,7 @@ public class JwtService {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token).getPayload();
         return claimsResolver.apply(claims);
     }
 

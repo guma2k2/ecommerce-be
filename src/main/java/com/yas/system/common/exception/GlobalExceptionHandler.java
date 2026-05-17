@@ -15,17 +15,26 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex){
         String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse
-                        .error(APIStatus.ERR_BAD_REQUEST.getCode(),
-                                errorMessage
-                        ));
+                .body(ApiResponse.error(APIStatus.ERR_BAD_REQUEST.getCode(), errorMessage));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getErrorCode().getCode(), ex.getErrorCode().getMessage()));
+    }
+
+    @ExceptionHandler(InvalidDataException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidData(InvalidDataException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getErrorCode().getCode(), ex.getErrorCode().getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(Exception ex){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse
-                        .error(ErrorCode.UNAUTHENTICATED.getCode(),
-                                ErrorCode.UNAUTHENTICATED.getMessage()));
+                        .error(ErrorCode.UNCATEGORIZED.getCode(),
+                                ErrorCode.UNCATEGORIZED.getMessage()));
     }
 }
