@@ -1,13 +1,20 @@
 package com.yas.system.auth.internal.dto.request;
 
+import com.yas.system.common.response.ParamError;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record SignUpRequest(
-        @NotBlank
+        @NotBlank(message = ParamError.FIELD_NAME)
+        @Email(message = ParamError.INVALID_EMAIL)
         String email,
 
-        @NotBlank
+        @NotBlank(message = ParamError.FIELD_NAME)
         String password,
+
+        @NotBlank(message = ParamError.FIELD_NAME)
         String firstName,
+
+        @NotBlank(message = ParamError.FIELD_NAME)
         String lastName
 ) {}

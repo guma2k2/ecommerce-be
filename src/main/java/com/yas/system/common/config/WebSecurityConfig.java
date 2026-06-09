@@ -1,10 +1,14 @@
 package com.yas.system.common.config;
 
-import com.yas.system.common.security.JwtAuthFilter;
+import com.yas.system.common.exception.AccessDeniedException;
+import com.yas.system.common.exception.AuthEntryPointException;
+import com.yas.system.common.security.custom.CustomUserDetailService;
+import com.yas.system.common.security.jwt.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -24,13 +28,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final AuthEntryPointException  authEntryPointException;
+    private final AccessDeniedException accessDeniedException;
+    private final CustomUserDetailService userDetailService;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+
                 .cors(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/public/**",
                                 "/swagger-ui/**",
@@ -39,20 +51,26 @@ public class WebSecurityConfig {
                                 "/api/v1/auth/**"
                                 ).permitAll()
                         .anyRequest().authenticated())
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authEntryPointException)
+                        .accessDeniedHandler(accessDeniedException))
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration
+    public DaoAuthenticationProvider authenticationProvider(
     ) {
-        return authenticationConfiguration.getAuthenticationManager();
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManagerBean(
+    public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
     ) {
         return config.getAuthenticationManager();

@@ -20,9 +20,9 @@ public class CookieUtil {
         return ResponseCookie.from("refresh_token", "")
             .httpOnly(true)
             .secure(secure)
-            .path("/api/auth/refresh")
+            .path("/")
             .maxAge(Duration.ZERO)
-            .sameSite("Strict")
+            .sameSite(secure ? "Strict" : "Lax")
             .build();
     }
 }

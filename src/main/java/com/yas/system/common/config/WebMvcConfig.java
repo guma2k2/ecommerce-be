@@ -1,6 +1,6 @@
 package com.yas.system.common.config;
 
-import com.yas.system.common.security.ActiveUserArgumentResolver;
+import com.yas.system.common.security.annotation.ActiveUserArgumentResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

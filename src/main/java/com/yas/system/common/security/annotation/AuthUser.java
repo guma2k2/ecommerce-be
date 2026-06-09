@@ -1,4 +1,4 @@
-package com.yas.system.common.security;
+package com.yas.system.common.security.annotation;
 
 import com.yas.system.auth.internal.entity.User;
 import org.jspecify.annotations.Nullable;
@@ -11,14 +11,13 @@ import java.util.Collections;
 public record AuthUser(
         String email,
         String roleName,
+        String password,
         Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
 
     public static AuthUser fromUser(User user) {
-        return new AuthUser(user.getEmail(), user.getRole() + "", Collections.emptyList());
+        return new AuthUser(user.getEmail(), user.getRole() + "", user.getPassword() ,Collections.emptyList());
     }
-
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -27,7 +26,7 @@ public record AuthUser(
 
     @Override
     public @Nullable String getPassword() {
-        return "";
+        return password;
     }
 
     @Override

@@ -13,6 +13,18 @@ spring:
       max-file-size: 1MB
       max-request-size: 10MB
 
+  mail:
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
+    host: smtp.gmail.com
+    username: thuanngo3072002@gmail.com
+    password: sfnh ducy gsaw fjkb
+    port: 587
+
 # Swagger config
 springdoc:
   api-docs:

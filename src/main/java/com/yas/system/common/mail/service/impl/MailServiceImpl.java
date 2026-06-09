@@ -18,13 +18,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class MailServiceImpl implements MailService {
-    JavaMailSender mailSender;
-    TemplateEngine templateEngine;
-
-
+    private final JavaMailSender mailSender;
+    private final TemplateEngine templateEngine;
     @Value("${spring.mail.host}")
     private String fromAddress;
 

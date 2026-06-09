@@ -1,8 +1,8 @@
-package com.yas.system.auth.internal.service;
+package com.yas.system.common.security.custom;
 
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.repository.UserRepository;
-import com.yas.system.common.security.AuthUser;
+import com.yas.system.common.security.annotation.AuthUser;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -10,8 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +20,8 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException(username));
+        User user = userRepository
+                .findByEmail(username).orElseThrow(() -> new UsernameNotFoundException(username));
         return AuthUser.fromUser(user);
     }
 }

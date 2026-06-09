@@ -1,6 +1,6 @@
-package com.yas.system.common.security;
+package com.yas.system.common.security.jwt;
 
-import com.yas.system.auth.internal.service.CustomUserDetailService;
+import com.yas.system.common.security.custom.CustomUserDetailService;
 import com.yas.system.common.constant.AppConstant;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +22,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -55,12 +57,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (JwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            // Todo: format api response
-            response.getWriter().write("Invalid JWT token: "+ e.getMessage());
-            return;
+          log.error("Error occurred in JwtAuthFilter: {}", e.getMessage());
         }
-
         filterChain.doFilter(request, response);
     }
 }

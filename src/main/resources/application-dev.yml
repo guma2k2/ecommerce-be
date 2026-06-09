@@ -17,17 +17,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  mail:
-    properties:
-      mail:
-        smtp:
-          starttls:
-            enable: 'true'
-          auth: 'true'
-    host: smtp.example.com
-    username: your-username
-    password: your-password
-    port: '587'
+
 app:
   jwt:
     secret: 0uC9dpSqePgOQA3hvRvoTCUJgly1iOqkPoImkCGxVeVKku9nSih3gner8w1IvfhUaIEGjhSZRQdle5zDsRU4Xz
