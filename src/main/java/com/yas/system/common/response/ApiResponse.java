@@ -6,6 +6,10 @@ public record ApiResponse <T> (int status, String message, T data) {
         return new ApiResponse<>(200, "success", data);
     }
 
+    public static <T> ApiResponse<T> successWithNoContent () {
+        return new ApiResponse<>(204, "success", null);
+    }
+
     public static <T> ApiResponse<T> error (int status, String message) {
         return new ApiResponse<>(status, message, null);
     }

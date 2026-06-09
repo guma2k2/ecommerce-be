@@ -26,7 +26,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     public Optional<RefreshToken> getRefreshTokenByToken(String token) {
-        return refreshTokenRepository.findById(token);
+        return refreshTokenRepository.findByToken(token);
     }
 
     @Override

@@ -1,12 +1,14 @@
 package com.yas.system.auth.controller;
 
+import com.yas.system.auth.internal.dto.request.SendVerificationRequest;
 import com.yas.system.auth.internal.dto.request.SignInRequest;
 import com.yas.system.auth.internal.dto.request.SignUpRequest;
+import com.yas.system.auth.internal.dto.request.VerifyRequest;
 import com.yas.system.auth.internal.dto.response.SignInResponse;
 import com.yas.system.auth.internal.service.AuthService;
 import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.common.response.ApiResponse;
-import com.yas.system.common.security.AuthUser;
+import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.common.security.annotation.ActiveUser;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -32,10 +34,27 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ApiResponse<String> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
         authService.signUp(signUpRequest);
-        return ApiResponse.success("ok");
+        return ApiResponse.successWithNoContent();
     }
 
-    // refresh token
+    @PostMapping("/send-verification")
+    public ApiResponse<String> sendVerification(@Valid @RequestBody SendVerificationRequest sendVerificationRequest) {
+        authService.sendVerificationCode(sendVerificationRequest);
+        return ApiResponse.successWithNoContent();
+    }
+
+    @PostMapping("/verify")
+    public ApiResponse<String> signUp(@Valid @RequestBody VerifyRequest verifyRequest) {
+        authService.verifyEmail(verifyRequest);
+        return ApiResponse.successWithNoContent();
+    }
+
+    @PostMapping("/sign-out")
+    public ApiResponse<String> signOut(@CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken) {
+        authService.signOut(cookieToken);
+        return ApiResponse.successWithNoContent();
+    }
+
     @PostMapping("/refresh")
     public ApiResponse<String> refreshToken(
             @ActiveUser AuthUser authUser,
@@ -45,18 +64,9 @@ public class AuthController {
         return ApiResponse.success(accessToken);
     }
 
-    // logout
-    @PostMapping("/sign-out")
-    public ApiResponse<String> signOut(@CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken) {
-        authService.signOut(cookieToken);
-        return ApiResponse.success("ok");
-    }
-
     // forgot password
 
-    // google login
-
-    // github login
+    // google login, facebook login, git login using restClient
 
     // 2fa login
 

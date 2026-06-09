@@ -28,6 +28,11 @@ public class VerifyEmailServiceImpl implements VerifyEmailService {
     }
 
     @Override
+    public Optional<VerifyEmail> getByVerifyCode(String verifyCode) {
+        return verifyEmailRepository.findById(verifyCode);
+    }
+
+    @Override
     public void deleteByUserId(String userId) {
         verifyEmailRepository.deleteById(userId);
     }

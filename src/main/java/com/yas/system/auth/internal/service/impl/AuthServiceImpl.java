@@ -1,7 +1,9 @@
 package com.yas.system.auth.internal.service.impl;
 
+import com.yas.system.auth.internal.dto.request.SendVerificationRequest;
 import com.yas.system.auth.internal.dto.request.SignInRequest;
 import com.yas.system.auth.internal.dto.request.SignUpRequest;
+import com.yas.system.auth.internal.dto.request.VerifyRequest;
 import com.yas.system.auth.internal.dto.response.SignInResponse;
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.helper.UserHelper;
@@ -19,16 +21,23 @@ import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
 import com.yas.system.common.mail.dto.SendEmailRequest;
 import com.yas.system.common.mail.service.MailService;
-import com.yas.system.common.security.AuthUser;
-import com.yas.system.common.security.JwtService;
+import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.common.security.jwt.JwtService;
+import com.yas.system.common.util.RandomUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,55 +46,64 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     UserRepository userRepository;
-    PasswordEncoder passwordEncoder;
     JwtService jwtService;
     UserHelper  userHelper;
     RefreshTokenService refreshTokenService;
     AppConfig appConfig;
     VerifyEmailService verifyEmailService;
     MailService mailService;
+    AuthenticationManager authenticationManager;
 
     @Override
+    @Transactional
     public SignInResponse signIn(SignInRequest signInRequest, HttpServletResponse response) {
-        User user = userRepository.findByEmail(signInRequest.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
-        boolean isPasswordMatch = passwordEncoder.matches(signInRequest.password(), signInRequest.password());
-
-        if (!isPasswordMatch) throw new ResourceNotFoundException(ErrorCode.INCORRECT_PASSWORD);
-
-        AuthUser userDetails = AuthUser.fromUser(user);
-
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        signInRequest.email(),
+                        signInRequest.password()
+        ));
+        AuthUser userDetails = (AuthUser) authentication.getPrincipal();
+        log.info("userDetails={}", userDetails);
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
         RefreshToken refreshTokenRedis = RefreshToken.builder()
+                .id(UUID.randomUUID().toString())
                 .token(refreshToken)
-                .expiresAt(appConfig.refreshTokenExpiration).build();
+                .expiresAt(appConfig.refreshTokenExpiration)
+                .build();
         refreshTokenService.saveRefreshToken(refreshTokenRedis);
 
         ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken, false);
-        response.addHeader(Constant.REFRESH_COOKIE_HEADER, refreshTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
         return new SignInResponse(accessToken);
     }
 
     @Override
+    @Transactional
     public void signUp(SignUpRequest signUpRequest) {
-        userRepository.findByEmail(signUpRequest.email())
-                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_EMAIL));
+        Optional<User> userOptional = userRepository.findByEmail(signUpRequest.email());
+        if(userOptional.isPresent()) {
+            throw new InvalidDataException(ErrorCode.INVALID_EMAIL);
+        }
         User user = userHelper.createUser(signUpRequest);
         User savedUser = userRepository.save(user);
 
         // generate code
-        String verifyCode = "abc123";
+        String verifyCode = RandomUtil.generatesOtp();
         VerifyEmail verifyEmail = VerifyEmail.builder()
-                .userId(savedUser.getId())
+                .userId(savedUser.getId().toString())
                 .timeToLive(Constant.VERIFY_CODE_TTL)
                 .verifyCode(verifyCode)
                 .build();
 
         verifyEmailService.saveVerifyEmail(verifyEmail);
         // send email
-        SendEmailRequest request = new SendEmailRequest(signUpRequest.email(), "Verify Email", "Your OTP code is: " + verifyCode + ". It is valid for 10 minutes.", true);
+        SendEmailRequest request = new SendEmailRequest(signUpRequest.email(),
+                "Verify Email",
+                "Your OTP code is: " + verifyCode + ". It is valid for 10 minutes.",
+                true
+        );
         mailService.sendEmail(request);
     }
 
@@ -97,17 +115,32 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void verifyEmail(String userId, String verifyCode) {
-        VerifyEmail verifyEmail = verifyEmailService.getByUserAndVerifyCode(userId, verifyCode).orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_CODE));
-        User user = userRepository.findByEmail(userId).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+    public void verifyEmail(VerifyRequest verifyRequest) {
+        VerifyEmail verifyEmail = verifyEmailService.getByVerifyCode(verifyRequest.code())
+                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_CODE));
+
+        User user = userRepository.findById(UUID.fromString(verifyEmail.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
         user.setVerified(true);
         userRepository.save(user);
     }
 
     @Override
+    public void sendVerificationCode(SendVerificationRequest sendVerificationRequest) {
+        // send email
+        String verifyCode = RandomUtil.generatesOtp();
+        SendEmailRequest request = new SendEmailRequest(sendVerificationRequest.email(),
+                "Verify Email",
+                "Your OTP code is: " + verifyCode + ". It is valid for 15 minutes.",
+                true
+        );
+    }
+
+    @Override
     public String refreshToken(String refreshToken, AuthUser authUser) {
         // validate refresh token
-        refreshTokenService.getRefreshTokenByToken(refreshToken).orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_TOKEN));
+        refreshTokenService.getRefreshTokenByToken(refreshToken)
+                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_TOKEN));
         // generate access token
         String email = authUser.email();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));

@@ -1,6 +1,5 @@
-package com.yas.system.common.security;
+package com.yas.system.common.security.annotation;
 
-import com.yas.system.common.security.annotation.ActiveUser;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
