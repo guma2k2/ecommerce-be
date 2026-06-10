@@ -150,4 +150,9 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateAccessToken(userDetails);
         return accessToken;
     }
+
+    @Override
+    public void outboundAuthenticate(String code) {
+
+    }
 }

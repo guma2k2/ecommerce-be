@@ -65,6 +65,14 @@ public class AuthController {
         return ApiResponse.success(accessToken);
     }
 
+    @PostMapping("/outbound/authentication")
+    public ApiResponse<String> outboundAuthentication(
+            @RequestParam("code") String code
+    ) {
+        authService.outboundAuthenticate(code);
+        return ApiResponse.successWithNoContent();
+    }
+
     // forgot password
 
     // google login, facebook login, git login using restClient

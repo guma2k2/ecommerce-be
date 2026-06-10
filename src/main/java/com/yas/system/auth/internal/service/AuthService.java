@@ -15,4 +15,5 @@ public interface AuthService {
     void verifyEmail(VerifyRequest  verifyRequest);
     void sendVerificationCode(SendVerificationRequest sendVerificationRequest);
     String refreshToken(String refreshToken, AuthUser authUser);
+    void outboundAuthenticate(String code);
 }
