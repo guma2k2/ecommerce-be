@@ -31,4 +31,33 @@ openapi:
     title: API Service
     version: 1.0.0
 
-
+outbound:
+  oauth2:
+    client:
+      registration:
+        google:
+          clientId:
+          clientSecret:
+          redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+          scope:
+            - email
+            - profile
+        facebook:
+          clientId:
+          clientSecret:
+          redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+          scope:
+            - email
+            - public_profile
+        github:
+          clientId:
+          clientSecret:
+          redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+          scope:
+            - user:email
+            - read:user
+      provider:
+        facebook:
+          authorizationUri: https://www.facebook.com/v3.0/dialog/oauth
+          tokenUri: https://graph.facebook.com/v3.0/oauth/access_token
+          userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
