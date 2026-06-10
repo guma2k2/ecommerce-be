@@ -29,6 +29,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -75,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.saveRefreshToken(refreshTokenRedis);
 
         ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken, false);
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
         return new SignInResponse(accessToken);
     }
 
@@ -134,6 +135,7 @@ public class AuthServiceImpl implements AuthService {
                 "Your OTP code is: " + verifyCode + ". It is valid for 15 minutes.",
                 true
         );
+        mailService.sendEmail(request);
     }
 
     @Override

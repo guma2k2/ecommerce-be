@@ -10,6 +10,7 @@ import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.common.security.annotation.ActiveUser;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ApiResponse<String> refreshToken(
             @ActiveUser AuthUser authUser,
-            @CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken
+            @Parameter(hidden = true) @CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken
     ) {
         String accessToken = authService.refreshToken(cookieToken, authUser);
         return ApiResponse.success(accessToken);
