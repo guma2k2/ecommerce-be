@@ -36,22 +36,22 @@ outbound:
     client:
       registration:
         google:
-          clientId: 267032846386-hchqmc5j59qi1ti287asu2bgb9fafqk1.apps.googleusercontent.com
-          clientSecret: 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
+          clientId:
+          clientSecret:
           redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
           scope:
             - email
             - profile
         facebook:
-          clientId: 121189305185277
-          clientSecret: 42ffe5aa7379e8326387e0fe16f34132
+          clientId:
+          clientSecret:
           redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
           scope:
             - email
             - public_profile
         github:
-          clientId: d3e47fc2ddd966fa4352
-          clientSecret: 3bc0f6b8332f93076354c2a5bada2f5a05aea60d
+          clientId:
+          clientSecret:
           redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
           scope:
             - user:email
