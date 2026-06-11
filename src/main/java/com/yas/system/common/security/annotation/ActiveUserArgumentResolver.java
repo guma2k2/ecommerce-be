@@ -39,6 +39,6 @@ public class ActiveUserArgumentResolver implements HandlerMethodArgumentResolver
         if (principal instanceof UserDetails) {
             return principal;
         }
-        throw new IllegalArgumentException("Unsupported principal type: " + principal.getClass());
+        throw new IllegalArgumentException("Unsupported principal type");
     }
 }
