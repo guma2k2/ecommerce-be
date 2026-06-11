@@ -20,10 +20,34 @@ spring:
 
 app:
   jwt:
-    secret: 0uC9dpSqePgOQA3hvRvoTCUJgly1iOqkPoImkCGxVeVKku9nSih3gner8w1IvfhUaIEGjhSZRQdle5zDsRU4Xz
+    secret: ${JWT_SECRET}
     access-token-expiration-ms: 86400000
     refresh-token-expiration-ms: 86400000
+  frontendErrorUrl: ${CLIENT_URL}/400
+  oauth2:
+    google:
+      clientId: ${GOOGLE_CLIENT_ID}
+      clientSecret: ${GOOGLE_CLIENT_SECRET}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/{registrationId}
+      scope:
+        - email
+        - profile
 
+    facebook:
+      clientId: ${FACEBOOK_CLIENT_ID}
+      clientSecret: ${FACEBOOK_CLIENT_SECRET}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/{registrationId}
+      scope:
+        - email
+        - public_profile
+
+    github:
+      clientId: ${GITHUB_CLIENT_ID}
+      clientSecret: ${GITHUB_CLIENT_SECRET}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/{registrationId}
+      scope:
+        - user:email
+        - read:user
 openapi:
   service:
     api-docs: api-service

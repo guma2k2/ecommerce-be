@@ -7,17 +7,17 @@ import java.time.Duration;
 public class CookieUtil {
 
     private static final long maxAgeSeconds = 60 * 60 * 24 * 7; // 7 days
-    public static ResponseCookie createRefreshTokenCookie(String token, boolean secure) {
-        return ResponseCookie.from("refresh_token", token)
+    public static ResponseCookie createCookie(String name, String value, boolean secure) {
+        return ResponseCookie.from(name, value)
             .httpOnly(true)
             .secure(secure)
-            .path("/api/auth/refresh")
+            .path("/")
             .maxAge(Duration.ofSeconds(maxAgeSeconds))
-            .sameSite("Strict")
+            .sameSite(secure ? "Strict" : "Lax")
             .build();
     }
-    public static ResponseCookie deleteRefreshTokenCookie(boolean secure) {
-        return ResponseCookie.from("refresh_token", "")
+    public static ResponseCookie deleteCookie(String name, boolean secure) {
+        return ResponseCookie.from(name, "")
             .httpOnly(true)
             .secure(secure)
             .path("/")
