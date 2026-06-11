@@ -1,10 +1,7 @@
 package com.yas.system.auth.controller;
 
-import com.yas.system.auth.internal.dto.request.SendVerificationRequest;
-import com.yas.system.auth.internal.dto.request.SignInRequest;
-import com.yas.system.auth.internal.dto.request.SignUpRequest;
-import com.yas.system.auth.internal.dto.request.VerifyRequest;
-import com.yas.system.auth.internal.dto.response.SignInResponse;
+import com.yas.system.auth.internal.dto.request.*;
+import com.yas.system.auth.internal.dto.response.AuthenticationResponse;
 import com.yas.system.auth.internal.service.AuthService;
 import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.common.response.ApiResponse;
@@ -24,12 +21,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/sign-in")
-    public ApiResponse<SignInResponse> signIn(
+    public ApiResponse<AuthenticationResponse> signIn(
             @Valid @RequestBody SignInRequest signInRequest,
             HttpServletResponse response
     ) {
-        SignInResponse signInResponse = authService.signIn(signInRequest, response);
-        return ApiResponse.success(signInResponse);
+        AuthenticationResponse authenticationResponse = authService.signIn(signInRequest, response);
+        return ApiResponse.success(authenticationResponse);
     }
 
     @PostMapping("/sign-up")
@@ -66,16 +63,24 @@ public class AuthController {
     }
 
     @PostMapping("/outbound/authentication")
-    public ApiResponse<String> outboundAuthentication(
-            @RequestParam("code") String code
+    public ApiResponse<AuthenticationResponse> outboundAuthentication(
+            @CookieValue(value = "oauth2_state", required = false) String savedState,
+            @RequestBody OutboundAuthenticationRequest outboundAuthenticationRequest,
+            HttpServletResponse response
     ) {
-        authService.outboundAuthenticate(code);
-        return ApiResponse.successWithNoContent();
+        AuthenticationResponse signInResponse = authService.outboundAuthenticate(outboundAuthenticationRequest, savedState, response);
+        return ApiResponse.success(signInResponse);
+    }
+
+    @PostMapping("/sign-in-social")
+    public void signInSocial(
+            @PathVariable("registryId") String registryId,
+            HttpServletResponse response
+    ) {
+        authService.startOauth2Login(registryId, response);
     }
 
     // forgot password
-
-    // google login, facebook login, git login using restClient
 
     // 2fa login
 

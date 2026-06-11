@@ -1,6 +1,6 @@
 package com.yas.system.auth.internal.dto.response;
 
-public record SignInResponse(
+public record AuthenticationResponse(
         String accessToken
 ) {
 }
