@@ -62,22 +62,24 @@ public class AuthController {
         return ApiResponse.success(accessToken);
     }
 
-    @PostMapping("/outbound/authentication")
+    @PostMapping("/outbound")
     public ApiResponse<AuthenticationResponse> outboundAuthentication(
             @CookieValue(value = "oauth2_state", required = false) String savedState,
             @RequestBody OutboundAuthenticationRequest outboundAuthenticationRequest,
             HttpServletResponse response
     ) {
-        AuthenticationResponse signInResponse = authService.outboundAuthenticate(outboundAuthenticationRequest, savedState, response);
+        AuthenticationResponse signInResponse = authService
+                .outboundAuthenticate(outboundAuthenticationRequest, savedState, response);
         return ApiResponse.success(signInResponse);
     }
 
-    @PostMapping("/sign-in-social")
-    public void signInSocial(
-            @PathVariable("registryId") String registryId,
+    @GetMapping("/login-in-social/{registrationId}")
+    public ApiResponse<String> loginGoogle(
+            @PathVariable("registrationId") String registrationId,
             HttpServletResponse response
     ) {
-        authService.startOauth2Login(registryId, response);
+        String url = authService.startOauth2Login(registrationId, response);
+        return ApiResponse.success(url);
     }
 
     // forgot password

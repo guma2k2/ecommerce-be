@@ -6,29 +6,27 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum ErrorCode {
-    UNCATEGORIZED(9999, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
-    UNAUTHENTICATED(1001, "Unauthenticated", HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1002, "You don't have permission", HttpStatus.FORBIDDEN),
-
-    // Not found : 1003 - 1500
-    USER_NOT_FOUND(1003, "User not found", HttpStatus.NOT_FOUND),
-
-
-    // Invalid data: conflict ,existed : 1501 - 2000
-    INCORRECT_PASSWORD(1501, "Incorrect password", HttpStatus.BAD_REQUEST),
-    INVALID_TOKEN(1502, "Invalid token", HttpStatus.BAD_REQUEST),
-    INVALID_EMAIL(1503, "Invalid email", HttpStatus.BAD_REQUEST),
-    INVALID_CODE(1504, "Invalid code", HttpStatus.BAD_REQUEST),
-
+    UNCATEGORIZED("internal_error", "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
+    UNAUTHENTICATED("unauthenticated", "Unauthenticated", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED("unauthorized", "You don't have permission", HttpStatus.FORBIDDEN),
+    USER_NOT_FOUND("user_not_found", "User not found", HttpStatus.NOT_FOUND),
+    INCORRECT_PASSWORD("incorrect_password", "Incorrect password", HttpStatus.BAD_REQUEST),
+    INVALID_TOKEN("invalid_token", "Invalid token", HttpStatus.BAD_REQUEST),
+    INVALID_EMAIL("invalid_email", "Invalid email", HttpStatus.BAD_REQUEST),
+    INVALID_CODE("invalid_code", "Invalid code", HttpStatus.BAD_REQUEST),
+    INVALID_PROVIDER("invalid_provider", "Looks like you're signed up with %s account. Please use your %s account to login.", HttpStatus.BAD_REQUEST),
     ;
 
-    ErrorCode(int code, String message, HttpStatusCode statusCode) {
+    ErrorCode(String code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
         this.statusCode = statusCode;
     }
+    public String format(Object... args) {
+        return String.format(message, args);
+    }
 
-    private final int code;
+    private final String code;
     private final String message;
     private final HttpStatusCode statusCode;
 

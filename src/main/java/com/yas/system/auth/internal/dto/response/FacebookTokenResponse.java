@@ -4,10 +4,8 @@ import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public record GithubUserInfoResponse(
-        Long id,
-        String login,
-        String name,
-        String avatarUrl
-) {
-}
+public record FacebookTokenResponse(
+        String accessToken,
+        String tokenType,
+        Long expiresIn
+) {}
