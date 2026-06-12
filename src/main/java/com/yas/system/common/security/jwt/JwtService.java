@@ -1,6 +1,6 @@
 package com.yas.system.common.security.jwt;
 
-import com.yas.system.common.config.AppConfig;
+import com.yas.system.common.config.AppProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -20,19 +20,19 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class JwtService {
 
-    private final AppConfig appConfig;
+    private final AppProperties appConfig;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(appConfig.jwtSecret);
+        byte[] keyBytes = Decoders.BASE64.decode(appConfig.jwt().secret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return buildToken(userDetails, appConfig.accessTokenExpiration);
+        return buildToken(userDetails, appConfig.jwt().accessTokenExpirationMs());
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(userDetails, appConfig.refreshTokenExpiration);
+        return buildToken(userDetails, appConfig.jwt().refreshTokenExpirationMs());
     }
 
     private String buildToken(UserDetails userDetails, long expiration) {

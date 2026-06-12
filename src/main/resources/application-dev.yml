@@ -20,10 +20,34 @@ spring:
 
 app:
   jwt:
-    secret: 0uC9dpSqePgOQA3hvRvoTCUJgly1iOqkPoImkCGxVeVKku9nSih3gner8w1IvfhUaIEGjhSZRQdle5zDsRU4Xz
+    secret: ${JWT_SECRET}
     access-token-expiration-ms: 86400000
     refresh-token-expiration-ms: 86400000
+  frontendErrorUrl: ${CLIENT_URL}/400
+  oauth2:
+    google:
+      clientId: ${GOOGLE_CLIENT_ID}
+      clientSecret: ${GOOGLE_CLIENT_SECRET}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/google
+      scope:
+        - email
+        - profile
 
+    facebook:
+      clientId: ${FACEBOOK_CLIENT_ID}
+      clientSecret: ${FACEBOOK_CLIENT_SECRET}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/facebook
+      scope:
+        - email
+        - public_profile
+
+    github:
+      clientId: ${GITHUB_CLIENT_ID}
+      clientSecret: ${GITHUB_CLIENT_SECRET}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/github
+      scope:
+        - user:email
+        - read:user
 openapi:
   service:
     api-docs: api-service
@@ -31,33 +55,4 @@ openapi:
     title: API Service
     version: 1.0.0
 
-outbound:
-  oauth2:
-    client:
-      registration:
-        google:
-          clientId:
-          clientSecret:
-          redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
-          scope:
-            - email
-            - profile
-        facebook:
-          clientId:
-          clientSecret:
-          redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
-          scope:
-            - email
-            - public_profile
-        github:
-          clientId:
-          clientSecret:
-          redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
-          scope:
-            - user:email
-            - read:user
-      provider:
-        facebook:
-          authorizationUri: https://www.facebook.com/v3.0/dialog/oauth
-          tokenUri: https://graph.facebook.com/v3.0/oauth/access_token
-          userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
+

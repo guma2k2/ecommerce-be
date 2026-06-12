@@ -1,5 +1,6 @@
 package com.yas.system.auth.internal.entity;
 
+import com.yas.system.auth.internal.enums.OauthProvider;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,11 +26,12 @@ public class User {
 
     private String password;
 
-    private String firstName;
-
-    private String lastName;
+    private String name;
 
     private boolean isVerified;
+
+    @Enumerated(EnumType.STRING)
+    private OauthProvider provider;
 
     private int role;
 
