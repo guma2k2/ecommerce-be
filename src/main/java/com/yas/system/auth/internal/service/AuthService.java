@@ -12,6 +12,6 @@ public interface AuthService {
     void verifyEmail(VerifyRequest  verifyRequest);
     void sendVerificationCode(SendVerificationRequest sendVerificationRequest);
     String refreshToken(String refreshToken, AuthUser authUser);
-    void startOauth2Login(String registryId, HttpServletResponse response);
+    String startOauth2Login(String registrationId, HttpServletResponse response);
     AuthenticationResponse outboundAuthenticate(OutboundAuthenticationRequest outboundAuthenticationRequest, String savedState, HttpServletResponse response);
 }

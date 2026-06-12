@@ -11,6 +11,7 @@ import com.yas.system.auth.internal.redis.service.RefreshTokenService;
 import com.yas.system.auth.internal.redis.service.VerifyEmailService;
 import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.service.AuthService;
+import com.yas.system.auth.internal.service.FacebookOauthService;
 import com.yas.system.auth.internal.service.GithubOauthService;
 import com.yas.system.auth.internal.service.GoogleOauthService;
 import com.yas.system.auth.internal.util.Constant;
@@ -25,6 +26,7 @@ import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.common.security.jwt.JwtService;
 import com.yas.system.common.util.RandomUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -37,7 +39,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Objects;
@@ -60,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
     AuthenticationManager authenticationManager;
     GoogleOauthService googleOauthService;
     GithubOauthService githubOauthService;
+    FacebookOauthService facebookOauthService;
 
     @Override
     @Transactional
@@ -150,42 +152,60 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public void startOauth2Login(String registryId, HttpServletResponse response) {
-        OauthProvider provider = OauthProvider.valueOf(registryId.toUpperCase());
+    public String startOauth2Login(@NotNull String registrationId, HttpServletResponse response) {
+        OauthProvider provider = OauthProvider.valueOf(registrationId.toUpperCase());
         var state = generateState();
         var url = switch (provider){
             case GOOGLE -> googleOauthService.buildAuthorizationUrl(state);
             case GITHUB -> githubOauthService.buildAuthorizationUrl(state);
+            case FACEBOOK ->  facebookOauthService.buildAuthorizationUrl(state);
             default -> null;
         };
         var stateCookie = CookieUtil.createCookie(Constant.OAUTH2_STATE, state, false);
         response.addHeader(HttpHeaders.SET_COOKIE, stateCookie.toString());
-        try {
-            response.sendRedirect(url);
-        } catch (IOException e) {
-            throw new InvalidDataException(ErrorCode.UNCATEGORIZED);
-        }
+        return url;
     }
 
     @Override
-    public AuthenticationResponse outboundAuthenticate(OutboundAuthenticationRequest outboundAuthenticationRequest, String savedState, HttpServletResponse response) {
+    public AuthenticationResponse outboundAuthenticate(
+            OutboundAuthenticationRequest outboundAuthenticationRequest,
+            String savedState,
+            HttpServletResponse response
+    ) {
         String code = outboundAuthenticationRequest.code();
         String state = outboundAuthenticationRequest.state();
-        OauthProvider provider = OauthProvider.valueOf(outboundAuthenticationRequest.registryId().toUpperCase());
+        log.info("outboundAuthenticationRequest={}", outboundAuthenticationRequest);
+        log.info("savedState={}", savedState);
+        OauthProvider provider = OauthProvider.valueOf(outboundAuthenticationRequest.registrationId().toUpperCase());
 
-        if (code == null || state == null || savedState == null || !state.equals(savedState)) {
+        if (code == null || state == null || !state.equals(savedState)) {
             throw new InvalidDataException(ErrorCode.UNCATEGORIZED);
         }
 
         OauthUserInfo oauthUserInfo = switch (provider) {
             case GOOGLE:
                 GoogleTokenResponse googleTokenResponse = googleOauthService.exchangeCodeForToken(code);
-                GoogleUserInfoResponse googleUserInfoResponse = googleOauthService.getUserInfo(googleTokenResponse.accessToken());
+                GoogleUserInfoResponse googleUserInfoResponse = googleOauthService
+                        .getUserInfo(googleTokenResponse.accessToken());
                 yield OauthUserInfo.fromGoogleOauthUser(googleUserInfoResponse);
             case GITHUB:
                 GithubTokenResponse githubTokenResponse = githubOauthService.exchangeCodeForToken(code);
-                GithubUserInfoResponse githubUserInfoResponse = githubOauthService.getUserInfo(githubTokenResponse.accessToken());
-                yield OauthUserInfo.fromGithubOauthUser(githubUserInfoResponse);
+                GithubUserInfoResponse githubUserInfoResponse = githubOauthService
+                        .getUserInfo(githubTokenResponse.accessToken());
+                var emails =
+                        githubOauthService.getEmails(githubTokenResponse.accessToken());
+                String email = emails.stream()
+                        .filter(e -> e.primary() && e.verified())
+                        .map(GithubEmailResponse::email)
+                        .findFirst()
+                        .orElse(null);
+                yield OauthUserInfo.fromGithubOauthUser(githubUserInfoResponse, email);
+
+            case FACEBOOK:
+                FacebookTokenResponse facebookTokenResponse = facebookOauthService.exchangeCodeForToken(code);
+                FacebookUserInfoResponse facebookUserInfoResponse = facebookOauthService
+                        .getUserInfo(facebookTokenResponse.accessToken());
+                yield OauthUserInfo.fromFacebookOauthUser(facebookUserInfoResponse);
             default:
                 yield null;
         };
@@ -194,10 +214,15 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidDataException(ErrorCode.UNCATEGORIZED);
         }
 
+
         User activeUser = userRepository.findByEmail(oauthUserInfo.email()).orElseGet(() -> {
             User user = userHelper.createUser(oauthUserInfo);
             return userRepository.save(user);
         });
+
+        if (!activeUser.getProvider().equals(provider)) {
+            throw new InvalidDataException(ErrorCode.INVALID_PROVIDER, provider, provider);
+        }
 
         AuthUser userDetails = AuthUser.fromUser(activeUser);
         String accessToken = jwtService.generateAccessToken(userDetails);
@@ -217,7 +242,8 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         refreshTokenService.saveRefreshToken(refreshTokenRedis);
 
-        ResponseCookie refreshTokenCookie = CookieUtil.createCookie(Constant.REFRESH_COOKIE_HEADER, refreshToken, false);
+        ResponseCookie refreshTokenCookie = CookieUtil
+                .createCookie(Constant.REFRESH_COOKIE_HEADER, refreshToken, false);
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
     }
 

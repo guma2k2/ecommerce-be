@@ -13,8 +13,5 @@ public record SignUpRequest(
         String password,
 
         @NotBlank(message = ParamError.FIELD_NAME)
-        String firstName,
-
-        @NotBlank(message = ParamError.FIELD_NAME)
-        String lastName
+        String name
 ) {}
