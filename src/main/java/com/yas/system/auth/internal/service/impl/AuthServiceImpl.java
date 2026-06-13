@@ -5,6 +5,7 @@ import com.yas.system.auth.internal.dto.response.*;
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.enums.OauthProvider;
 import com.yas.system.auth.internal.helper.UserHelper;
+import com.yas.system.auth.internal.mfa.MfaService;
 import com.yas.system.auth.internal.redis.entity.RefreshToken;
 import com.yas.system.auth.internal.redis.entity.VerifyEmail;
 import com.yas.system.auth.internal.redis.service.RefreshTokenService;
@@ -20,8 +21,7 @@ import com.yas.system.common.config.AppProperties;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
-import com.yas.system.common.mail.dto.SendEmailRequest;
-import com.yas.system.common.mail.service.MailService;
+import com.yas.system.notification.events.VerifyEmailEvent;
 import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.common.security.jwt.JwtService;
 import com.yas.system.common.util.RandomUtil;
@@ -31,6 +31,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -57,11 +58,12 @@ public class AuthServiceImpl implements AuthService {
     RefreshTokenService refreshTokenService;
     AppProperties appProperties;
     VerifyEmailService verifyEmailService;
-    MailService mailService;
     AuthenticationManager authenticationManager;
     GoogleOauthService googleOauthService;
     GithubOauthService githubOauthService;
     FacebookOauthService facebookOauthService;
+    ApplicationEventPublisher eventPublisher;
+    MfaService mfaService;
 
     @Override
     @Transactional
@@ -98,12 +100,12 @@ public class AuthServiceImpl implements AuthService {
 
         verifyEmailService.saveVerifyEmail(verifyEmail);
         // send email
-        SendEmailRequest request = new SendEmailRequest(signUpRequest.email(),
-                "Verify Email",
-                "Your OTP code is: " + verifyCode + ". It is valid for 15 minutes.",
-                true
+        VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(signUpRequest.email(),
+                signUpRequest.name(),
+                verifyCode,
+                Constant.VERIFY_CODE_TTL_MINUTES
         );
-        mailService.sendEmail(request);
+        eventPublisher.publishEvent(verifyEmailEvent);
     }
 
     @Override
@@ -126,14 +128,37 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendVerificationCode(SendVerificationRequest sendVerificationRequest) {
+        User user = userRepository.findByEmail(sendVerificationRequest.email())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
         // send email
         String verifyCode = RandomUtil.generatesOtp();
-        SendEmailRequest request = new SendEmailRequest(sendVerificationRequest.email(),
-                "Verify Email",
-                "Your OTP code is: " + verifyCode + ". It is valid for 15 minutes.",
-                true
+        VerifyEmail verifyEmail = VerifyEmail.builder()
+                .userId(user.getId().toString())
+                .timeToLive(Constant.VERIFY_CODE_TTL)
+                .verifyCode(verifyCode)
+                .build();
+
+        verifyEmailService.saveVerifyEmail(verifyEmail);
+        VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(sendVerificationRequest.email(),
+                user.getName(),
+                verifyCode,
+                Constant.VERIFY_CODE_TTL_MINUTES
         );
-        mailService.sendEmail(request);
+        eventPublisher.publishEvent(verifyEmailEvent);
+    }
+
+    @Override
+    public void send2faVerificationCode(SendVerificationRequest sendVerificationRequest) {
+        User user = userRepository.findByEmail(sendVerificationRequest.email())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+        // send email
+        String verifyCode = RandomUtil.generatesOtp();
+        VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(sendVerificationRequest.email(),
+                user.getName(),
+                verifyCode,
+                Constant.VERIFY_CODE_TTL_MINUTES
+        );
+        eventPublisher.publishEvent(verifyEmailEvent);
     }
 
     @Override

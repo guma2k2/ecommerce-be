@@ -41,6 +41,12 @@ public class AuthController {
         return ApiResponse.successWithNoContent();
     }
 
+    @PostMapping("/2fa/send-verification")
+    public ApiResponse<String> send2faVerification(@Valid @RequestBody SendVerificationRequest sendVerificationRequest) {
+        authService.sendVerificationCode(sendVerificationRequest);
+        return ApiResponse.successWithNoContent();
+    }
+
     @PostMapping("/verify")
     public ApiResponse<String> signUp(@Valid @RequestBody VerifyRequest verifyRequest) {
         authService.verifyEmail(verifyRequest);

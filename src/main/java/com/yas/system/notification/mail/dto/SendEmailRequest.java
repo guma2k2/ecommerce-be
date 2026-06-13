@@ -1,4 +1,4 @@
-package com.yas.system.common.mail.dto;
+package com.yas.system.notification.mail.dto;
 
 public record SendEmailRequest(
         String toAddress,
