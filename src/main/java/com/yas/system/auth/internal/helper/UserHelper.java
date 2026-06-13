@@ -3,6 +3,7 @@ package com.yas.system.auth.internal.helper;
 import com.yas.system.auth.internal.dto.request.SignUpRequest;
 import com.yas.system.auth.internal.dto.response.OauthUserInfo;
 import com.yas.system.auth.internal.entity.User;
+import com.yas.system.auth.internal.enums.OauthProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,9 +18,9 @@ public class UserHelper {
         User newUser = new User();
         newUser.setEmail(signUpRequest.email());
         newUser.setPassword(passwordEncoder.encode(signUpRequest.password()));
-        newUser.setFirstName(signUpRequest.firstName());
-        newUser.setLastName(signUpRequest.lastName());
+        newUser.setName(signUpRequest.name());
         newUser.setVerified(false);
+        newUser.setProvider(OauthProvider.LOCAL);
         return newUser;
     }
 
@@ -27,9 +28,9 @@ public class UserHelper {
         User newUser = new User();
         newUser.setEmail(oauthUserInfo.email());
         newUser.setPassword(null);
-        newUser.setFirstName(oauthUserInfo.name());
-        newUser.setLastName("");
+        newUser.setName(oauthUserInfo.name());
         newUser.setVerified(true);
+        newUser.setProvider(oauthUserInfo.provider());
         return newUser;
     }
 }

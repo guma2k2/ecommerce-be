@@ -11,8 +11,8 @@ import java.util.concurrent.Executors;
 @Configuration
 public class ExecutorConfig {
 
-    @Bean(name = "virtualThreadExecutor")
     @Primary
+    @Bean(name = "virtualThreadExecutor")
     public AsyncTaskExecutor virtualThreadExecutor() {
         return new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
     }

@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex){
         String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(APIStatus.ERR_BAD_REQUEST.getCode(), errorMessage));
+                .body(ApiResponse.error(APIStatus.ERR_BAD_REQUEST.getCode()+"", errorMessage));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(APIStatus.ERR_BAD_REQUEST.getCode(), "Email or password is incorrect"));
+                .body(ApiResponse.error(APIStatus.ERR_BAD_REQUEST.getCode() + "", "Email or password is incorrect"));
     }
 
     @ExceptionHandler(Exception.class)

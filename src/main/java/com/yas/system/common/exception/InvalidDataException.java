@@ -9,6 +9,11 @@ public class InvalidDataException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
+    public InvalidDataException(ErrorCode errorCode, Object... args) {
+        super(errorCode.format(args));
+        this.errorCode = errorCode;
+    }
+
     public ErrorCode getErrorCode() {
         return errorCode;
     }
@@ -16,4 +21,5 @@ public class InvalidDataException extends RuntimeException {
     public void setErrorCode(ErrorCode errorCode) {
         this.errorCode = errorCode;
     }
+
 }

@@ -1,7 +1,7 @@
-package com.yas.system.common.mail.service.impl;
+package com.yas.system.notification.mail.service.impl;
 
-import com.yas.system.common.mail.dto.SendEmailRequest;
-import com.yas.system.common.mail.service.MailService;
+import com.yas.system.notification.mail.dto.SendEmailRequest;
+import com.yas.system.notification.mail.service.MailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;

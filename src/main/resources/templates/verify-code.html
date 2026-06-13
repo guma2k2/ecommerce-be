@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Verification Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .code {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 10px;
+            color: #2563eb;
+            margin: 30px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #666;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Email Verification</h2>
+
+    <p>
+        Hi <span th:text="${name}">User</span>,
+    </p>
+
+    <p>
+        Use the verification code below to complete your registration:
+    </p>
+
+    <div class="code" th:text="${code}">
+        123456
+    </div>
+
+    <p>
+        This code will expire in
+        <strong th:text="${expirationMinutes}">15</strong>
+        minutes.
+    </p>
+
+    <p>
+        Do not share this code with anyone.
+    </p>
+
+    <div class="footer">
+        If you didn't request this code, please ignore this email.
+    </div>
+
+</div>
+
+</body>
+</html>

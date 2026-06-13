@@ -5,7 +5,9 @@ import com.yas.system.auth.internal.dto.response.GithubTokenResponse;
 import com.yas.system.auth.internal.dto.response.GithubUserInfoResponse;
 import com.yas.system.auth.internal.service.GithubOauthService;
 import com.yas.system.common.config.AppProperties;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GithubOauthServiceImpl implements GithubOauthService {
 
     AppProperties appProperties;

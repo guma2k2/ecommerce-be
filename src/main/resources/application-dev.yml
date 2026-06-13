@@ -28,7 +28,7 @@ app:
     google:
       clientId: ${GOOGLE_CLIENT_ID}
       clientSecret: ${GOOGLE_CLIENT_SECRET}
-      redirectUri: ${CLIENT_URL}/oauth2/callback/{registrationId}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/google
       scope:
         - email
         - profile
@@ -36,7 +36,7 @@ app:
     facebook:
       clientId: ${FACEBOOK_CLIENT_ID}
       clientSecret: ${FACEBOOK_CLIENT_SECRET}
-      redirectUri: ${CLIENT_URL}/oauth2/callback/{registrationId}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/facebook
       scope:
         - email
         - public_profile
@@ -44,7 +44,7 @@ app:
     github:
       clientId: ${GITHUB_CLIENT_ID}
       clientSecret: ${GITHUB_CLIENT_SECRET}
-      redirectUri: ${CLIENT_URL}/oauth2/callback/{registrationId}
+      redirectUri: ${CLIENT_URL}/oauth2/callback/github
       scope:
         - user:email
         - read:user
