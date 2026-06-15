@@ -148,17 +148,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void send2faVerificationCode(SendVerificationRequest sendVerificationRequest) {
-        User user = userRepository.findByEmail(sendVerificationRequest.email())
+    public void verifyMfaCode(AuthUser authUser, String code) {
+        User user = userRepository.findByEmail(authUser.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
-        // send email
-        String verifyCode = RandomUtil.generatesOtp();
-        VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(sendVerificationRequest.email(),
-                user.getName(),
-                verifyCode,
-                Constant.VERIFY_CODE_TTL_MINUTES
-        );
-        eventPublisher.publishEvent(verifyEmailEvent);
+        if (!mfaService.verifyTotpCode(user.getMfaSecret(),  code)) {
+            throw new InvalidDataException(ErrorCode.INVALID_CODE);
+        }
     }
 
     @Override

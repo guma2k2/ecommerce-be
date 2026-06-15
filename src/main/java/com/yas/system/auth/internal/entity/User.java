@@ -33,6 +33,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     private OauthProvider provider;
 
+    private String mfaSecret;
+
     private int role;
 
 }
