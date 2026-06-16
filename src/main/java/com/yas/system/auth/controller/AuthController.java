@@ -36,25 +36,55 @@ public class AuthController {
     }
 
     @PostMapping("/send-verification")
-    public ApiResponse<String> sendVerification(@Valid @RequestBody SendVerificationRequest sendVerificationRequest) {
+    public ApiResponse<Void> sendVerification(@Valid @RequestBody SendVerificationRequest sendVerificationRequest) {
         authService.sendVerificationCode(sendVerificationRequest);
         return ApiResponse.successWithNoContent();
     }
 
     @PostMapping("/2fa/send-verification")
-    public ApiResponse<String> send2faVerification(@Valid @RequestBody SendVerificationRequest sendVerificationRequest) {
+    public ApiResponse<Void> send2faVerification(@Valid @RequestBody SendVerificationRequest sendVerificationRequest) {
         authService.sendVerificationCode(sendVerificationRequest);
         return ApiResponse.successWithNoContent();
     }
 
+    @PostMapping("/2fa/setup")
+    public ApiResponse<String> setUp2fa(@ActiveUser AuthUser authUser) {
+        String url = authService.setUp2fa(authUser);
+        return ApiResponse.success(url);
+    }
+
+    @PostMapping("/2fa/enable")
+    public ApiResponse<Void> enable2fa(
+            @ActiveUser AuthUser authUser,
+            @Valid @RequestBody EnableMfaRequest enableMfaRequest
+    ) {
+        authService.enable2fa(authUser, enableMfaRequest);
+        return ApiResponse.successWithNoContent();
+    }
+
+    @PostMapping("/2fa/disable")
+    public ApiResponse<Void> disable2fa(@ActiveUser AuthUser authUser) {
+        authService.disable2fa(authUser);
+        return ApiResponse.successWithNoContent();
+    }
+
+    @PostMapping("/2fa/verify")
+    public ApiResponse<Void> verify2fa(
+            @Valid @RequestBody VerifyRequest verifyRequest,
+            @ActiveUser AuthUser authUser
+    ) {
+        authService.verifyMfaCode(authUser, verifyRequest);
+        return ApiResponse.successWithNoContent();
+    }
+
     @PostMapping("/verify")
-    public ApiResponse<String> signUp(@Valid @RequestBody VerifyRequest verifyRequest) {
+    public ApiResponse<Void> verifyEmail(@Valid @RequestBody VerifyRequest verifyRequest) {
         authService.verifyEmail(verifyRequest);
         return ApiResponse.successWithNoContent();
     }
 
     @PostMapping("/sign-out")
-    public ApiResponse<String> signOut(@CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken) {
+    public ApiResponse<Void> signOut(@CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken) {
         authService.signOut(cookieToken);
         return ApiResponse.successWithNoContent();
     }
@@ -89,7 +119,5 @@ public class AuthController {
     }
 
     // forgot password
-
-    // 2fa login
 
 }
