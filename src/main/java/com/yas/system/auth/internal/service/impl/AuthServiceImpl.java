@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
     FacebookOauthService facebookOauthService;
     ApplicationEventPublisher eventPublisher;
     MfaService mfaService;
+    String ISSUER = "me";
 
     @Override
     @Transactional
@@ -147,14 +148,7 @@ public class AuthServiceImpl implements AuthService {
         eventPublisher.publishEvent(verifyEmailEvent);
     }
 
-    @Override
-    public void verifyMfaCode(AuthUser authUser, String code) {
-        User user = userRepository.findByEmail(authUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
-        if (!mfaService.verifyTotpCode(user.getMfaSecret(),  code)) {
-            throw new InvalidDataException(ErrorCode.INVALID_CODE);
-        }
-    }
+
 
     @Override
     public String refreshToken(String refreshToken, AuthUser authUser) {
@@ -250,6 +244,47 @@ public class AuthServiceImpl implements AuthService {
 
         CookieUtil.deleteCookie(Constant.OAUTH2_STATE,false);
         return new AuthenticationResponse(accessToken);
+    }
+
+    @Override
+    public String setUp2fa(AuthUser authUser) {
+        User user = userRepository.findByEmail(authUser.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        String mfaSecret = mfaService.generateMfaSecret(authUser.email());
+        String url = mfaService.generateQrCodeUri(authUser.email(), mfaSecret, ISSUER);
+        user.setMfaSecret(mfaSecret);
+        userRepository.save(user);
+        return url;
+    }
+
+    @Override
+    public void verifyMfaCode(AuthUser authUser, VerifyRequest verifyRequest) {
+        User user = userRepository.findByEmail(authUser.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+        if (!mfaService.verifyTotpCode(user.getMfaSecret(),  verifyRequest.code())) {
+            throw new InvalidDataException(ErrorCode.INVALID_CODE);
+        }
+    }
+
+    @Override
+    public void enable2fa(AuthUser authUser, EnableMfaRequest enableMfaRequest) {
+        User user = userRepository.findByEmail(authUser.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+        if (!mfaService.verifyTotpCode(user.getMfaSecret(),  enableMfaRequest.code())) {
+            throw new InvalidDataException(ErrorCode.INVALID_CODE);
+        }
+        user.setEnabledMfa(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void disable2fa(AuthUser authUser) {
+        User user = userRepository.findByEmail(authUser.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+        user.setEnabledMfa(false);
+        user.setMfaSecret(null);
+        userRepository.save(user);
     }
 
     private void responseRefreshToken(HttpServletResponse response, AuthUser userDetails) {
