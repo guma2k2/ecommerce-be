@@ -119,5 +119,9 @@ public class AuthController {
     }
 
     // forgot password
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword() {
+        return ApiResponse.successWithNoContent();
+    }
 
 }
