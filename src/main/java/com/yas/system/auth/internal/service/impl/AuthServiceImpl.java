@@ -6,8 +6,10 @@ import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.enums.OauthProvider;
 import com.yas.system.auth.internal.helper.UserHelper;
 import com.yas.system.auth.internal.mfa.MfaService;
+import com.yas.system.auth.internal.redis.entity.PasswordResetToken;
 import com.yas.system.auth.internal.redis.entity.RefreshToken;
 import com.yas.system.auth.internal.redis.entity.VerifyEmail;
+import com.yas.system.auth.internal.redis.service.PasswordResetTokenService;
 import com.yas.system.auth.internal.redis.service.RefreshTokenService;
 import com.yas.system.auth.internal.redis.service.VerifyEmailService;
 import com.yas.system.auth.internal.repository.UserRepository;
@@ -21,6 +23,7 @@ import com.yas.system.common.config.AppProperties;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.notification.events.ResetPasswordEvent;
 import com.yas.system.notification.events.VerifyEmailEvent;
 import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.common.security.jwt.JwtService;
@@ -65,6 +68,8 @@ public class AuthServiceImpl implements AuthService {
     ApplicationEventPublisher eventPublisher;
     MfaService mfaService;
     String ISSUER = "me";
+    String CLIENT_URL = "http://localhost:5173";
+    PasswordResetTokenService passwordResetTokenService;
 
     @Override
     @Transactional
@@ -285,6 +290,26 @@ public class AuthServiceImpl implements AuthService {
         user.setEnabledMfa(false);
         user.setMfaSecret(null);
         userRepository.save(user);
+    }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
+        User user = userRepository.findByEmail(forgotPasswordRequest.email())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        String token = "Token";
+        PasswordResetToken passwordResetToken = PasswordResetToken
+                .builder()
+                .id(UUID.randomUUID().toString())
+                .token(token)
+                .timeToLive(Constant.VERIFY_CODE_TTL)
+                .isUsed(false)
+                .build();
+        passwordResetTokenService.save(passwordResetToken);
+        String resetLink = CLIENT_URL + "?token=" + token;
+        ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getEmail(), user.getName(), resetLink, Constant.VERIFY_CODE_TTL_MINUTES);
+        eventPublisher.publishEvent(resetPasswordEvent);
+
     }
 
     private void responseRefreshToken(HttpServletResponse response, AuthUser userDetails) {

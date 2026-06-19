@@ -19,4 +19,5 @@ public interface AuthService {
     String setUp2fa(AuthUser authUser);
     void enable2fa(AuthUser authUser, EnableMfaRequest enableMfaRequest);
     void disable2fa(AuthUser authUser);
+    void forgotPassword(ForgotPasswordRequest forgotPasswordRequest);
 }
