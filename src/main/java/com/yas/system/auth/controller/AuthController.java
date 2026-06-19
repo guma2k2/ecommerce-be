@@ -120,7 +120,8 @@ public class AuthController {
 
     // forgot password
     @PostMapping("/forgot-password")
-    public ApiResponse<Void> forgotPassword() {
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        authService.forgotPassword(forgotPasswordRequest);
         return ApiResponse.successWithNoContent();
     }
 
