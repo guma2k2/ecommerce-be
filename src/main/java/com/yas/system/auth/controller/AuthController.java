@@ -118,11 +118,17 @@ public class AuthController {
         return ApiResponse.success(url);
     }
 
-    // forgot password
     @PostMapping("/forgot-password")
     public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
         authService.forgotPassword(forgotPasswordRequest);
         return ApiResponse.successWithNoContent();
     }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        authService.resetPasswordRequest(resetPasswordRequest);
+        return ApiResponse.successWithNoContent();
+    }
+
 
 }

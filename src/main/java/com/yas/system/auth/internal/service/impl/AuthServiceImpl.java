@@ -40,6 +40,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +71,7 @@ public class AuthServiceImpl implements AuthService {
     String ISSUER = "me";
     String CLIENT_URL = "http://localhost:5173";
     PasswordResetTokenService passwordResetTokenService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -310,6 +312,17 @@ public class AuthServiceImpl implements AuthService {
         ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getEmail(), user.getName(), resetLink, Constant.VERIFY_CODE_TTL_MINUTES);
         eventPublisher.publishEvent(resetPasswordEvent);
 
+    }
+
+    @Override
+    public void resetPasswordRequest(ResetPasswordRequest resetPasswordRequest) {
+        PasswordResetToken passwordResetToken = passwordResetTokenService
+                .getResetPasswordByCode(resetPasswordRequest.token())
+                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_TOKEN));
+        User user = userRepository.findById(UUID.fromString(passwordResetToken.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+        user.setPassword(passwordEncoder.encode(resetPasswordRequest.password()));
+        userRepository.save(user);
     }
 
     private void responseRefreshToken(HttpServletResponse response, AuthUser userDetails) {

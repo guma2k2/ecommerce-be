@@ -20,4 +20,5 @@ public interface AuthService {
     void enable2fa(AuthUser authUser, EnableMfaRequest enableMfaRequest);
     void disable2fa(AuthUser authUser);
     void forgotPassword(ForgotPasswordRequest forgotPasswordRequest);
+    void resetPasswordRequest(ResetPasswordRequest resetPasswordRequest);
 }
