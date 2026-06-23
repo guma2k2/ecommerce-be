@@ -1,6 +1,7 @@
 package com.yas.system.auth.internal.entity;
 
 import com.yas.system.auth.internal.enums.OauthProvider;
+import com.yas.system.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,9 +14,7 @@ import java.util.UUID;
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
-@Getter
-public class User {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
