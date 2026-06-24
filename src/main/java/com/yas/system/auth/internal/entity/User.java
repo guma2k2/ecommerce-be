@@ -11,9 +11,11 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "tbl_user")
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class User extends BaseEntity {
 
     @Id
