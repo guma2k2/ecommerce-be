@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.repository;
 
-import com.tiki.product.entity.Review;
+import com.yas.system.catalog.internal.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,21 +15,21 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 
     @Query("""
-    select r 
-    from Review r
-    join fetch r.productVariant pv 
-    join fetch pv.product p 
-    where p.id = :productId and r.ratingStar in :ratings 
+        select r 
+        from Review r
+        join fetch r.productVariant pv 
+        join fetch pv.product p 
+        where p.id = :productId and r.ratingStar in :ratings 
     """)
     Page<Review> findByProductIdAndRatingStar(Long productId, Pageable pageable, List<Integer> ratings);
 
 
     @Query("""
-    select r 
-    from Review r
-    join fetch r.productVariant pv 
-    join fetch pv.product p 
-    where p.id = :productId
+        select r 
+        from Review r
+        join fetch r.productVariant pv 
+        join fetch pv.product p 
+        where p.id = :productId
     """)
     Page<Review> findByProductId(Long productId, Pageable pageable);
 
