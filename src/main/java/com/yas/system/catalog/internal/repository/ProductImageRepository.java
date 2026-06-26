@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.repository;
 
-import com.tiki.product.entity.ProductImage;
+import com.yas.system.catalog.internal.entity.ProductImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

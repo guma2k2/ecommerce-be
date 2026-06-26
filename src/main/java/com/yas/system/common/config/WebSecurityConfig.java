@@ -45,9 +45,9 @@ public class WebSecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/public/**",
-                                "/swagger-ui/**",
-                                "/api-docs/**",
                                 "/swagger-ui.html",
+                                "/api-docs/**",
+                                "/swagger-ui/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/auth/login-in-social/**"
                                 ).permitAll()
