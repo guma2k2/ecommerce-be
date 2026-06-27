@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.entity;
 
-import com.tiki.product.dto.enums.ProductImageType;
+import com.yas.system.catalog.internal.dto.enums.ProductImageType;
 import jakarta.persistence.*;
 import lombok.*;
 
