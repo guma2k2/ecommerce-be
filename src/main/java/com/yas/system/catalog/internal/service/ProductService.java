@@ -19,4 +19,6 @@ public interface ProductService {
     void createProduct(ProductCreationRequest request);
     void saveProductVariants(List<ProductVariantCreateRequest> requests, Long productId);
     void createAttribute(AttributeRequest request);
+    ProductResponse getById(String productId);
+    ProductVariantResponse getProductVariant(String id);
 }

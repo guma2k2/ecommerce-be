@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.dto.response;
 
-import com.tiki.product.entity.ProductImage;
+
+import com.yas.system.catalog.internal.entity.ProductImage;
 
 public record ProductImageResponse (
         Long id,
