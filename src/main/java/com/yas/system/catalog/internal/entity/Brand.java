@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "brands")
+@Table(name = "tbl_brand")
 @Setter
 @Getter
 @AllArgsConstructor

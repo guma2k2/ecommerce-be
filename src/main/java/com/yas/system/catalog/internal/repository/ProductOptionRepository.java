@@ -1,13 +1,13 @@
 package com.yas.system.catalog.internal.repository;
 
-import com.yas.system.catalog.internal.entity.Attribute;
+import com.yas.system.catalog.internal.entity.ProductOption;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface AttributeRepository extends JpaRepository<Attribute, Integer> {
+public interface ProductOptionRepository extends JpaRepository<ProductOption, Integer> {
 
-    Optional<Attribute> findByName(String name);
+    Optional<ProductOption> findByName(String name);
 }
