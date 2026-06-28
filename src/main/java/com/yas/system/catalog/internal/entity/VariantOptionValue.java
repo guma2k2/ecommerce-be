@@ -3,16 +3,14 @@ package com.yas.system.catalog.internal.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-
 @Entity
-@Table(name = "variant_attribute_values")
+@Table(name = "tbl_variant_option_value")
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VariantAttributeValue {
+public class VariantOptionValue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,5 +23,5 @@ public class VariantAttributeValue {
 
     @ManyToOne
     @JoinColumn(name = "attribute_id")
-    private Attribute attribute;
+    private ProductOption productOption;
 }

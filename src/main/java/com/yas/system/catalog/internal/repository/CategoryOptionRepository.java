@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CategoryAttributeRepository extends JpaRepository<CategoryAttribute, Integer> {
+public interface CategoryOptionRepository extends JpaRepository<CategoryAttribute, Integer> {
 
 
     @Query("""

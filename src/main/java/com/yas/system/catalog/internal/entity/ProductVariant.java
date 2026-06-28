@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "product_variants")
+@Table(name = "tbl_product_variant")
 @Setter
 @Getter
 @AllArgsConstructor
@@ -20,12 +20,12 @@ public class ProductVariant {
     private String sku;
     private Double price;
     private Integer quantity;
-    private String status; // active/inactive
+    private String status;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 
     @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL)
-    private List<VariantAttributeValue> attributeValues = new ArrayList<>();
+    private List<VariantOptionValue> attributeValues = new ArrayList<>();
 }

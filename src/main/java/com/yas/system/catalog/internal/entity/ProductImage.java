@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "product_image")
+@Table(name = "tbl_product_image")
 @Setter
 @Getter
 @AllArgsConstructor
@@ -22,7 +22,7 @@ public class ProductImage {
     private ProductImageType type;
 
     @Builder.Default
-    private int sortOrder = 0;
+    private int position = 0;
 
     private boolean status;
 
