@@ -22,7 +22,7 @@ public class ProductVariant {
     private Integer quantity;
     private String status;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
