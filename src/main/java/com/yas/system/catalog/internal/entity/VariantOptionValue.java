@@ -1,20 +1,24 @@
 package com.yas.system.catalog.internal.entity;
 
+import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tbl_variant_option_value")
+@Table(name = "tbl_variant_option_value",
+        uniqueConstraints = @UniqueConstraint(
+        columnNames = {
+                "product_variant_id",
+                "attribute_id"
+        }
+))
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VariantOptionValue {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class VariantOptionValue extends BaseLongEntity {
+    
     private String value;
 
     @ManyToOne

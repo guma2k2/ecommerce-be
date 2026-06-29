@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.entity;
 
 import com.yas.system.catalog.internal.dto.enums.ProductImageType;
+import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,10 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductImage {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ProductImage extends BaseLongEntity {
 
     private String url;
 
