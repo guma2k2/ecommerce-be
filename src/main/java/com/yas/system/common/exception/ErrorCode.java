@@ -15,6 +15,8 @@ public enum ErrorCode {
     INVALID_EMAIL("invalid_email", "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_CODE("invalid_code", "Invalid code", HttpStatus.BAD_REQUEST),
     INVALID_PROVIDER("invalid_provider", "Looks like you're signed up with %s account. Please use your %s account to login.", HttpStatus.BAD_REQUEST),
+    INVALID_PRODUCT("invalid_product", "Invalid product data", HttpStatus.BAD_REQUEST),
+    PRODUCT_ALREADY_EXISTS("product_already_exists", "Product already exists", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {

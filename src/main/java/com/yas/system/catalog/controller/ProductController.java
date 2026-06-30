@@ -1,6 +1,10 @@
 package com.yas.system.catalog.controller;
 
+import com.yas.system.catalog.internal.dto.request.ProductRequest;
+import com.yas.system.catalog.internal.dto.response.ProductResponse;
 import com.yas.system.catalog.internal.service.ProductService;
+import com.yas.system.common.response.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -8,11 +12,11 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
     ProductService productService;
 
-//    @PostMapping("/create")
-//    public ApiResponse<Void> createProduct(@RequestBody @Valid ProductCreationRequest request) {
-//        productService.createProduct(request);
-//        return ApiResponse.successWithNoContent();
-//    }
+    @PostMapping()
+    public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
+        ProductResponse product = productService.createProduct(request);
+        return ApiResponse.success(product);
+    }
 //
 //
 //    @GetMapping("/{productId}")

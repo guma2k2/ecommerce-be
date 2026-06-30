@@ -6,6 +6,6 @@ public record ProductVariantRequest(
         String option3,
         String sku,
         Double price,
-        int quality
+        int quantity
 ) {
 }
