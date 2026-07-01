@@ -5,11 +5,17 @@ import com.yas.system.catalog.internal.dto.response.ProductResponse;
 import com.yas.system.catalog.internal.service.ProductService;
 import com.yas.system.common.response.ApiResponse;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/products")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
 public class ProductController {
+
     ProductService productService;
 
     @PostMapping()
@@ -17,22 +23,25 @@ public class ProductController {
         ProductResponse product = productService.createProduct(request);
         return ApiResponse.success(product);
     }
-//
-//
-//    @GetMapping("/{productId}")
-//    public ApiResponse<ProductResponse> getProduct(@PathVariable String productId) {
-//        return ApiResponse.success(productService.getById(productId));
-//    }
-//
-//    @GetMapping("/variants/{id}")
-//    public ApiResponse<ProductVariantResponse> getProductVariants(@PathVariable String id) {
-//        return ApiResponse.success(productService.getProductVariant(id));
-//    }
-//
-//
-//    @PostMapping("/attribute")
-//    public ApiResponse<Void> createAttribute(@RequestBody @Valid AttributeRequest request) {
-//        productService.createAttribute(request);
-//        return ApiResponse.successWithNoContent();
-//    }
+
+    @PutMapping("/{productId}")
+    public ApiResponse<ProductResponse> updateProduct(
+            @RequestBody @Valid ProductRequest request,
+            @PathVariable Long productId
+    ) {
+        ProductResponse product = productService.updateProduct(request, productId);
+        return ApiResponse.success(product);
+    }
+
+    @GetMapping("/{productId}")
+    public ApiResponse<ProductResponse> getProduct(@PathVariable Long productId) {
+        return ApiResponse.success(productService.getById(productId));
+    }
+
+    @DeleteMapping("/{productId}")
+    public ApiResponse<Void> deleteProduct(@PathVariable Long productId) {
+        productService.deleteById(productId);
+        return ApiResponse.successWithNoContent();
+    }
+
 }

@@ -16,6 +16,7 @@ public enum ErrorCode {
     INVALID_CODE("invalid_code", "Invalid code", HttpStatus.BAD_REQUEST),
     INVALID_PROVIDER("invalid_provider", "Looks like you're signed up with %s account. Please use your %s account to login.", HttpStatus.BAD_REQUEST),
     INVALID_PRODUCT("invalid_product", "Invalid product data", HttpStatus.BAD_REQUEST),
+    PRODUCT_NOT_FOUND("product_not_found", "Product not found", HttpStatus.NOT_FOUND),
     PRODUCT_ALREADY_EXISTS("product_already_exists", "Product already exists", HttpStatus.BAD_REQUEST),
     ;
 
