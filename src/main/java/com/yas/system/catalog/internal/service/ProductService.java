@@ -6,6 +6,7 @@ import com.yas.system.catalog.internal.entity.Product;
 
 public interface ProductService {
     ProductResponse createProduct(ProductRequest request);
-    ProductResponse updateProduct(ProductRequest request);
+    ProductResponse updateProduct(ProductRequest request, Long productId);
     ProductResponse getById(Long id );
+    void deleteById(Long id);
 }
