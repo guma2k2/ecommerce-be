@@ -10,7 +10,7 @@ import java.util.Optional;
 
 
 @Repository
-public interface CategoryRepository extends JpaRepository<Category, Integer> {
+public interface CategoryRepository extends JpaRepository<Category, Long> {
 
 
 
@@ -19,7 +19,7 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
         from Category c 
         where c.name = :name and (c.id != :id or :id is null)
         """)
-    Optional<Category> checkExited(String name, Integer id);
+    Optional<Category> checkExited(String name, Long id);
 
 
     @Query("""
@@ -35,5 +35,5 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
         left join fetch c.children
         where c.id = :id 
     """)
-    Optional<Category> findByIdCustom(Integer id);
+    Optional<Category> findByIdCustom(Long id);
 }
