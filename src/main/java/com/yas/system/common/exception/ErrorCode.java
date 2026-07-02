@@ -18,6 +18,9 @@ public enum ErrorCode {
     INVALID_PRODUCT("invalid_product", "Invalid product data", HttpStatus.BAD_REQUEST),
     PRODUCT_NOT_FOUND("product_not_found", "Product not found", HttpStatus.NOT_FOUND),
     PRODUCT_ALREADY_EXISTS("product_already_exists", "Product already exists", HttpStatus.BAD_REQUEST),
+    INVALID_CATEGORY("invalid_category", "Invalid category data", HttpStatus.BAD_REQUEST),
+    CATEGORY_NOT_FOUND("category_not_found", "Category not found", HttpStatus.NOT_FOUND),
+    CATEGORY_ALREADY_EXISTS("category_already_exists", "Category already exists", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {
