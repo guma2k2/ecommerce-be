@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -33,18 +34,39 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void updateCategory(CategoryRequest categoryRequest, Long categoryId) {
+        validateUpdateCategoryRequest(categoryRequest, categoryId);
 
+        Category category = findCategoryById(categoryId);
+        Category parent = resolveParent(categoryRequest.parentId());
+        validateParent(categoryId, parent);
+
+        updateCategory(categoryRequest, category, parent);
+        categoryRepository.save(category);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Long categoryId) {
-        return null;
+        if (Objects.isNull(categoryId)) {
+            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+        }
+        Category category = categoryRepository.findByIdCustom(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        return toCategoryResponse(category);
     }
 
     @Override
+    @Transactional
     public void deleteCategory(Long categoryId) {
+        if (Objects.isNull(categoryId)) {
+            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+        }
+        Category category = findCategoryById(categoryId);
 
+        categoryRepository.delete(category);
     }
 
     private void validateCreateCategoryRequest(CategoryRequest categoryRequest) {
@@ -56,12 +78,25 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
+    private void validateUpdateCategoryRequest(CategoryRequest categoryRequest, Long categoryId) {
+        if (Objects.isNull(categoryId) || Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
+            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+        }
+        if (categoryRepository.checkExited(categoryRequest.name(), categoryId).isPresent()) {
+            throw new InvalidDataException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+        }
+    }
+
+    private Category findCategoryById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
+
     private Category resolveParent(Long parentId) {
         if (Objects.isNull(parentId)) {
             return null;
         }
-        return categoryRepository.findById(parentId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+        return findCategoryById(parentId);
     }
 
     private Category createCategory(CategoryRequest request, Category parent) {
@@ -69,6 +104,35 @@ public class CategoryServiceImpl implements CategoryService {
                 .name(request.name())
                 .parent(parent)
                 .build();
+    }
+
+    private void updateCategory(CategoryRequest request, Category category, Category parent) {
+        category.setName(request.name());
+        category.setParent(parent);
+    }
+
+    private void validateParent(Long categoryId, Category parent) {
+        Category currentParent = parent;
+        while (Objects.nonNull(currentParent)) {
+            if (categoryId.equals(currentParent.getId())) {
+                throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+            }
+            currentParent = currentParent.getParent();
+        }
+    }
+
+    private CategoryResponse toCategoryResponse(Category category) {
+        List<CategoryResponse> children = Objects.isNull(category.getChildren())
+                ? List.of()
+                : category.getChildren().stream()
+                .map(this::toCategoryResponse)
+                .toList();
+
+        return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                children
+        );
     }
 
     private boolean isBlank(String value) {
