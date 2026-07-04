@@ -1,7 +1,11 @@
 package com.yas.system.catalog.internal.service;
 
-import com.yas.system.catalog.internal.dto.request.BrandCreateRequest;
 
+import com.yas.system.catalog.internal.dto.request.BrandRequest;
+import com.yas.system.catalog.internal.dto.response.BrandResponse;
 public interface BrandService {
-    void createBrand(BrandCreateRequest request);
+    void createBrand(BrandRequest request);
+    void updateBrand(BrandRequest request, Long brandId);
+    void deleteBrandById(Long brandId);
+    BrandResponse getById(Long brandId);
 }
