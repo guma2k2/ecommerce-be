@@ -9,13 +9,13 @@ import java.util.Optional;
 
 
 @Repository
-public interface BrandRepository extends JpaRepository<Brand, Integer> {
+public interface BrandRepository extends JpaRepository<Brand, Long> {
 
     @Query("""
         select c 
         from Brand c 
         where c.name = :name and (c.id != :id or :id is null)
     """)
-    Optional<Brand> checkExited(String name, Integer id);
+    Optional<Brand> checkExited(String name, Long id);
 
 }
