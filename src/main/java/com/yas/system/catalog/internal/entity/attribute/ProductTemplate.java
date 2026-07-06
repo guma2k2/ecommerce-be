@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.entity.attribute;
 
-import com.yas.system.common.entity.BaseLongEntity;
+import com.yas.system.common.entity.BaseInteger;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -13,7 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductTemplate extends BaseLongEntity {
+public class ProductTemplate extends BaseInteger {
     @Column(nullable = false, unique = true)
     private String name;
 }
