@@ -24,6 +24,12 @@ public enum ErrorCode {
     INVALID_BRAND("invalid_brand", "Invalid brand data", HttpStatus.BAD_REQUEST),
     BRAND_NOT_FOUND("brand_not_found", "Brand not found", HttpStatus.NOT_FOUND),
     BRAND_ALREADY_EXISTS("brand_already_exists", "Brand already exists", HttpStatus.BAD_REQUEST),
+    INVALID_PRODUCT_ATTRIBUTE("invalid_product_attribute", "Invalid product attribute data", HttpStatus.BAD_REQUEST),
+    PRODUCT_ATTRIBUTE_NOT_FOUND("product_attribute_not_found", "Product attribute not found", HttpStatus.NOT_FOUND),
+    PRODUCT_ATTRIBUTE_ALREADY_EXISTS("product_attribute_already_exists", "Product attribute already exists", HttpStatus.BAD_REQUEST),
+    INVALID_PRODUCT_TEMPLATE("invalid_product_template", "Invalid product template data", HttpStatus.BAD_REQUEST),
+    PRODUCT_TEMPLATE_NOT_FOUND("product_template_not_found", "Product template not found", HttpStatus.NOT_FOUND),
+    PRODUCT_TEMPLATE_ALREADY_EXISTS("product_template_already_exists", "Product template already exists", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {
