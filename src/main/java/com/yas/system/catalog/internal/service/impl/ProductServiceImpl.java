@@ -8,6 +8,7 @@ import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.ProductOption;
 import com.yas.system.catalog.internal.entity.ProductVariant;
 import com.yas.system.catalog.internal.entity.VariantOptionValue;
+import com.yas.system.catalog.internal.helper.ProductHelper;
 import com.yas.system.catalog.internal.repository.ProductOptionRepository;
 import com.yas.system.catalog.internal.repository.ProductRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
@@ -41,13 +42,14 @@ public class ProductServiceImpl implements ProductService {
     ProductVariantRepository productVariantRepository;
     ProductOptionRepository productOptionRepository;
     VariantOptionValueRepository variantOptionValueRepository;
+    ProductHelper productHelper;
 
     @Override
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         validateProductRequest(request);
 
-        Product savedProduct = productRepository.save(request.toEntity());
+        Product savedProduct = productRepository.save(productHelper.createProduct(request));
         List<ProductOption> savedOptions = saveOptions(request, savedProduct);
         List<ProductVariant> savedVariants = saveVariants(request, savedProduct);
         List<VariantOptionValue> savedVariantOptionValues = saveVariantOptionValues(
@@ -66,7 +68,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        request.applyTo(product);
+        productHelper.updateProduct(request, product);
         Product savedProduct = productRepository.save(product);
 
         List<ProductOption> currentOptions = productOptionRepository.findByProductId(productId);
