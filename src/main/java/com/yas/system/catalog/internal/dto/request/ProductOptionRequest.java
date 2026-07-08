@@ -7,14 +7,14 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 
-import java.util.Arrays;
+import java.util.List;
 
 public record ProductOptionRequest (
         Long id,
         @NotBlank
         String name,
         @NotEmpty
-        String[] values,
+        List<String> values,
         @Min(1)
         @Max(3)
         int position
@@ -22,7 +22,7 @@ public record ProductOptionRequest (
     public ProductOption toEntity(Product product) {
         ProductOption option = ProductOption.builder()
                 .name(name)
-                .values(Arrays.asList(values))
+                .values(values)
                 .position(position)
                 .product(product)
                 .build();
@@ -32,7 +32,7 @@ public record ProductOptionRequest (
 
     public void applyTo(ProductOption option) {
         option.setName(name);
-        option.setValues(Arrays.asList(values));
+        option.setValues(values);
         option.setPosition(position);
     }
 }

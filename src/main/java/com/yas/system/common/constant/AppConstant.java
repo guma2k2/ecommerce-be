@@ -3,6 +3,7 @@ package com.yas.system.common.constant;
 public class AppConstant {
 
     public static final String BEARER  = "Bearer ";
+    public static final String PRODUCT_VARIANT_DEFAULT_TITLE = "Default Title";
 
     enum ConsoleType {
         ADMIN,

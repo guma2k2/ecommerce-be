@@ -3,6 +3,9 @@ package com.yas.system.catalog.internal.dto.request;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
 
 public record ProductRequest(
         @NotBlank
@@ -10,11 +13,16 @@ public record ProductRequest(
         String description,
         @NotBlank
         String slug,
+
+        @Valid
+        List<ProductAttributeValueRequest> attributes,
+
         @Valid
         @NotEmpty
-        ProductVariantRequest[] variants,
+        List<ProductVariantRequest> variants,
+
         @Valid
-        @NotEmpty
-        ProductOptionRequest[] options
+        @NotNull
+        List<ProductOptionRequest> options
 ) {
 }

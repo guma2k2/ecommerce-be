@@ -4,6 +4,7 @@ import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.ProductOption;
 import com.yas.system.catalog.internal.entity.ProductVariant;
 import com.yas.system.catalog.internal.entity.VariantOptionValue;
+import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;
 
 import java.util.List;
 
@@ -12,11 +13,13 @@ public record ProductResponse(
         String name,
         String description,
         String slug,
-        ProductOptionResponse[] options,
-        ProductVariantResponse[] variants
+        List<ProductAttributeValueResponse> attributes,
+        List<ProductOptionResponse> options,
+        List<ProductVariantResponse> variants
 ) {
     public static ProductResponse from(
             Product product,
+            List<ProductAttributeValue> attributes,
             List<ProductOption> options,
             List<ProductVariant> variants,
             List<VariantOptionValue> variantOptionValues
@@ -26,12 +29,15 @@ public record ProductResponse(
                 product.getName(),
                 product.getDescription(),
                 product.getSlug(),
+                attributes.stream()
+                        .map(ProductAttributeValueResponse::from)
+                        .toList(),
                 options.stream()
                         .map(ProductOptionResponse::from)
-                        .toArray(ProductOptionResponse[]::new),
+                        .toList(),
                 variants.stream()
                         .map(variant -> ProductVariantResponse.from(variant, variantOptionValues))
-                        .toArray(ProductVariantResponse[]::new)
+                        .toList()
         );
     }
 }
