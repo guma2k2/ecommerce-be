@@ -8,6 +8,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 public record ProductVariantRequest(
         Long id,
+        String title,
         String option1,
         String option2,
         String option3,
@@ -22,6 +23,7 @@ public record ProductVariantRequest(
     public ProductVariant toEntity(Product product) {
         return ProductVariant.builder()
                 .id(id)
+                .title(title)
                 .sku(sku)
                 .price(price)
                 .quantity(quantity)
@@ -30,6 +32,7 @@ public record ProductVariantRequest(
     }
 
     public void applyTo(ProductVariant variant) {
+        variant.setTitle(title);
         variant.setSku(sku);
         variant.setPrice(price);
         variant.setQuantity(quantity);
