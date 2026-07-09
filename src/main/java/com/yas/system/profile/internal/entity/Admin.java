@@ -1,6 +1,6 @@
 package com.yas.system.profile.internal.entity;
 
-import com.yas.system.common.entity.BaseEntity;
+import com.yas.system.common.entity.BaseUuidEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
@@ -12,5 +12,5 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Admin extends BaseEntity {
+public class Admin extends BaseUuidEntity {
 }
