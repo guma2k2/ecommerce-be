@@ -30,6 +30,8 @@ public enum ErrorCode {
     INVALID_PRODUCT_TEMPLATE("invalid_product_template", "Invalid product template data", HttpStatus.BAD_REQUEST),
     PRODUCT_TEMPLATE_NOT_FOUND("product_template_not_found", "Product template not found", HttpStatus.NOT_FOUND),
     PRODUCT_TEMPLATE_ALREADY_EXISTS("product_template_already_exists", "Product template already exists", HttpStatus.BAD_REQUEST),
+    INVALID_MEDIA_TYPE("invalid_media_type", "Invalid media type: %s", HttpStatus.BAD_REQUEST),
+    MEDIA_NOT_FOUND("media_not_found", "Media not found", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {

@@ -1,7 +1,7 @@
 package com.yas.system.auth.internal.entity;
 
 import com.yas.system.auth.internal.enums.OauthProvider;
-import com.yas.system.common.entity.BaseEntity;
+import com.yas.system.common.entity.BaseUuidEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,11 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public class User extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class User extends BaseUuidEntity {
 
     @Column(unique = true)
     private String email;
