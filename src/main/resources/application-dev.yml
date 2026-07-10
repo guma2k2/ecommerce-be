@@ -17,8 +17,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  cloudinary:
+    api:
+      name: ${CLOUDINARY_NAME}
+      secret: ${CLOUDINARY_SECRET}
+      key: ${CLOUDINARY_KEY}
 
 app:
+  upload:
+    location: cloudinary
   jwt:
     secret: ${JWT_SECRET}
     access-token-expiration-ms: 86400000
