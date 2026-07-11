@@ -2,12 +2,11 @@ package com.yas.system.media.internal.service.impl;
 
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
 import com.yas.system.media.internal.repository.MediaRepository;
-import com.yas.system.media.internal.service.MediaService;
+import com.yas.system.media.internal.service.UploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,7 +24,7 @@ import java.util.UUID;
 @ConditionalOnProperty(name = "app.upload.location", havingValue = "local", matchIfMissing = true)
 @Service
 @RequiredArgsConstructor
-public class LocalStorageServiceImpl implements MediaService {
+public class LocalStorageServiceImpl implements UploadService {
 
     private final MediaRepository mediaRepository;
 
@@ -33,7 +32,7 @@ public class LocalStorageServiceImpl implements MediaService {
     private String uploadDir;
 
     @Override
-    public MediaResponse upload(MultipartFile multipartFile, String type) {
+    public MediaResponse upload(MultipartFile multipartFile, String type, String name, String altText) {
         MediaType mediaType;
         if ("image".equalsIgnoreCase(type)) {
             mediaType = MediaType.IMAGE;
@@ -60,9 +59,29 @@ public class LocalStorageServiceImpl implements MediaService {
 
             String url = "/uploads/" + uniqueFilename;
 
+            String finalName = (name != null && !name.isBlank()) ? name : originalFilename;
+            if (finalName == null) {
+                finalName = "unknown";
+            }
+            String finalAltText = (altText != null && !altText.isBlank()) ? altText : finalName;
+
+            String fileType = "";
+            if (extension.startsWith(".")) {
+                fileType = extension.substring(1);
+            } else if (multipartFile.getContentType() != null) {
+                fileType = multipartFile.getContentType();
+            }
+            if (fileType.length() > 20) {
+                fileType = fileType.substring(0, 20);
+            }
+
             Media media = Media.builder()
+                    .name(finalName)
                     .url(url)
                     .type(mediaType)
+                    .size(multipartFile.getSize())
+                    .altText(finalAltText)
+                    .fileType(fileType)
                     .active(true)
                     .build();
 
@@ -71,18 +90,5 @@ public class LocalStorageServiceImpl implements MediaService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file locally", e);
         }
-    }
-
-    @Override
-    public MediaResponse getById(String id) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            throw new ResourceNotFoundException(ErrorCode.MEDIA_NOT_FOUND);
-        }
-        Media media = mediaRepository.findById(uuid)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEDIA_NOT_FOUND));
-        return MediaResponse.fromModel(media);
     }
 }
