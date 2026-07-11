@@ -3,12 +3,11 @@ package com.yas.system.media.internal.service.impl;
 import com.cloudinary.Cloudinary;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
 import com.yas.system.media.internal.repository.MediaRepository;
-import com.yas.system.media.internal.service.MediaService;
+import com.yas.system.media.internal.service.UploadService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,13 +23,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class CloudinaryStorageServiceImpl implements MediaService {
+public class CloudinaryStorageServiceImpl implements UploadService {
 
     Cloudinary cloudinary;
     MediaRepository mediaRepository;
 
     @Override
-    public MediaResponse upload(MultipartFile multipartFile, String type) {
+    public MediaResponse upload(MultipartFile multipartFile, String type, String name, String altText) {
         MediaType mediaType;
         if ("image".equalsIgnoreCase(type)) {
             mediaType = MediaType.IMAGE;
@@ -51,9 +50,30 @@ public class CloudinaryStorageServiceImpl implements MediaService {
             Object durationObj = uploadResult.get("duration");
             String duration = durationObj != null ? durationObj.toString() : null;
 
+            String originalFilename = multipartFile.getOriginalFilename();
+            String finalName = (name != null && !name.isBlank()) ? name : originalFilename;
+            if (finalName == null) {
+                finalName = "unknown";
+            }
+            String finalAltText = (altText != null && !altText.isBlank()) ? altText : finalName;
+
+            String fileType = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileType = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
+            } else if (multipartFile.getContentType() != null) {
+                fileType = multipartFile.getContentType();
+            }
+            if (fileType.length() > 20) {
+                fileType = fileType.substring(0, 20);
+            }
+
             Media media = Media.builder()
+                    .name(finalName)
                     .url(url)
                     .type(mediaType)
+                    .size(multipartFile.getSize())
+                    .altText(finalAltText)
+                    .fileType(fileType)
                     .duration(duration)
                     .active(true)
                     .build();
@@ -63,18 +83,5 @@ public class CloudinaryStorageServiceImpl implements MediaService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file to Cloudinary", e);
         }
-    }
-
-    @Override
-    public MediaResponse getById(String id) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            throw new ResourceNotFoundException(ErrorCode.MEDIA_NOT_FOUND);
-        }
-        Media media = mediaRepository.findById(uuid)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEDIA_NOT_FOUND));
-        return MediaResponse.fromModel(media);
     }
 }

@@ -1,8 +1,10 @@
 package com.yas.system.media.controller;
 
 import com.yas.system.common.response.ApiResponse;
+import com.yas.system.common.response.PageResponse;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.service.MediaService;
+import com.yas.system.media.internal.service.UploadService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,15 +17,27 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class MediaController {
 
+    UploadService uploadService;
     MediaService mediaService;
 
     @PostMapping()
     public ApiResponse<MediaResponse> upload (
             @RequestParam("file") MultipartFile multipartFile,
-            @RequestParam("type") String type // video or image
+            @RequestParam("type") String type, // video or image
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "altText", required = false) String altText
     ) {
-        return ApiResponse.success(mediaService.upload(multipartFile, type));
+        return ApiResponse.success(uploadService.upload(multipartFile, type, name, altText));
     }
+
+    @GetMapping("/page")
+    public ApiResponse<PageResponse<MediaResponse>> getPageMedia (
+            @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize
+    ) {
+        return ApiResponse.success(mediaService.getPage(pageNumber, pageSize));
+    }
+
 
     @GetMapping("/{mediaId}")
     public ApiResponse<MediaResponse> getMediaById (
