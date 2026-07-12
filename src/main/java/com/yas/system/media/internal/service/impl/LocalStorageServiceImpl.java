@@ -32,7 +32,7 @@ public class LocalStorageServiceImpl implements UploadService {
     private String uploadDir;
 
     @Override
-    public MediaResponse upload(MultipartFile multipartFile, String type, String name, String altText) {
+    public MediaResponse upload(MultipartFile multipartFile, String type, String altText) {
         MediaType mediaType;
         if ("image".equalsIgnoreCase(type)) {
             mediaType = MediaType.IMAGE;
@@ -59,8 +59,8 @@ public class LocalStorageServiceImpl implements UploadService {
 
             String url = "/uploads/" + uniqueFilename;
 
-            String finalName = (name != null && !name.isBlank()) ? name : originalFilename;
-            if (finalName == null) {
+            String finalName = originalFilename;
+            if (finalName == null || finalName.isBlank()) {
                 finalName = "unknown";
             }
             String finalAltText = (altText != null && !altText.isBlank()) ? altText : finalName;
