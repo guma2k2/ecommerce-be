@@ -25,6 +25,11 @@ public class Product extends BaseLongEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    private String metaTitle;
+    private String metaKeyword;
+    private String metaDescription;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;

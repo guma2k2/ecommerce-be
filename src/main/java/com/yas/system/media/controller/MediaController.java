@@ -24,10 +24,9 @@ public class MediaController {
     public ApiResponse<MediaResponse> upload (
             @RequestParam("file") MultipartFile multipartFile,
             @RequestParam("type") String type, // video or image
-            @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "altText", required = false) String altText
     ) {
-        return ApiResponse.success(uploadService.upload(multipartFile, type, name, altText));
+        return ApiResponse.success(uploadService.upload(multipartFile, type, altText));
     }
 
     @GetMapping("/page")

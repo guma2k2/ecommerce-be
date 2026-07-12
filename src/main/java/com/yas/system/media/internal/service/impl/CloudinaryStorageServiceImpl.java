@@ -29,7 +29,7 @@ public class CloudinaryStorageServiceImpl implements UploadService {
     MediaRepository mediaRepository;
 
     @Override
-    public MediaResponse upload(MultipartFile multipartFile, String type, String name, String altText) {
+    public MediaResponse upload(MultipartFile multipartFile, String type, String altText) {
         MediaType mediaType;
         if ("image".equalsIgnoreCase(type)) {
             mediaType = MediaType.IMAGE;
@@ -51,8 +51,8 @@ public class CloudinaryStorageServiceImpl implements UploadService {
             String duration = durationObj != null ? durationObj.toString() : null;
 
             String originalFilename = multipartFile.getOriginalFilename();
-            String finalName = (name != null && !name.isBlank()) ? name : originalFilename;
-            if (finalName == null) {
+            String finalName = originalFilename;
+            if (finalName == null || finalName.isBlank()) {
                 finalName = "unknown";
             }
             String finalAltText = (altText != null && !altText.isBlank()) ? altText : finalName;
