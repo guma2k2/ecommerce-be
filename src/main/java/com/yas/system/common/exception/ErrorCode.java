@@ -32,6 +32,9 @@ public enum ErrorCode {
     PRODUCT_TEMPLATE_ALREADY_EXISTS("product_template_already_exists", "Product template already exists", HttpStatus.BAD_REQUEST),
     INVALID_MEDIA_TYPE("invalid_media_type", "Invalid media type: %s", HttpStatus.BAD_REQUEST),
     MEDIA_NOT_FOUND("media_not_found", "Media not found", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND("role_not_found", "Role not found", HttpStatus.NOT_FOUND),
+    ROLE_ALREADY_EXISTS("role_already_exists", "Role already exists", HttpStatus.BAD_REQUEST),
+    PERMISSION_NOT_FOUND("permission_not_found", "Permission not found", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {
