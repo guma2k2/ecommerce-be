@@ -5,12 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
-@Table(name = "tbl_admin")
+@Table(name = "tbl_customer")
 @Entity
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class Admin extends BaseUuidEntity {
+public class CustomerProfile extends BaseUuidEntity {
 }
