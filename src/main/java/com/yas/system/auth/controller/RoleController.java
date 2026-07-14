@@ -1,5 +1,6 @@
 package com.yas.system.auth.controller;
 
+import com.yas.system.auth.internal.dto.request.AssignPermissionRequest;
 import com.yas.system.auth.internal.dto.request.RoleRequest;
 import com.yas.system.auth.internal.dto.response.RoleResponse;
 import com.yas.system.auth.internal.service.RoleService;
@@ -43,5 +44,14 @@ public class RoleController {
             @Valid @RequestBody RoleRequest roleRequest
     ) {
         return ApiResponse.success(roleService.updateRole(id, roleRequest));
+    }
+
+    @PatchMapping("/{id}/permissions")
+    public ApiResponse<Void> assignPermissions(
+            @PathVariable("id") Integer id,
+            @Valid @RequestBody AssignPermissionRequest request
+    ) {
+        roleService.assignPermissions(id, request);
+        return ApiResponse.successWithNoContent();
     }
 }
