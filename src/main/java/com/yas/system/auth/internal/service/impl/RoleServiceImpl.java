@@ -1,5 +1,6 @@
 package com.yas.system.auth.internal.service.impl;
 
+import com.yas.system.auth.internal.dto.request.AssignPermissionRequest;
 import com.yas.system.auth.internal.dto.request.RoleRequest;
 import com.yas.system.auth.internal.dto.response.RoleResponse;
 import com.yas.system.auth.internal.entity.Role;
@@ -18,7 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import com.yas.system.auth.internal.entity.Permission;
+import com.yas.system.auth.internal.repository.PermissionRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +30,7 @@ import java.util.List;
 public class RoleServiceImpl implements RoleService {
 
     RoleRepository roleRepository;
+    PermissionRepository permissionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -51,7 +56,10 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponse getRoleDetail(Integer id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
-        return RoleResponse.fromModel(role);
+        List<Integer> permissionIds = role.getPermissions().stream()
+                .map(Permission::getId)
+                .toList();
+        return RoleResponse.fromModelAndPermission(role, permissionIds);
     }
 
     @Override
@@ -81,5 +89,20 @@ public class RoleServiceImpl implements RoleService {
         role.setAllowGetAll(roleRequest.isAllowListAll());
         Role savedRole = roleRepository.save(role);
         return RoleResponse.fromModel(savedRole);
+    }
+
+    @Override
+    @Transactional
+    public void assignPermissions(Integer roleId, AssignPermissionRequest request) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
+
+        List<Permission> permissions = permissionRepository.findAllById(request.permissionIds());
+        if (permissions.size() != request.permissionIds().size()) {
+            throw new ResourceNotFoundException(ErrorCode.PERMISSION_NOT_FOUND);
+        }
+
+        role.setPermissions(new HashSet<>(permissions));
+        roleRepository.save(role);
     }
 }
