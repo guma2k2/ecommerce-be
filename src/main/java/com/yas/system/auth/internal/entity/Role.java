@@ -22,7 +22,7 @@ public class Role extends BaseIntegerEntity {
 
     private boolean isAllowGetAll;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),
