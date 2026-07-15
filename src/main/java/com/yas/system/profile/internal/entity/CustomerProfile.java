@@ -1,8 +1,8 @@
 package com.yas.system.profile.internal.entity;
 
 import com.yas.system.common.entity.BaseUuidEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.yas.system.profile.internal.enums.Gender;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Table(name = "tbl_customer")
@@ -11,4 +11,12 @@ import lombok.*;
 @Getter
 @Setter
 public class CustomerProfile extends BaseUuidEntity {
+
+    @Column(nullable = false, unique = true)
+    private String userId;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    private String language;
 }
