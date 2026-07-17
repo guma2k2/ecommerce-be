@@ -54,4 +54,10 @@ public class RoleController {
         roleService.assignPermissions(id, request);
         return ApiResponse.successWithNoContent();
     }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> deleteRole(@PathVariable("id") Integer id) {
+        roleService.deleteRole(id);
+        return ApiResponse.successWithNoContent();
+    }
 }

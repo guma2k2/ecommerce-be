@@ -34,6 +34,7 @@ public enum ErrorCode {
     MEDIA_NOT_FOUND("media_not_found", "Media not found", HttpStatus.NOT_FOUND),
     ROLE_NOT_FOUND("role_not_found", "Role not found", HttpStatus.NOT_FOUND),
     ROLE_ALREADY_EXISTS("role_already_exists", "Role already exists", HttpStatus.BAD_REQUEST),
+    ROLE_CANNOT_BE_DELETED("role_cannot_be_deleted", "Role cannot be deleted", HttpStatus.BAD_REQUEST),
     PERMISSION_NOT_FOUND("permission_not_found", "Permission not found", HttpStatus.NOT_FOUND),
     ;
 
