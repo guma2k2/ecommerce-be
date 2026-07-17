@@ -105,4 +105,18 @@ public class RoleServiceImpl implements RoleService {
         role.setPermissions(new HashSet<>(permissions));
         roleRepository.save(role);
     }
+
+    @Override
+    @Transactional
+    public void deleteRole(Integer id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
+
+        if ("SUPER_ADMIN".equalsIgnoreCase(role.getName())) {
+            throw new InvalidDataException(ErrorCode.ROLE_CANNOT_BE_DELETED);
+        }
+
+        roleRepository.deleteUserRolesByRoleId(id);
+        roleRepository.delete(role);
+    }
 }
