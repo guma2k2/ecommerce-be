@@ -13,6 +13,9 @@ public record ProductResponse(
         String name,
         String description,
         String slug,
+        String metaTitle,
+        String metaKeyword,
+        String metaDescription,
         List<ProductAttributeValueResponse> attributes,
         List<ProductOptionResponse> options,
         List<ProductVariantResponse> variants
@@ -29,6 +32,9 @@ public record ProductResponse(
                 product.getName(),
                 product.getDescription(),
                 product.getSlug(),
+                product.getMetaTitle(),
+                product.getMetaKeyword(),
+                product.getMetaDescription(),
                 attributes.stream()
                         .map(ProductAttributeValueResponse::from)
                         .toList(),

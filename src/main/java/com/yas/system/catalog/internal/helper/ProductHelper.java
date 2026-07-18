@@ -12,6 +12,9 @@ public class ProductHelper {
                 .name(request.name())
                 .description(request.description())
                 .slug(request.slug())
+                .metaTitle(request.metaTitle())
+                .metaKeyword(request.metaKeyword())
+                .metaDescription(request.metaDescription())
                 .build();
     }
 
@@ -19,5 +22,8 @@ public class ProductHelper {
         product.setName(request.name());
         product.setDescription(request.description());
         product.setSlug(request.slug());
+        product.setMetaTitle(request.metaTitle());
+        product.setMetaKeyword(request.metaKeyword());
+        product.setMetaDescription(request.metaDescription());
     }
 }

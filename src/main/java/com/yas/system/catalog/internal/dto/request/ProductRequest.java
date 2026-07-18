@@ -13,6 +13,9 @@ public record ProductRequest(
         String description,
         @NotBlank
         String slug,
+        String metaTitle,
+        String metaKeyword,
+        String metaDescription,
 
         @Valid
         List<ProductAttributeValueRequest> attributes,
