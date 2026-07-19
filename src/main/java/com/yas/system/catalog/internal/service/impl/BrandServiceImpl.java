@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.yas.system.common.util.StringUtils.isBlank;
 import java.util.Objects;
 
 @Service
@@ -59,7 +60,7 @@ public class BrandServiceImpl implements BrandService {
         if (Objects.isNull(brandId)) {
             throw new InvalidDataException(ErrorCode.INVALID_BRAND);
         }
-        return toBrandResponse(findBrandById(brandId));
+        return BrandResponse.from(findBrandById(brandId));
     }
 
     private void validateCreateBrandRequest(BrandRequest request) {
@@ -85,15 +86,5 @@ public class BrandServiceImpl implements BrandService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
     }
 
-    private BrandResponse toBrandResponse(Brand brand) {
-        return new BrandResponse(
-                brand.getId(),
-                brand.getName(),
-                brand.getDescription()
-        );
-    }
 
-    private boolean isBlank(String value) {
-        return Objects.isNull(value) || value.isBlank();
-    }
 }

@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.yas.system.common.util.StringUtils.isBlank;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,7 +56,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findByIdCustom(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        return toCategoryResponse(category);
+        return CategoryResponse.from(category);
     }
 
     @Override
@@ -121,21 +122,4 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private CategoryResponse toCategoryResponse(Category category) {
-        List<CategoryResponse> children = Objects.isNull(category.getChildren())
-                ? List.of()
-                : category.getChildren().stream()
-                .map(this::toCategoryResponse)
-                .toList();
-
-        return new CategoryResponse(
-                category.getId(),
-                category.getName(),
-                children
-        );
-    }
-
-    private boolean isBlank(String value) {
-        return Objects.isNull(value) || value.isBlank();
-    }
 }

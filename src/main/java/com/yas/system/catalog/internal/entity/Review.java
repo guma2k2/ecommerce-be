@@ -25,10 +25,4 @@ public class Review extends BaseLongEntity {
 
     private String customerId;
 
-    @Column(name = "created_at")
-    protected LocalDateTime createdAt;
-
-
-    @Column(name = "updated_at")
-    protected LocalDateTime updatedAt;
 }
