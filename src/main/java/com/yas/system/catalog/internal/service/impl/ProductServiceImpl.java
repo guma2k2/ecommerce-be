@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.yas.system.common.util.StringUtils.isBlank;
 import static com.yas.system.common.constant.AppConstant.PRODUCT_VARIANT_DEFAULT_TITLE;
 
 @Service
@@ -329,7 +330,7 @@ public class ProductServiceImpl implements ProductService {
                         || option.values().isEmpty()
                         || option.position() < 1
                         || option.position() > 3
-                        || option.values().stream().anyMatch(this::isBlank));
+                        || option.values().stream().anyMatch(value -> isBlank(value)));
         if (invalidOption || hasDuplicatePositions(request)) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
@@ -517,7 +518,4 @@ public class ProductServiceImpl implements ProductService {
         productVariantRepository.deleteAll(deletedVariants);
     }
 
-    private boolean isBlank(String value) {
-        return Objects.isNull(value) || value.isBlank();
-    }
 }

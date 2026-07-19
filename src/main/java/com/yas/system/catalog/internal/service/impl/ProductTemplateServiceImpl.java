@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.yas.system.common.util.StringUtils.isBlank;
 import java.util.Objects;
 
 @Service
@@ -59,7 +60,7 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
         if (Objects.isNull(productTemplateId)) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
-        return toProductTemplateResponse(findProductTemplateById(productTemplateId));
+        return ProductTemplateResponse.from(findProductTemplateById(productTemplateId));
     }
 
     private void validateCreateProductTemplateRequest(ProductTemplateRequest request) {
@@ -85,14 +86,5 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_TEMPLATE_NOT_FOUND));
     }
 
-    private ProductTemplateResponse toProductTemplateResponse(ProductTemplate productTemplate) {
-        return new ProductTemplateResponse(
-                productTemplate.getId(),
-                productTemplate.getName()
-        );
-    }
 
-    private boolean isBlank(String value) {
-        return Objects.isNull(value) || value.isBlank();
-    }
 }

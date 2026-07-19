@@ -6,6 +6,7 @@ import com.yas.system.catalog.internal.entity.ProductVariant;
 import com.yas.system.catalog.internal.entity.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public record ProductResponse(
@@ -18,7 +19,9 @@ public record ProductResponse(
         String metaDescription,
         List<ProductAttributeValueResponse> attributes,
         List<ProductOptionResponse> options,
-        List<ProductVariantResponse> variants
+        List<ProductVariantResponse> variants,
+        String createdAt,
+        String updatedAt
 ) {
     public static ProductResponse from(
             Product product,
@@ -43,7 +46,9 @@ public record ProductResponse(
                         .toList(),
                 variants.stream()
                         .map(variant -> ProductVariantResponse.from(variant, variantOptionValues))
-                        .toList()
+                        .toList(),
+                product.getCreatedAt() != null ? product.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
+                product.getUpdatedAt() != null ? product.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
         );
     }
 }
