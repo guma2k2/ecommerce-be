@@ -53,7 +53,6 @@ public class GoogleOauthServiceImpl implements GoogleOauthService {
     @Override
     public String buildAuthorizationUrl(String state) {
         var google = appProperties.oauth2().google();
-        System.out.println("google: " + google.clientId());
 
         return UriComponentsBuilder
                 .fromUriString("https://accounts.google.com/o/oauth2/v2/auth")

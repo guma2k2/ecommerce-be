@@ -1,4 +1,4 @@
-package com.yas.system.auth.internal.enums;
+package com.yas.system.auth.internal.enumeration;
 
 public enum ApiModule {
     CATALOG,

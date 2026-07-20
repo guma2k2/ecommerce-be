@@ -18,5 +18,8 @@ public record SignUpRequest(
         String password,
 
         @NotBlank(message = ParamError.FIELD_NAME)
-        String name
+        String name,
+
+        @NotBlank(message = ParamError.FIELD_NAME)
+        String language
 ) {}

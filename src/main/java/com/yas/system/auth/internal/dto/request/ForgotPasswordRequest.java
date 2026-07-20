@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 
 public record ForgotPasswordRequest(
         @Email(message = ParamError.INVALID_EMAIL)
-        String email
+        String email,
+        String console
 ) {
 }

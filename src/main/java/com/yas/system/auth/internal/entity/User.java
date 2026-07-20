@@ -1,6 +1,6 @@
 package com.yas.system.auth.internal.entity;
 
-import com.yas.system.auth.internal.enums.OauthProvider;
+import com.yas.system.auth.internal.enumeration.OauthProvider;
 import com.yas.system.common.entity.BaseUuidEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "tbl_user")
@@ -25,14 +24,18 @@ public class User extends BaseUuidEntity {
 
     private String password;
 
-    private String name;
+//    private String name;
 
     private boolean isVerified;
+
+    @Column(length = 50)
+    private String language;
 
     @Enumerated(EnumType.STRING)
     private OauthProvider provider;
 
-    private boolean isEnabledMfa;
+    @Column(columnDefinition = "boolean default false")
+    private boolean isEnabledMfa = false;
 
     private String mfaSecret;
 
