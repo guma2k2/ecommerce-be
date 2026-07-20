@@ -24,6 +24,10 @@ spring:
       key: ${CLOUDINARY_KEY}
 
 app:
+  name: ecommerce-dev
+  clientUrl:
+    backoffice: http://localhost:5173
+    storefront: http://localhost:3000
   upload:
     location: cloudinary
   jwt:

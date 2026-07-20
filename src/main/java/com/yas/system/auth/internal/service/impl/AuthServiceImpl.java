@@ -2,8 +2,10 @@ package com.yas.system.auth.internal.service.impl;
 
 import com.yas.system.auth.internal.dto.request.*;
 import com.yas.system.auth.internal.dto.response.*;
+import com.yas.system.auth.internal.entity.CustomerProfile;
 import com.yas.system.auth.internal.entity.User;
-import com.yas.system.auth.internal.enums.OauthProvider;
+import com.yas.system.auth.internal.enumeration.OauthProvider;
+import com.yas.system.auth.internal.helper.CustomerProfileHelper;
 import com.yas.system.auth.internal.helper.UserHelper;
 import com.yas.system.auth.internal.mfa.MfaService;
 import com.yas.system.auth.internal.redis.entity.PasswordResetToken;
@@ -12,6 +14,7 @@ import com.yas.system.auth.internal.redis.entity.VerifyEmail;
 import com.yas.system.auth.internal.redis.service.PasswordResetTokenService;
 import com.yas.system.auth.internal.redis.service.RefreshTokenService;
 import com.yas.system.auth.internal.redis.service.VerifyEmailService;
+import com.yas.system.auth.internal.repository.CustomerProfileRepository;
 import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.service.AuthService;
 import com.yas.system.auth.internal.service.FacebookOauthService;
@@ -20,6 +23,7 @@ import com.yas.system.auth.internal.service.GoogleOauthService;
 import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.auth.internal.util.CookieUtil;
 import com.yas.system.common.config.AppProperties;
+import com.yas.system.common.constant.AppConstant;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
@@ -68,10 +72,10 @@ public class AuthServiceImpl implements AuthService {
     FacebookOauthService facebookOauthService;
     ApplicationEventPublisher eventPublisher;
     MfaService mfaService;
-    String ISSUER = "me";
-    String CLIENT_URL = "http://localhost:5173";
     PasswordResetTokenService passwordResetTokenService;
-    private final PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
+    CustomerProfileRepository customerProfileRepository;
+    CustomerProfileHelper customerProfileHelper;
 
     @Override
     @Transactional
@@ -88,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
         return new AuthenticationResponse(accessToken);
     }
 
+    /* Use for sign up customer account */
     @Override
     @Transactional
     public void signUp(SignUpRequest signUpRequest) {
@@ -97,6 +102,10 @@ public class AuthServiceImpl implements AuthService {
         }
         User user = userHelper.createUser(signUpRequest);
         User savedUser = userRepository.save(user);
+
+        // Save customer's profile
+        CustomerProfile customerProfile = customerProfileHelper.createCustomerProfile(signUpRequest, savedUser);
+        customerProfileRepository.save(customerProfile);
 
         // generate code
         String verifyCode = RandomUtil.generatesOtp();
@@ -108,7 +117,8 @@ public class AuthServiceImpl implements AuthService {
 
         verifyEmailService.saveVerifyEmail(verifyEmail);
         // send email
-        VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(signUpRequest.email(),
+        VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(
+                signUpRequest.email(),
                 signUpRequest.name(),
                 verifyCode,
                 Constant.VERIFY_CODE_TTL_MINUTES
@@ -117,7 +127,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void signOut(String  refreshToken) {
+    public void signOut(String refreshToken) {
         // Delete refresh token from redis and cookie
         refreshTokenService.deleteRefreshTokenByToken(refreshToken);
         CookieUtil.deleteCookie(Constant.REFRESH_COOKIE_HEADER,false);
@@ -148,7 +158,7 @@ public class AuthServiceImpl implements AuthService {
 
         verifyEmailService.saveVerifyEmail(verifyEmail);
         VerifyEmailEvent verifyEmailEvent = new VerifyEmailEvent(sendVerificationRequest.email(),
-                user.getName(),
+                user.getEmail(),
                 verifyCode,
                 Constant.VERIFY_CODE_TTL_MINUTES
         );
@@ -259,7 +269,8 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         String mfaSecret = mfaService.generateMfaSecret(authUser.email());
-        String url = mfaService.generateQrCodeUri(authUser.email(), mfaSecret, ISSUER);
+        String issuer = appProperties.name();
+        String url = mfaService.generateQrCodeUri(authUser.email(), mfaSecret, issuer);
         user.setMfaSecret(mfaSecret);
         userRepository.save(user);
         return url;
@@ -308,10 +319,13 @@ public class AuthServiceImpl implements AuthService {
                 .isUsed(false)
                 .build();
         passwordResetTokenService.save(passwordResetToken);
-        String resetLink = CLIENT_URL + "?token=" + token;
-        ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getEmail(), user.getName(), resetLink, Constant.VERIFY_CODE_TTL_MINUTES);
+        String clientUrl = switch (forgotPasswordRequest.console()) {
+            case AppConstant.ConsoleType.BACKOFFICE -> appProperties.clientUrl().backoffice();
+            default -> appProperties.clientUrl().storefront();
+        };
+        String resetLink = clientUrl + "?token=" + token;
+        ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getEmail(), user.getEmail(), resetLink, Constant.VERIFY_CODE_TTL_MINUTES);
         eventPublisher.publishEvent(resetPasswordEvent);
-
     }
 
     @Override

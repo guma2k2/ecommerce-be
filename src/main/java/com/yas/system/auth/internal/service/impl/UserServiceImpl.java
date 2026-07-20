@@ -4,7 +4,7 @@ import com.yas.system.auth.internal.dto.request.UserRequest;
 import com.yas.system.auth.internal.dto.response.UserResponse;
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.entity.Role;
-import com.yas.system.auth.internal.enums.OauthProvider;
+import com.yas.system.auth.internal.enumeration.OauthProvider;
 import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.repository.RoleRepository;
 import com.yas.system.auth.internal.service.UserService;
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setEmail(userRequest.email());
         user.setPassword(passwordEncoder.encode(userRequest.password()));
-        user.setName(userRequest.name());
+//        user.setName(userRequest.name());
         user.setVerified(true);
         user.setProvider(OauthProvider.LOCAL);
         user.setRoles(new HashSet<>(roles));
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND);
         }
 
-        user.setName(userRequest.name());
+//        user.setName(userRequest.name());
         user.setRoles(new HashSet<>(roles));
 
         User savedUser = userRepository.save(user);

@@ -7,10 +7,17 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
+        String name,
         Jwt jwt,
         OAuth2 oauth2,
-        String frontendErrorUrl
+        String frontendErrorUrl,
+        ClientUrl clientUrl
 ) {
+
+    public record ClientUrl(
+      String backoffice,
+      String storefront
+    ){}
 
     public record Jwt(
             String secret,

@@ -1,6 +1,6 @@
 package com.yas.system.auth.internal.dto.response;
 
-import com.yas.system.auth.internal.enums.OauthProvider;
+import com.yas.system.auth.internal.enumeration.OauthProvider;
 
 public record OauthUserInfo(
         String id,

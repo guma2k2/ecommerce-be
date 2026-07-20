@@ -1,7 +1,7 @@
 package com.yas.system.auth.internal.entity;
 
-import com.yas.system.auth.internal.enums.ApiMethod;
-import com.yas.system.auth.internal.enums.ApiModule;
+import com.yas.system.auth.internal.enumeration.ApiMethod;
+import com.yas.system.auth.internal.enumeration.ApiModule;
 import com.yas.system.common.entity.BaseIntegerEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

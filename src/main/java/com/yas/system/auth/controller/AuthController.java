@@ -20,7 +20,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/sign-in")
+    @PostMapping("/public/sign-in")
     public ApiResponse<AuthenticationResponse> signIn(
             @Valid @RequestBody SignInRequest signInRequest,
             HttpServletResponse response
@@ -29,7 +29,7 @@ public class AuthController {
         return ApiResponse.success(authenticationResponse);
     }
 
-    @PostMapping("/sign-up")
+    @PostMapping("/public/sign-up")
     public ApiResponse<String> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
         authService.signUp(signUpRequest);
         return ApiResponse.successWithNoContent();
@@ -98,6 +98,16 @@ public class AuthController {
         return ApiResponse.success(accessToken);
     }
 
+
+    @GetMapping("/public/login-in-social/{registrationId}")
+    public ApiResponse<String> loginGoogle(
+            @PathVariable("registrationId") String registrationId,
+            HttpServletResponse response
+    ) {
+        String url = authService.startOauth2Login(registrationId, response);
+        return ApiResponse.success(url);
+    }
+
     @PostMapping("/outbound")
     public ApiResponse<AuthenticationResponse> outboundAuthentication(
             @CookieValue(value = "oauth2_state", required = false) String savedState,
@@ -109,22 +119,13 @@ public class AuthController {
         return ApiResponse.success(signInResponse);
     }
 
-    @GetMapping("/login-in-social/{registrationId}")
-    public ApiResponse<String> loginGoogle(
-            @PathVariable("registrationId") String registrationId,
-            HttpServletResponse response
-    ) {
-        String url = authService.startOauth2Login(registrationId, response);
-        return ApiResponse.success(url);
-    }
-
-    @PostMapping("/forgot-password")
+    @PostMapping("/public/forgot-password")
     public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
         authService.forgotPassword(forgotPasswordRequest);
         return ApiResponse.successWithNoContent();
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/public/reset-password")
     public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
         authService.resetPasswordRequest(resetPasswordRequest);
         return ApiResponse.successWithNoContent();

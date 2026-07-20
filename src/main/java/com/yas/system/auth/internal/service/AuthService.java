@@ -4,7 +4,6 @@ import com.yas.system.auth.internal.dto.request.*;
 import com.yas.system.auth.internal.dto.response.AuthenticationResponse;
 import com.yas.system.common.security.annotation.AuthUser;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 
 public interface AuthService {
     AuthenticationResponse signIn(SignInRequest signInRequest, HttpServletResponse response);
