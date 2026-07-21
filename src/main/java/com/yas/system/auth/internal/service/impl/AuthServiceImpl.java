@@ -198,6 +198,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthenticationResponse outboundAuthenticate(
             OutboundAuthenticationRequest outboundAuthenticationRequest,
             String savedState,
@@ -248,7 +249,12 @@ public class AuthServiceImpl implements AuthService {
 
         User activeUser = userRepository.findByEmail(oauthUserInfo.email()).orElseGet(() -> {
             User user = userHelper.createUser(oauthUserInfo);
-            return userRepository.save(user);
+            User savedUser = userRepository.save(user);
+
+            CustomerProfile customerProfile = customerProfileHelper.createCustomerProfile(oauthUserInfo, savedUser);
+            customerProfileRepository.save(customerProfile);
+
+            return savedUser;
         });
 
         if (!activeUser.getProvider().equals(provider)) {
@@ -319,10 +325,9 @@ public class AuthServiceImpl implements AuthService {
                 .isUsed(false)
                 .build();
         passwordResetTokenService.save(passwordResetToken);
-        String clientUrl = switch (forgotPasswordRequest.console()) {
-            case AppConstant.ConsoleType.BACKOFFICE -> appProperties.clientUrl().backoffice();
-            default -> appProperties.clientUrl().storefront();
-        };
+        String clientUrl = AppConstant.ConsoleType.BACKOFFICE.name().equalsIgnoreCase(forgotPasswordRequest.console())
+                ? appProperties.clientUrl().backoffice()
+                : appProperties.clientUrl().storefront();
         String resetLink = clientUrl + "?token=" + token;
         ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getEmail(), user.getEmail(), resetLink, Constant.VERIFY_CODE_TTL_MINUTES);
         eventPublisher.publishEvent(resetPasswordEvent);

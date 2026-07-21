@@ -20,7 +20,6 @@ public class UserHelper {
         User newUser = new User();
         newUser.setEmail(signUpRequest.email());
         newUser.setPassword(passwordEncoder.encode(signUpRequest.password()));
-//        newUser.setName(signUpRequest.name());
         newUser.setLanguage(signUpRequest.language());
         newUser.setVerified(false);
         newUser.setProvider(OauthProvider.LOCAL);
@@ -32,7 +31,6 @@ public class UserHelper {
         newUser.setEmail(oauthUserInfo.email());
         newUser.setPassword(null);
         newUser.setLanguage(DEFAULT_LANGUAGE);
-//        newUser.setName(oauthUserInfo.name());
         newUser.setVerified(true);
         newUser.setProvider(oauthUserInfo.provider());
         return newUser;
