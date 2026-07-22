@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
     AuthenticationResponse signIn(SignInRequest signInRequest, HttpServletResponse response);
     void signUp(SignUpRequest signUpRequest);
-    void signOut(String refreshToken);
+    void signOut(String refreshToken, HttpServletResponse response);
     void verifyEmail(VerifyRequest  verifyRequest);
     void sendVerificationCode(SendVerificationRequest sendVerificationRequest);
     void verifyMfaCode(AuthUser authUser, VerifyRequest verifyRequest);

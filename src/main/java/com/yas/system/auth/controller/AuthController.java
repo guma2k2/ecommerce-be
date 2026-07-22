@@ -30,7 +30,7 @@ public class AuthController {
     }
 
     @PostMapping("/public/sign-up")
-    public ApiResponse<String> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
+    public ApiResponse<Void> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
         authService.signUp(signUpRequest);
         return ApiResponse.successWithNoContent();
     }
@@ -84,8 +84,11 @@ public class AuthController {
     }
 
     @PostMapping("/sign-out")
-    public ApiResponse<Void> signOut(@CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken) {
-        authService.signOut(cookieToken);
+    public ApiResponse<Void> signOut(
+            @CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken,
+            HttpServletResponse response
+    ) {
+        authService.signOut(cookieToken, response);
         return ApiResponse.successWithNoContent();
     }
 
@@ -99,9 +102,9 @@ public class AuthController {
     }
 
 
-    @GetMapping("/public/login-in-social/{registrationId}")
+    @GetMapping("/public/login-in-social/{registration_id}")
     public ApiResponse<String> loginGoogle(
-            @PathVariable("registrationId") String registrationId,
+            @PathVariable("registration_id") String registrationId,
             HttpServletResponse response
     ) {
         String url = authService.startOauth2Login(registrationId, response);
@@ -130,6 +133,5 @@ public class AuthController {
         authService.resetPasswordRequest(resetPasswordRequest);
         return ApiResponse.successWithNoContent();
     }
-
 
 }
