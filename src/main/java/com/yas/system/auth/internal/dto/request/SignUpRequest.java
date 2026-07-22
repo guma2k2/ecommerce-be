@@ -1,6 +1,8 @@
 package com.yas.system.auth.internal.dto.request;
 
+import com.yas.system.common.enumeration.Language;
 import com.yas.system.common.response.ParamError;
+import com.yas.system.common.validation.annotation.ValidateEnum;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -21,5 +23,6 @@ public record SignUpRequest(
         String name,
 
         @NotBlank(message = ParamError.FIELD_NAME)
+        @ValidateEnum(enumClass = Language.class, message = "Language must be one of: EN, VI")
         String language
 ) {}
