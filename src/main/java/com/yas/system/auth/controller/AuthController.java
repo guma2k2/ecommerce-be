@@ -102,19 +102,19 @@ public class AuthController {
     }
 
 
-    @GetMapping("/public/login-in-social/{registration_id}")
-    public ApiResponse<String> loginGoogle(
-            @PathVariable("registration_id") String registrationId,
+    @GetMapping("/public/social-login/{registrationId}")
+    public ApiResponse<String> startSocialLogin(
+            @PathVariable("registrationId") String registrationId,
             HttpServletResponse response
     ) {
         String url = authService.startOauth2Login(registrationId, response);
         return ApiResponse.success(url);
     }
 
-    @PostMapping("/outbound")
+    @PostMapping("/public/outbound")
     public ApiResponse<AuthenticationResponse> outboundAuthentication(
             @CookieValue(value = "oauth2_state", required = false) String savedState,
-            @RequestBody OutboundAuthenticationRequest outboundAuthenticationRequest,
+            @Valid @RequestBody OutboundAuthenticationRequest outboundAuthenticationRequest,
             HttpServletResponse response
     ) {
         AuthenticationResponse signInResponse = authService
