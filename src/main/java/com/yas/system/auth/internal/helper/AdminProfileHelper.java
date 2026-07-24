@@ -1,5 +1,6 @@
 package com.yas.system.auth.internal.helper;
 
+import com.yas.system.auth.internal.dto.request.AdminProfileRequest;
 import com.yas.system.auth.internal.dto.request.SignUpRequest;
 import com.yas.system.auth.internal.entity.AdminProfile;
 import com.yas.system.auth.internal.entity.CustomerProfile;
@@ -13,6 +14,12 @@ public class AdminProfileHelper {
         AdminProfile adminProfile = new AdminProfile();
         adminProfile.setUser(user);
         adminProfile.setName(name);
+        return adminProfile;
+    }
+
+    public AdminProfile updateAdminProfile(AdminProfile adminProfile, AdminProfileRequest request) {
+        adminProfile.setName(request.name());
+        adminProfile.setAvatar(request.avatar());
         return adminProfile;
     }
 }

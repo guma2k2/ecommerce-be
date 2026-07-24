@@ -9,6 +9,6 @@ public record SignInRequest(
         @Email(message = ParamError.INVALID_EMAIL)
         String email,
 
-        @NotBlank
+        @NotBlank(message = ParamError.FIELD_NAME)
         String password
 ) {}
