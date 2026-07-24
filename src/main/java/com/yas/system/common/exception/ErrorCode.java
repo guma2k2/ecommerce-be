@@ -36,6 +36,7 @@ public enum ErrorCode {
     ROLE_ALREADY_EXISTS("role_already_exists", "Role already exists", HttpStatus.BAD_REQUEST),
     ROLE_CANNOT_BE_DELETED("role_cannot_be_deleted", "Role cannot be deleted", HttpStatus.BAD_REQUEST),
     PERMISSION_NOT_FOUND("permission_not_found", "Permission not found", HttpStatus.NOT_FOUND),
+    ADMIN_PROFILE_NOT_FOUND("admin_profile_not_found", "Admin profile not found", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {
