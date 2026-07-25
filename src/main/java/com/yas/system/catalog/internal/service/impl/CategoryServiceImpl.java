@@ -8,9 +8,13 @@ import com.yas.system.catalog.internal.service.CategoryService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +40,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public void updateCategory(CategoryRequest categoryRequest, Long categoryId) {
+    public void updateCategory(CategoryRequest categoryRequest, Integer categoryId) {
         validateUpdateCategoryRequest(categoryRequest, categoryId);
 
         Category category = findCategoryById(categoryId);
@@ -49,7 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public CategoryResponse getCategoryById(Long categoryId) {
+    public CategoryResponse getCategoryById(Integer categoryId) {
         if (Objects.isNull(categoryId)) {
             throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
         }
@@ -60,8 +64,27 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PageResponse<CategoryResponse> getCategoryPage(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Category> categoryPage = categoryRepository.findAll(pageable);
+
+        List<CategoryResponse> content = categoryPage.getContent().stream()
+                .map(CategoryResponse::from)
+                .toList();
+
+        return new PageResponse<>(
+                categoryPage.getNumber(),
+                categoryPage.getSize(),
+                categoryPage.getTotalPages(),
+                categoryPage.getTotalElements(),
+                content
+        );
+    }
+
+    @Override
     @Transactional
-    public void deleteCategory(Long categoryId) {
+    public void deleteCategory(Integer categoryId) {
         if (Objects.isNull(categoryId)) {
             throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
         }
@@ -79,7 +102,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private void validateUpdateCategoryRequest(CategoryRequest categoryRequest, Long categoryId) {
+    private void validateUpdateCategoryRequest(CategoryRequest categoryRequest, Integer categoryId) {
         if (Objects.isNull(categoryId) || Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
         }
@@ -88,12 +111,12 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private Category findCategoryById(Long categoryId) {
+    private Category findCategoryById(Integer categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    private Category resolveParent(Long parentId) {
+    private Category resolveParent(Integer parentId) {
         if (Objects.isNull(parentId)) {
             return null;
         }
@@ -112,7 +135,7 @@ public class CategoryServiceImpl implements CategoryService {
         category.setParent(parent);
     }
 
-    private void validateParent(Long categoryId, Category parent) {
+    private void validateParent(Integer categoryId, Category parent) {
         Category currentParent = parent;
         while (Objects.nonNull(currentParent)) {
             if (categoryId.equals(currentParent.getId())) {

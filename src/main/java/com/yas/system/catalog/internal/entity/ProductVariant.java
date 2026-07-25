@@ -3,6 +3,7 @@ package com.yas.system.catalog.internal.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class ProductVariant {
     private Long id;
     private String title;
     private String sku;
-    private Double price;
+    private BigDecimal price;
     private Integer quantity;
     private String status;
 

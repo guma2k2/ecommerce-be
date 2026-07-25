@@ -5,15 +5,20 @@ import com.yas.system.catalog.internal.dto.request.ProductOptionRequest;
 import com.yas.system.catalog.internal.dto.request.ProductRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
+import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.entity.Product;
+import com.yas.system.catalog.internal.entity.ProductCategory;
+import com.yas.system.catalog.internal.entity.ProductCategoryId;
 import com.yas.system.catalog.internal.entity.ProductOption;
 import com.yas.system.catalog.internal.entity.ProductVariant;
 import com.yas.system.catalog.internal.entity.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;
 import com.yas.system.catalog.internal.helper.ProductHelper;
+import com.yas.system.catalog.internal.repository.CategoryRepository;
 import com.yas.system.catalog.internal.repository.ProductAttributeRepository;
 import com.yas.system.catalog.internal.repository.ProductAttributeValueRepository;
+import com.yas.system.catalog.internal.repository.ProductCategoryRepository;
 import com.yas.system.catalog.internal.repository.ProductOptionRepository;
 import com.yas.system.catalog.internal.repository.ProductRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
@@ -29,9 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -52,6 +61,8 @@ public class ProductServiceImpl implements ProductService {
     VariantOptionValueRepository variantOptionValueRepository;
     ProductAttributeRepository productAttributeRepository;
     ProductAttributeValueRepository productAttributeValueRepository;
+    CategoryRepository categoryRepository;
+    ProductCategoryRepository productCategoryRepository;
     ProductHelper productHelper;
 
     @Override
@@ -59,7 +70,12 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse createProduct(ProductRequest request) {
         validateProductRequest(request);
 
+        Category category = resolveCategory(request.categoryId());
         Product savedProduct = productRepository.save(productHelper.createProduct(request));
+
+        List<Category> categoryHierarchy = collectCategoryAndParents(category);
+        saveProductCategories(savedProduct, categoryHierarchy);
+
         List<ProductAttributeValue> savedAttributes = saveProductAttributeValues(request, savedProduct);
         List<ProductOption> savedOptions = saveOptions(request, savedProduct);
         List<ProductVariant> savedVariants = saveVariants(request, savedProduct);
@@ -77,10 +93,15 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(ProductRequest request, Long productId) {
         validateProductRequest(request, productId);
 
+        Category category = resolveCategory(request.categoryId());
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         productHelper.updateProduct(request, product);
         Product savedProduct = productRepository.save(product);
+
+        productCategoryRepository.deleteByProductId(productId);
+        List<Category> categoryHierarchy = collectCategoryAndParents(category);
+        saveProductCategories(savedProduct, categoryHierarchy);
 
         List<ProductAttributeValue> currentAttributes = productAttributeValueRepository.findByProductId(productId);
         List<ProductOption> currentOptions = productOptionRepository.findByProductId(productId);
@@ -128,11 +149,49 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        productCategoryRepository.deleteByProductId(id);
         productAttributeValueRepository.deleteByProductId(id);
         variantOptionValueRepository.deleteByProductId(id);
         productOptionRepository.deleteByProductId(id);
         productVariantRepository.deleteByProductId(id);
         productRepository.delete(product);
+    }
+
+    private Category resolveCategory(Integer categoryId) {
+        if (Objects.isNull(categoryId)) {
+            return null;
+        }
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    private List<Category> collectCategoryAndParents(Category category) {
+        if (Objects.isNull(category)) {
+            return List.of();
+        }
+        List<Category> categories = new ArrayList<>();
+        Category current = category;
+        Set<Integer> visitedIds = new HashSet<>();
+        while (Objects.nonNull(current) && !visitedIds.contains(current.getId())) {
+            categories.add(current);
+            visitedIds.add(current.getId());
+            current = current.getParent();
+        }
+        return categories;
+    }
+
+    private List<ProductCategory> saveProductCategories(Product product, List<Category> categories) {
+        if (Objects.isNull(categories) || categories.isEmpty()) {
+            return List.of();
+        }
+        List<ProductCategory> productCategories = categories.stream()
+                .map(category -> ProductCategory.builder()
+                        .id(new ProductCategoryId(product.getId(), category.getId()))
+                        .product(product)
+                        .category(category)
+                        .build())
+                .toList();
+        return productCategoryRepository.saveAll(productCategories);
     }
 
     private List<ProductAttributeValue> saveProductAttributeValues(ProductRequest request, Product product) {
@@ -344,7 +403,7 @@ public class ProductServiceImpl implements ProductService {
                 .anyMatch(variant -> Objects.isNull(variant)
                         || isBlank(variant.sku())
                         || Objects.isNull(variant.price())
-                        || variant.price() < 0
+                        || variant.price().compareTo(BigDecimal.ZERO) < 0
                         || variant.quantity() < 0);
         if (invalidVariant) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);

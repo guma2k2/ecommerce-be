@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
+import java.math.BigDecimal;
+
 public record ProductVariantRequest(
         Long id,
         String title,
@@ -16,7 +18,7 @@ public record ProductVariantRequest(
         String sku,
         @NotNull
         @PositiveOrZero
-        Double price,
+        BigDecimal price,
         @PositiveOrZero
         int quantity
 ) {

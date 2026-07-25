@@ -27,3 +27,5 @@ public class ProductHelper {
         product.setMetaDescription(request.metaDescription());
     }
 }
+
+

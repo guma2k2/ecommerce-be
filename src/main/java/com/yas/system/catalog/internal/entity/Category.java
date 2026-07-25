@@ -1,10 +1,12 @@
 package com.yas.system.catalog.internal.entity;
 
+import com.yas.system.common.entity.BaseIntegerEntity;
 import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "tbl_category")
@@ -13,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Category extends BaseLongEntity {
+public class Category extends BaseIntegerEntity {
 
     private String name;
 
@@ -24,5 +26,6 @@ public class Category extends BaseLongEntity {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
     private List<Category> children;
 
-
+    @OneToMany(mappedBy = "category")
+    private Set<ProductCategory> productCategories;
 }

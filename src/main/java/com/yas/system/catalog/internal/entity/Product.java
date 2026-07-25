@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "tbl_product")
@@ -25,20 +26,21 @@ public class Product extends BaseLongEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(length = 60)
     private String metaTitle;
-    private String metaKeyword;
-    private String metaDescription;
 
+    private String metaKeyword;
+
+    @Column(length = 160)
+    private String metaDescription;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
     private List<ProductVariant> productVariants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product")
+    private Set<ProductCategory> productCategories;
 }
