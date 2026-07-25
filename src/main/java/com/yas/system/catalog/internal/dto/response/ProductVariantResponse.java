@@ -3,6 +3,7 @@ package com.yas.system.catalog.internal.dto.response;
 import com.yas.system.catalog.internal.entity.ProductVariant;
 import com.yas.system.catalog.internal.entity.VariantOptionValue;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record ProductVariantResponse(
@@ -11,7 +12,7 @@ public record ProductVariantResponse(
         String option2,
         String option3,
         String sku,
-        Double price,
+        BigDecimal price,
         int quantity
 ) {
     public static ProductVariantResponse from(ProductVariant variant, List<VariantOptionValue> optionValues) {
