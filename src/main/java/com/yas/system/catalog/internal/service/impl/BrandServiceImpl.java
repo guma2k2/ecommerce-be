@@ -9,14 +9,20 @@ import com.yas.system.catalog.internal.service.BrandService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.yas.system.common.util.StringUtils.isBlank;
+import java.util.List;
 import java.util.Objects;
+
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +68,26 @@ public class BrandServiceImpl implements BrandService {
         }
         return BrandResponse.from(findBrandById(brandId));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<BrandResponse> getBrandPage(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Brand> brandPage = brandRepository.findAll(pageable);
+
+        List<BrandResponse> content = brandPage.getContent().stream()
+                .map(BrandResponse::from)
+                .toList();
+
+        return new PageResponse<>(
+                brandPage.getNumber(),
+                brandPage.getSize(),
+                brandPage.getTotalPages(),
+                brandPage.getTotalElements(),
+                content
+        );
+    }
+
 
     private void validateCreateBrandRequest(BrandRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {

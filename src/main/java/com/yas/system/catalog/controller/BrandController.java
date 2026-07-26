@@ -4,6 +4,7 @@ import com.yas.system.catalog.internal.dto.request.BrandRequest;
 import com.yas.system.catalog.internal.dto.response.BrandResponse;
 import com.yas.system.catalog.internal.service.BrandService;
 import com.yas.system.common.response.ApiResponse;
+import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -38,9 +39,18 @@ public class BrandController {
         return ApiResponse.success(brandService.getById(brandId));
     }
 
+    @GetMapping("/page")
+    public ApiResponse<PageResponse<BrandResponse>> getBrandPage(
+            @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize
+    ) {
+        return ApiResponse.success(brandService.getBrandPage(pageNumber, pageSize));
+    }
+
     @DeleteMapping("/{brandId}")
     public ApiResponse<Void> deleteBrand(@PathVariable Long brandId) {
         brandService.deleteBrandById(brandId);
         return ApiResponse.successWithNoContent();
     }
 }
+

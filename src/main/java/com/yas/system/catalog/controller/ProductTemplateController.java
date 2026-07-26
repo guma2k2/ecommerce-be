@@ -4,6 +4,7 @@ import com.yas.system.catalog.internal.dto.request.ProductTemplateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
 import com.yas.system.catalog.internal.service.ProductTemplateService;
 import com.yas.system.common.response.ApiResponse;
+import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -38,9 +39,18 @@ public class ProductTemplateController {
         return ApiResponse.success(productTemplateService.getById(productTemplateId));
     }
 
+    @GetMapping("/page")
+    public ApiResponse<PageResponse<ProductTemplateResponse>> getProductTemplatePage(
+            @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize
+    ) {
+        return ApiResponse.success(productTemplateService.getProductTemplatePage(pageNumber, pageSize));
+    }
+
     @DeleteMapping("/{productTemplateId}")
     public ApiResponse<Void> deleteProductTemplate(@PathVariable Integer productTemplateId) {
         productTemplateService.deleteProductTemplateById(productTemplateId);
         return ApiResponse.successWithNoContent();
     }
 }
+

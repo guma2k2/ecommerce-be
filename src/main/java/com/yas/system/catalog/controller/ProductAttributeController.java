@@ -4,6 +4,7 @@ import com.yas.system.catalog.internal.dto.request.ProductAttributeRequest;
 import com.yas.system.catalog.internal.dto.response.ProductAttributeResponse;
 import com.yas.system.catalog.internal.service.ProductAttributeService;
 import com.yas.system.common.response.ApiResponse;
+import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -38,9 +39,18 @@ public class ProductAttributeController {
         return ApiResponse.success(productAttributeService.getById(productAttributeId));
     }
 
+    @GetMapping("/page")
+    public ApiResponse<PageResponse<ProductAttributeResponse>> getProductAttributePage(
+            @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize
+    ) {
+        return ApiResponse.success(productAttributeService.getProductAttributePage(pageNumber, pageSize));
+    }
+
     @DeleteMapping("/{productAttributeId}")
     public ApiResponse<Void> deleteProductAttribute(@PathVariable Long productAttributeId) {
         productAttributeService.deleteProductAttributeById(productAttributeId);
         return ApiResponse.successWithNoContent();
     }
 }
+
