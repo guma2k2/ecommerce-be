@@ -9,14 +9,20 @@ import com.yas.system.catalog.internal.service.ProductAttributeService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.yas.system.common.util.StringUtils.isBlank;
+import java.util.List;
 import java.util.Objects;
+
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +68,26 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
         }
         return ProductAttributeResponse.from(findProductAttributeById(productAttributeId));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProductAttributeResponse> getProductAttributePage(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<ProductAttribute> productAttributePage = productAttributeRepository.findAll(pageable);
+
+        List<ProductAttributeResponse> content = productAttributePage.getContent().stream()
+                .map(ProductAttributeResponse::from)
+                .toList();
+
+        return new PageResponse<>(
+                productAttributePage.getNumber(),
+                productAttributePage.getSize(),
+                productAttributePage.getTotalPages(),
+                productAttributePage.getTotalElements(),
+                content
+        );
+    }
+
 
     private void validateCreateProductAttributeRequest(ProductAttributeRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {

@@ -9,14 +9,20 @@ import com.yas.system.catalog.internal.service.ProductTemplateService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.yas.system.common.util.StringUtils.isBlank;
+import java.util.List;
 import java.util.Objects;
+
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +68,26 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
         }
         return ProductTemplateResponse.from(findProductTemplateById(productTemplateId));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProductTemplateResponse> getProductTemplatePage(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<ProductTemplate> productTemplatePage = productTemplateRepository.findAll(pageable);
+
+        List<ProductTemplateResponse> content = productTemplatePage.getContent().stream()
+                .map(ProductTemplateResponse::from)
+                .toList();
+
+        return new PageResponse<>(
+                productTemplatePage.getNumber(),
+                productTemplatePage.getSize(),
+                productTemplatePage.getTotalPages(),
+                productTemplatePage.getTotalElements(),
+                content
+        );
+    }
+
 
     private void validateCreateProductTemplateRequest(ProductTemplateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
