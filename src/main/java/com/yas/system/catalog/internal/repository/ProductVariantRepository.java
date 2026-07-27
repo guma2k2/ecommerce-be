@@ -13,17 +13,6 @@ import java.util.Optional;
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Long> {
 
-
-    @Query("""
-        select pv
-        from ProductVariant pv 
-        join fetch pv.product p
-        join fetch p.category 
-        join fetch p.brand
-        where pv.id = :id 
-    """)
-    Optional<ProductVariant> findByIdCustom(Long id);
-
     List<ProductVariant> findByProductId(Long productId);
 
     @Modifying

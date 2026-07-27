@@ -8,7 +8,7 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@Table(name = "tbl_admin")
+@Table(name = "tbl_admin_profile")
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
