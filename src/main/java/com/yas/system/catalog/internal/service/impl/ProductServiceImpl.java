@@ -5,6 +5,7 @@ import com.yas.system.catalog.internal.dto.request.ProductOptionRequest;
 import com.yas.system.catalog.internal.dto.request.ProductRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
+import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.ProductCategory;
@@ -15,6 +16,7 @@ import com.yas.system.catalog.internal.entity.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;
 import com.yas.system.catalog.internal.helper.ProductHelper;
+import com.yas.system.catalog.internal.repository.BrandRepository;
 import com.yas.system.catalog.internal.repository.CategoryRepository;
 import com.yas.system.catalog.internal.repository.ProductAttributeRepository;
 import com.yas.system.catalog.internal.repository.ProductAttributeValueRepository;
@@ -62,6 +64,7 @@ public class ProductServiceImpl implements ProductService {
     ProductAttributeRepository productAttributeRepository;
     ProductAttributeValueRepository productAttributeValueRepository;
     CategoryRepository categoryRepository;
+    BrandRepository brandRepository;
     ProductCategoryRepository productCategoryRepository;
     ProductHelper productHelper;
 
@@ -71,7 +74,8 @@ public class ProductServiceImpl implements ProductService {
         validateProductRequest(request);
 
         Category category = resolveCategory(request.categoryId());
-        Product savedProduct = productRepository.save(productHelper.createProduct(request));
+        Brand brand = resolveBrand(request.brandId());
+        Product savedProduct = productRepository.save(productHelper.createProduct(request, brand));
 
         List<Category> categoryHierarchy = collectCategoryAndParents(category);
         saveProductCategories(savedProduct, categoryHierarchy);
@@ -94,9 +98,10 @@ public class ProductServiceImpl implements ProductService {
         validateProductRequest(request, productId);
 
         Category category = resolveCategory(request.categoryId());
+        Brand brand = resolveBrand(request.brandId());
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        productHelper.updateProduct(request, product);
+        productHelper.updateProduct(request, product, brand);
         Product savedProduct = productRepository.save(product);
 
         productCategoryRepository.deleteByProductId(productId);
@@ -163,6 +168,14 @@ public class ProductServiceImpl implements ProductService {
         }
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    private Brand resolveBrand(Long brandId) {
+        if (Objects.isNull(brandId)) {
+            return null;
+        }
+        return brandRepository.findById(brandId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
     }
 
     private List<Category> collectCategoryAndParents(Category category) {

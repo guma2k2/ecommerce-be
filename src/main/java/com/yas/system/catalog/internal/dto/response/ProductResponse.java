@@ -17,6 +17,7 @@ public record ProductResponse(
         String metaTitle,
         String metaKeyword,
         String metaDescription,
+        BrandResponse brand,
         List<ProductAttributeValueResponse> attributes,
         List<ProductOptionResponse> options,
         List<ProductVariantResponse> variants,
@@ -38,6 +39,7 @@ public record ProductResponse(
                 product.getMetaTitle(),
                 product.getMetaKeyword(),
                 product.getMetaDescription(),
+                product.getBrand() != null ? BrandResponse.from(product.getBrand()) : null,
                 attributes.stream()
                         .map(ProductAttributeValueResponse::from)
                         .toList(),

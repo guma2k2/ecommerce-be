@@ -17,6 +17,7 @@ public record ProductRequest(
         String metaKeyword,
         String metaDescription,
         Integer categoryId,
+        Long brandId,
 
         @Valid
         List<ProductAttributeValueRequest> attributes,

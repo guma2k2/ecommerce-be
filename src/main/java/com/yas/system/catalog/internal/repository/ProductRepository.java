@@ -18,13 +18,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     boolean existsBySlugAndIdNot(String slug, Long id);
 
-    @Query("""
-        select p 
-        from Product p
-        join fetch p.category 
-        join fetch p.brand
-        left join fetch p.productVariants
-        where p.id = :id
-    """)
-    Optional<Product> findByIdCustom(Long id);
 }
