@@ -3,6 +3,8 @@ package com.yas.system.common.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.yas.system.common.security.annotation.ActiveUser;
+import com.yas.system.common.security.annotation.AuthUser;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -11,11 +13,18 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenAPIConfig {
+
+    static {
+        SpringDocUtils.getConfig()
+                .addAnnotationsToIgnore(ActiveUser.class)
+                .addRequestWrapperToIgnore(AuthUser.class);
+    }
 
     @Bean
     public ObjectMapper objectMapper() {

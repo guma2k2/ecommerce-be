@@ -8,7 +8,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 
-public record ProductVariantRequest(
+public record ProductVariantUpdateRequest(
         Long id,
         String title,
         String option1,

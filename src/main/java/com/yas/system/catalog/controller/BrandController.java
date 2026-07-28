@@ -1,6 +1,7 @@
 package com.yas.system.catalog.controller;
 
-import com.yas.system.catalog.internal.dto.request.BrandRequest;
+import com.yas.system.catalog.internal.dto.request.BrandCreateRequest;
+import com.yas.system.catalog.internal.dto.request.BrandUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.BrandResponse;
 import com.yas.system.catalog.internal.service.BrandService;
 import com.yas.system.common.response.ApiResponse;
@@ -20,14 +21,14 @@ public class BrandController {
     BrandService brandService;
 
     @PostMapping()
-    public ApiResponse<Void> createBrand(@RequestBody @Valid BrandRequest request) {
+    public ApiResponse<Void> createBrand(@RequestBody @Valid BrandCreateRequest request) {
         brandService.createBrand(request);
         return ApiResponse.successWithNoContent();
     }
 
     @PutMapping("/{brandId}")
     public ApiResponse<Void> updateBrand(
-            @RequestBody @Valid BrandRequest request,
+            @RequestBody @Valid BrandUpdateRequest request,
             @PathVariable Long brandId
     ) {
         brandService.updateBrand(request, brandId);

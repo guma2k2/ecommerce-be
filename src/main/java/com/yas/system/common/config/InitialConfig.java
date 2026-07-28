@@ -30,10 +30,10 @@ public class InitialConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Role superAdminRole = roleRepository.findByName("SUPER_ADMIN")
+        Role superAdminRole = roleRepository.findByName("ROLE_SUPERADMIN")
                 .orElseGet(() -> {
                     Role role = new Role();
-                    role.setName("SUPER_ADMIN");
+                    role.setName("ROLE_SUPERADMIN");
                     role.setAllowGetAll(true);
                     return roleRepository.save(role);
                 });

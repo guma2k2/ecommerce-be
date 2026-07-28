@@ -1,6 +1,7 @@
 package com.yas.system.catalog.controller;
 
-import com.yas.system.catalog.internal.dto.request.ProductTemplateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductTemplateCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductTemplateUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
 import com.yas.system.catalog.internal.service.ProductTemplateService;
 import com.yas.system.common.response.ApiResponse;
@@ -20,14 +21,14 @@ public class ProductTemplateController {
     ProductTemplateService productTemplateService;
 
     @PostMapping()
-    public ApiResponse<Void> createProductTemplate(@RequestBody @Valid ProductTemplateRequest request) {
+    public ApiResponse<Void> createProductTemplate(@RequestBody @Valid ProductTemplateCreateRequest request) {
         productTemplateService.createProductTemplate(request);
         return ApiResponse.successWithNoContent();
     }
 
     @PutMapping("/{productTemplateId}")
     public ApiResponse<Void> updateProductTemplate(
-            @RequestBody @Valid ProductTemplateRequest request,
+            @RequestBody @Valid ProductTemplateUpdateRequest request,
             @PathVariable Integer productTemplateId
     ) {
         productTemplateService.updateProductTemplate(request, productTemplateId);

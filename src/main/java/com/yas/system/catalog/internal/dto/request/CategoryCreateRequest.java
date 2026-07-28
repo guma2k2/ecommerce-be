@@ -1,6 +1,9 @@
 package com.yas.system.catalog.internal.dto.request;
 
-public record CategoryRequest(
+import jakarta.validation.constraints.NotBlank;
+
+public record CategoryCreateRequest(
+        @NotBlank
         String name,
         Integer parentId
 ) {

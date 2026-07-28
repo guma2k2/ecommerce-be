@@ -13,6 +13,14 @@ import java.util.Set;
 
 @Entity
 @Table(name = "tbl_user")
+@NamedEntityGraph(
+        name = "User.roles",
+        attributeNodes = @NamedAttributeNode(value = "roles", subgraph = "role.permissions"),
+        subgraphs = @NamedSubgraph(
+                name = "role.permissions",
+                attributeNodes = @NamedAttributeNode("permissions")
+        )
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

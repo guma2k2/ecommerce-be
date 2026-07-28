@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.service.impl;
 
-import com.yas.system.catalog.internal.dto.request.ProductAttributeRequest;
+import com.yas.system.catalog.internal.dto.request.ProductAttributeCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductAttributeUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductAttributeResponse;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.helper.ProductAttributeHelper;
@@ -34,14 +35,14 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
 
     @Override
     @Transactional
-    public void createProductAttribute(ProductAttributeRequest request) {
+    public void createProductAttribute(ProductAttributeCreateRequest request) {
         validateCreateProductAttributeRequest(request);
         productAttributeRepository.save(productAttributeHelper.createProductAttribute(request));
     }
 
     @Override
     @Transactional
-    public void updateProductAttribute(ProductAttributeRequest request, Long productAttributeId) {
+    public void updateProductAttribute(ProductAttributeUpdateRequest request, Long productAttributeId) {
         validateUpdateProductAttributeRequest(request, productAttributeId);
 
         ProductAttribute productAttribute = findProductAttributeById(productAttributeId);
@@ -89,7 +90,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
     }
 
 
-    private void validateCreateProductAttributeRequest(ProductAttributeRequest request) {
+    private void validateCreateProductAttributeRequest(ProductAttributeCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
         }
@@ -98,7 +99,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
         }
     }
 
-    private void validateUpdateProductAttributeRequest(ProductAttributeRequest request, Long productAttributeId) {
+    private void validateUpdateProductAttributeRequest(ProductAttributeUpdateRequest request, Long productAttributeId) {
         if (Objects.isNull(productAttributeId) || Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
         }
