@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.service.impl;
 
-import com.yas.system.catalog.internal.dto.request.ProductTemplateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductTemplateCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductTemplateUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
 import com.yas.system.catalog.internal.entity.attribute.ProductTemplate;
 import com.yas.system.catalog.internal.helper.ProductTemplateHelper;
@@ -34,14 +35,14 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
 
     @Override
     @Transactional
-    public void createProductTemplate(ProductTemplateRequest request) {
+    public void createProductTemplate(ProductTemplateCreateRequest request) {
         validateCreateProductTemplateRequest(request);
         productTemplateRepository.save(productTemplateHelper.createProductTemplate(request));
     }
 
     @Override
     @Transactional
-    public void updateProductTemplate(ProductTemplateRequest request, Integer productTemplateId) {
+    public void updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId) {
         validateUpdateProductTemplateRequest(request, productTemplateId);
 
         ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
@@ -89,7 +90,7 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
     }
 
 
-    private void validateCreateProductTemplateRequest(ProductTemplateRequest request) {
+    private void validateCreateProductTemplateRequest(ProductTemplateCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
@@ -98,7 +99,7 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
         }
     }
 
-    private void validateUpdateProductTemplateRequest(ProductTemplateRequest request, Integer productTemplateId) {
+    private void validateUpdateProductTemplateRequest(ProductTemplateUpdateRequest request, Integer productTemplateId) {
         if (Objects.isNull(productTemplateId) || Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }

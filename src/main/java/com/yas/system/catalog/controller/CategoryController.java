@@ -1,6 +1,7 @@
 package com.yas.system.catalog.controller;
 
-import com.yas.system.catalog.internal.dto.request.CategoryRequest;
+import com.yas.system.catalog.internal.dto.request.CategoryCreateRequest;
+import com.yas.system.catalog.internal.dto.request.CategoryUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.CategoryResponse;
 import com.yas.system.catalog.internal.service.CategoryService;
 import com.yas.system.common.response.ApiResponse;
@@ -20,14 +21,14 @@ public class CategoryController {
     CategoryService categoryService;
 
     @PostMapping()
-    public ApiResponse<Void> createCategory(@RequestBody @Valid CategoryRequest request) {
+    public ApiResponse<Void> createCategory(@RequestBody @Valid CategoryCreateRequest request) {
         categoryService.createCategory(request);
         return ApiResponse.successWithNoContent();
     }
 
     @PutMapping("/{categoryId}")
     public ApiResponse<Void> updateCategory(
-            @RequestBody @Valid CategoryRequest request,
+            @RequestBody @Valid CategoryUpdateRequest request,
             @PathVariable Integer categoryId
     ) {
         categoryService.updateCategory(request, categoryId);

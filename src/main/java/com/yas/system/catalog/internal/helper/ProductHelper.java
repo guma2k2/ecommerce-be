@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.helper;
 
-import com.yas.system.catalog.internal.dto.request.ProductRequest;
+import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.entity.Product;
 import org.springframework.stereotype.Component;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductHelper {
 
-    public Product createProduct(ProductRequest request, Brand brand) {
+    public Product createProduct(ProductCreateRequest request, Brand brand) {
         return Product.builder()
                 .name(request.name())
                 .description(request.description())
@@ -20,7 +21,7 @@ public class ProductHelper {
                 .build();
     }
 
-    public void updateProduct(ProductRequest request, Product product, Brand brand) {
+    public void updateProduct(ProductUpdateRequest request, Product product, Brand brand) {
         product.setName(request.name());
         product.setDescription(request.description());
         product.setSlug(request.slug());

@@ -2,8 +2,9 @@ package com.yas.system.catalog.internal.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record ProductTemplateRequest(
+public record BrandCreateRequest(
         @NotBlank
-        String name
+        String name,
+        String description
 ) {
 }

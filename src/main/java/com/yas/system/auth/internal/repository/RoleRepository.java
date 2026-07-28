@@ -1,6 +1,7 @@
 package com.yas.system.auth.internal.repository;
 
 import com.yas.system.auth.internal.entity.Role;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,7 +12,14 @@ import java.util.Optional;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
+
+    @EntityGraph(value = "Role.permissions")
     Optional<Role> findByName(String name);
+
+    @Override
+    @EntityGraph(value = "Role.permissions")
+    Optional<Role> findById(Integer id);
+
     boolean existsByName(String name);
 
     @Modifying

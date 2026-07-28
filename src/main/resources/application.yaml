@@ -21,8 +21,8 @@ spring:
             enable: true
           auth: true
     host: smtp.gmail.com
-    username: thuanngo3072002@gmail.com
-    password: sfnh ducy gsaw fjkb
+    username: ${SMTP_USER}
+    password: ${SMTP_PASS}
     port: 587
 
 # Swagger config

@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.service.impl;
 
-import com.yas.system.catalog.internal.dto.request.BrandRequest;
+import com.yas.system.catalog.internal.dto.request.BrandCreateRequest;
+import com.yas.system.catalog.internal.dto.request.BrandUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.BrandResponse;
 import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.helper.BrandHelper;
@@ -34,14 +35,14 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     @Transactional
-    public void createBrand(BrandRequest request) {
+    public void createBrand(BrandCreateRequest request) {
         validateCreateBrandRequest(request);
         brandRepository.save(brandHelper.createBrand(request));
     }
 
     @Override
     @Transactional
-    public void updateBrand(BrandRequest request, Long brandId) {
+    public void updateBrand(BrandUpdateRequest request, Long brandId) {
         validateUpdateBrandRequest(request, brandId);
 
         Brand brand = findBrandById(brandId);
@@ -89,7 +90,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
 
-    private void validateCreateBrandRequest(BrandRequest request) {
+    private void validateCreateBrandRequest(BrandCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_BRAND);
         }
@@ -98,7 +99,7 @@ public class BrandServiceImpl implements BrandService {
         }
     }
 
-    private void validateUpdateBrandRequest(BrandRequest request, Long brandId) {
+    private void validateUpdateBrandRequest(BrandUpdateRequest request, Long brandId) {
         if (Objects.isNull(brandId) || Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_BRAND);
         }

@@ -1,9 +1,13 @@
 package com.yas.system.catalog.internal.service.impl;
 
-import com.yas.system.catalog.internal.dto.request.ProductAttributeValueRequest;
-import com.yas.system.catalog.internal.dto.request.ProductOptionRequest;
-import com.yas.system.catalog.internal.dto.request.ProductRequest;
-import com.yas.system.catalog.internal.dto.request.ProductVariantRequest;
+import com.yas.system.catalog.internal.dto.request.ProductAttributeValueCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductAttributeValueUpdateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductOptionCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductOptionUpdateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductVariantCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductVariantUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
 import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.entity.Category;
@@ -70,7 +74,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductResponse createProduct(ProductRequest request) {
+    public ProductResponse createProduct(ProductCreateRequest request) {
         validateProductRequest(request);
 
         Category category = resolveCategory(request.categoryId());
@@ -83,7 +87,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductAttributeValue> savedAttributes = saveProductAttributeValues(request, savedProduct);
         List<ProductOption> savedOptions = saveOptions(request, savedProduct);
         List<ProductVariant> savedVariants = saveVariants(request, savedProduct);
-        List<VariantOptionValue> savedVariantOptionValues = saveVariantOptionValues(
+        List<VariantOptionValue> savedVariantOptionValues = saveVariantOptionValuesForCreate(
                 request,
                 savedOptions,
                 savedVariants
@@ -94,7 +98,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductResponse updateProduct(ProductRequest request, Long productId) {
+    public ProductResponse updateProduct(ProductUpdateRequest request, Long productId) {
         validateProductRequest(request, productId);
 
         Category category = resolveCategory(request.categoryId());
@@ -120,7 +124,7 @@ public class ProductServiceImpl implements ProductService {
         );
         List<ProductOption> savedOptions = saveUpdatedOptions(request, savedProduct, currentOptions);
         List<ProductVariant> savedVariants = saveUpdatedVariants(request, savedProduct, currentVariants);
-        List<VariantOptionValue> savedVariantOptionValues = saveVariantOptionValues(
+        List<VariantOptionValue> savedVariantOptionValues = saveVariantOptionValuesForUpdate(
                 request,
                 savedOptions,
                 savedVariants
@@ -207,11 +211,14 @@ public class ProductServiceImpl implements ProductService {
         return productCategoryRepository.saveAll(productCategories);
     }
 
-    private List<ProductAttributeValue> saveProductAttributeValues(ProductRequest request, Product product) {
+    private List<ProductAttributeValue> saveProductAttributeValues(ProductCreateRequest request, Product product) {
         if (Objects.isNull(request.attributes()) || request.attributes().isEmpty()) {
             return List.of();
         }
-        Map<Long, ProductAttribute> productAttributeById = findProductAttributes(request);
+        List<Long> productAttributeIds = request.attributes().stream()
+                .map(ProductAttributeValueCreateRequest::productAttributeId)
+                .toList();
+        Map<Long, ProductAttribute> productAttributeById = findProductAttributes(productAttributeIds);
         List<ProductAttributeValue> attributeValues = request.attributes().stream()
                 .map(attributeRequest -> ProductAttributeValue.builder()
                         .product(product)
@@ -223,7 +230,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private List<ProductAttributeValue> saveUpdatedProductAttributeValues(
-            ProductRequest request,
+            ProductUpdateRequest request,
             Product product,
             List<ProductAttributeValue> currentAttributes
     ) {
@@ -231,7 +238,10 @@ public class ProductServiceImpl implements ProductService {
             productAttributeValueRepository.deleteAll(currentAttributes);
             return List.of();
         }
-        Map<Long, ProductAttribute> productAttributeById = findProductAttributes(request);
+        List<Long> productAttributeIds = request.attributes().stream()
+                .map(ProductAttributeValueUpdateRequest::productAttributeId)
+                .toList();
+        Map<Long, ProductAttribute> productAttributeById = findProductAttributes(productAttributeIds);
         Map<Long, ProductAttributeValue> currentAttributeByProductAttributeId = currentAttributes.stream()
                 .collect(Collectors.toMap(
                         attributeValue -> attributeValue.getProductAttribute().getId(),
@@ -249,10 +259,7 @@ public class ProductServiceImpl implements ProductService {
         return productAttributeValueRepository.saveAll(attributeValues);
     }
 
-    private Map<Long, ProductAttribute> findProductAttributes(ProductRequest request) {
-        List<Long> productAttributeIds = request.attributes().stream()
-                .map(ProductAttributeValueRequest::productAttributeId)
-                .toList();
+    private Map<Long, ProductAttribute> findProductAttributes(List<Long> productAttributeIds) {
         Map<Long, ProductAttribute> productAttributeById = productAttributeRepository.findAllById(productAttributeIds)
                 .stream()
                 .collect(Collectors.toMap(ProductAttribute::getId, Function.identity()));
@@ -263,7 +270,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductAttributeValue resolveProductAttributeValue(
-            ProductAttributeValueRequest request,
+            ProductAttributeValueUpdateRequest request,
             Product product,
             Map<Long, ProductAttribute> productAttributeById,
             Map<Long, ProductAttributeValue> currentAttributeByProductAttributeId
@@ -281,11 +288,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void deleteMissingProductAttributeValues(
-            ProductRequest request,
+            ProductUpdateRequest request,
             List<ProductAttributeValue> currentAttributes
     ) {
         List<Long> requestProductAttributeIds = request.attributes().stream()
-                .map(ProductAttributeValueRequest::productAttributeId)
+                .map(ProductAttributeValueUpdateRequest::productAttributeId)
                 .toList();
         List<ProductAttributeValue> deletedAttributes = currentAttributes.stream()
                 .filter(attributeValue -> !requestProductAttributeIds.contains(attributeValue.getProductAttribute().getId()))
@@ -293,15 +300,15 @@ public class ProductServiceImpl implements ProductService {
         productAttributeValueRepository.deleteAll(deletedAttributes);
     }
 
-    private List<ProductOption> saveOptions(ProductRequest request, Product product) {
+    private List<ProductOption> saveOptions(ProductCreateRequest request, Product product) {
         List<ProductOption> options = request.options().stream()
                 .map(optionRequest -> optionRequest.toEntity(product))
                 .toList();
         return productOptionRepository.saveAll(options);
     }
 
-    private List<ProductVariant> saveVariants(ProductRequest request, Product product) {
-        boolean hasOptions = hasOptions(request);
+    private List<ProductVariant> saveVariants(ProductCreateRequest request, Product product) {
+        boolean hasOptions = hasOptions(request.options());
         return request.variants().stream()
                 .map(variantRequest -> {
                     ProductVariant variant = variantRequest.toEntity(product);
@@ -311,17 +318,17 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-    private List<VariantOptionValue> saveVariantOptionValues(
-            ProductRequest request,
+    private List<VariantOptionValue> saveVariantOptionValuesForCreate(
+            ProductCreateRequest request,
             List<ProductOption> options,
             List<ProductVariant> variants
     ) {
-        if (!hasOptions(request)) {
+        if (!hasOptions(request.options())) {
             return List.of();
         }
         Map<Integer, ProductOption> optionByPosition = options.stream()
                 .collect(Collectors.toMap(ProductOption::getPosition, Function.identity()));
-        List<VariantOptionValue> variantOptionValues = buildVariantOptionValues(
+        List<VariantOptionValue> variantOptionValues = buildVariantOptionValuesForCreate(
                 request.variants(),
                 variants,
                 optionByPosition
@@ -329,54 +336,54 @@ public class ProductServiceImpl implements ProductService {
         return variantOptionValueRepository.saveAll(variantOptionValues);
     }
 
-    private void validateProductRequest(ProductRequest request) {
-        if (Objects.isNull(request)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+    private List<VariantOptionValue> saveVariantOptionValuesForUpdate(
+            ProductUpdateRequest request,
+            List<ProductOption> options,
+            List<ProductVariant> variants
+    ) {
+        if (!hasOptions(request.options())) {
+            return List.of();
         }
-        if (isBlank(request.name()) || isBlank(request.slug())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
-        }
+        Map<Integer, ProductOption> optionByPosition = options.stream()
+                .collect(Collectors.toMap(ProductOption::getPosition, Function.identity()));
+        List<VariantOptionValue> variantOptionValues = buildVariantOptionValuesForUpdate(
+                request.variants(),
+                variants,
+                optionByPosition
+        );
+        return variantOptionValueRepository.saveAll(variantOptionValues);
+    }
+
+    private void validateProductRequest(ProductCreateRequest request) {
         if (productRepository.existsByName(request.name()) || productRepository.existsBySlug(request.slug())) {
             throw new InvalidDataException(ErrorCode.PRODUCT_ALREADY_EXISTS);
         }
-        validateAttributes(request);
-        validateOptions(request);
-        validateVariants(request);
-        validateCreateIds(request);
+        validateCreateAttributes(request.attributes());
+        validateCreateOptions(request.options());
+        validateCreateVariants(request.variants());
     }
 
-    private void validateProductRequest(ProductRequest request, Long productId) {
+    private void validateProductRequest(ProductUpdateRequest request, Long productId) {
         if (Objects.isNull(productId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
-        }
-        if (Objects.isNull(request) || isBlank(request.name()) || isBlank(request.slug())) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
         if (productRepository.existsByNameAndIdNot(request.name(), productId)
                 || productRepository.existsBySlugAndIdNot(request.slug(), productId)) {
             throw new InvalidDataException(ErrorCode.PRODUCT_ALREADY_EXISTS);
         }
-        validateAttributes(request);
-        validateOptions(request);
-        validateVariants(request);
+        validateUpdateAttributes(request.attributes());
+        validateUpdateOptions(request.options());
+        validateUpdateVariants(request.variants());
         validateUpdateIds(request);
     }
 
-    private void validateCreateIds(ProductRequest request) {
-        boolean hasRequestId = request.options().stream().anyMatch(option -> Objects.nonNull(option.id()))
-                || request.variants().stream().anyMatch(variant -> Objects.nonNull(variant.id()));
-        if (hasRequestId) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
-        }
-    }
-
-    private void validateUpdateIds(ProductRequest request) {
+    private void validateUpdateIds(ProductUpdateRequest request) {
         boolean hasDuplicateOptionId = hasDuplicateIds(request.options().stream()
-                .map(ProductOptionRequest::id)
+                .map(ProductOptionUpdateRequest::id)
                 .filter(Objects::nonNull)
                 .toList());
         boolean hasDuplicateVariantId = hasDuplicateIds(request.variants().stream()
-                .map(ProductVariantRequest::id)
+                .map(ProductVariantUpdateRequest::id)
                 .filter(Objects::nonNull)
                 .toList());
         if (hasDuplicateOptionId || hasDuplicateVariantId) {
@@ -388,14 +395,14 @@ public class ProductServiceImpl implements ProductService {
         return ids.stream().distinct().count() != ids.size();
     }
 
-    private void validateOptions(ProductRequest request) {
-        if (Objects.isNull(request.options())) {
+    private void validateCreateOptions(List<ProductOptionCreateRequest> options) {
+        if (Objects.isNull(options)) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
-        if (request.options().isEmpty()) {
+        if (options.isEmpty()) {
             return;
         }
-        boolean invalidOption = request.options().stream()
+        boolean invalidOption = options.stream()
                 .anyMatch(option -> Objects.isNull(option)
                         || isBlank(option.name())
                         || Objects.isNull(option.values())
@@ -403,16 +410,36 @@ public class ProductServiceImpl implements ProductService {
                         || option.position() < 1
                         || option.position() > 3
                         || option.values().stream().anyMatch(value -> isBlank(value)));
-        if (invalidOption || hasDuplicatePositions(request)) {
+        if (invalidOption || hasDuplicatePositions(options.stream().map(ProductOptionCreateRequest::position).toList())) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
     }
 
-    private void validateVariants(ProductRequest request) {
-        if (Objects.isNull(request.variants()) || request.variants().isEmpty()) {
+    private void validateUpdateOptions(List<ProductOptionUpdateRequest> options) {
+        if (Objects.isNull(options)) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
-        boolean invalidVariant = request.variants().stream()
+        if (options.isEmpty()) {
+            return;
+        }
+        boolean invalidOption = options.stream()
+                .anyMatch(option -> Objects.isNull(option)
+                        || isBlank(option.name())
+                        || Objects.isNull(option.values())
+                        || option.values().isEmpty()
+                        || option.position() < 1
+                        || option.position() > 3
+                        || option.values().stream().anyMatch(value -> isBlank(value)));
+        if (invalidOption || hasDuplicatePositions(options.stream().map(ProductOptionUpdateRequest::position).toList())) {
+            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+        }
+    }
+
+    private void validateCreateVariants(List<ProductVariantCreateRequest> variants) {
+        if (Objects.isNull(variants) || variants.isEmpty()) {
+            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+        }
+        boolean invalidVariant = variants.stream()
                 .anyMatch(variant -> Objects.isNull(variant)
                         || isBlank(variant.sku())
                         || Objects.isNull(variant.price())
@@ -423,42 +450,95 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void validateAttributes(ProductRequest request) {
-        if (Objects.isNull(request.attributes()) || request.attributes().isEmpty()) {
+    private void validateUpdateVariants(List<ProductVariantUpdateRequest> variants) {
+        if (Objects.isNull(variants) || variants.isEmpty()) {
+            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+        }
+        boolean invalidVariant = variants.stream()
+                .anyMatch(variant -> Objects.isNull(variant)
+                        || isBlank(variant.sku())
+                        || Objects.isNull(variant.price())
+                        || variant.price().compareTo(BigDecimal.ZERO) < 0
+                        || variant.quantity() < 0);
+        if (invalidVariant) {
+            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+        }
+    }
+
+    private void validateCreateAttributes(List<ProductAttributeValueCreateRequest> attributes) {
+        if (Objects.isNull(attributes) || attributes.isEmpty()) {
             return;
         }
-        boolean invalidAttribute = request.attributes().stream()
+        boolean invalidAttribute = attributes.stream()
                 .anyMatch(attribute -> Objects.isNull(attribute)
                         || Objects.isNull(attribute.productAttributeId())
                         || isBlank(attribute.value()));
         if (invalidAttribute) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
-        boolean hasDuplicateAttribute = request.attributes().stream()
-                .map(attribute -> attribute.productAttributeId())
+        boolean hasDuplicateAttribute = attributes.stream()
+                .map(ProductAttributeValueCreateRequest::productAttributeId)
                 .distinct()
-                .count() != request.attributes().size();
+                .count() != attributes.size();
         if (hasDuplicateAttribute) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
         }
     }
 
-    private boolean hasDuplicatePositions(ProductRequest request) {
-        return request.options().stream()
-                .map(ProductOptionRequest::position)
+    private void validateUpdateAttributes(List<ProductAttributeValueUpdateRequest> attributes) {
+        if (Objects.isNull(attributes) || attributes.isEmpty()) {
+            return;
+        }
+        boolean invalidAttribute = attributes.stream()
+                .anyMatch(attribute -> Objects.isNull(attribute)
+                        || Objects.isNull(attribute.productAttributeId())
+                        || isBlank(attribute.value()));
+        if (invalidAttribute) {
+            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+        }
+        boolean hasDuplicateAttribute = attributes.stream()
+                .map(ProductAttributeValueUpdateRequest::productAttributeId)
                 .distinct()
-                .count() != request.options().size();
+                .count() != attributes.size();
+        if (hasDuplicateAttribute) {
+            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+        }
     }
 
-    private List<VariantOptionValue> buildVariantOptionValues(
-            List<ProductVariantRequest> variantRequests,
+    private boolean hasDuplicatePositions(List<Integer> positions) {
+        return positions.stream()
+                .distinct()
+                .count() != positions.size();
+    }
+
+    private List<VariantOptionValue> buildVariantOptionValuesForCreate(
+            List<ProductVariantCreateRequest> variantRequests,
             List<ProductVariant> savedVariants,
             Map<Integer, ProductOption> optionByPosition
     ) {
         return IntStream.range(0, variantRequests.size())
                 .boxed()
                 .flatMap(index -> buildVariantOptionValues(
-                        variantRequests.get(index),
+                        variantRequests.get(index).option1(),
+                        variantRequests.get(index).option2(),
+                        variantRequests.get(index).option3(),
+                        savedVariants.get(index),
+                        optionByPosition
+                ).stream())
+                .toList();
+    }
+
+    private List<VariantOptionValue> buildVariantOptionValuesForUpdate(
+            List<ProductVariantUpdateRequest> variantRequests,
+            List<ProductVariant> savedVariants,
+            Map<Integer, ProductOption> optionByPosition
+    ) {
+        return IntStream.range(0, variantRequests.size())
+                .boxed()
+                .flatMap(index -> buildVariantOptionValues(
+                        variantRequests.get(index).option1(),
+                        variantRequests.get(index).option2(),
+                        variantRequests.get(index).option3(),
                         savedVariants.get(index),
                         optionByPosition
                 ).stream())
@@ -466,14 +546,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private List<VariantOptionValue> buildVariantOptionValues(
-            ProductVariantRequest variantRequest,
+            String option1,
+            String option2,
+            String option3,
             ProductVariant variant,
             Map<Integer, ProductOption> optionByPosition
     ) {
         return Stream.of(
-                        buildVariantOptionValue(variantRequest.option1(), variant, optionByPosition.get(1)),
-                        buildVariantOptionValue(variantRequest.option2(), variant, optionByPosition.get(2)),
-                        buildVariantOptionValue(variantRequest.option3(), variant, optionByPosition.get(3))
+                        buildVariantOptionValue(option1, variant, optionByPosition.get(1)),
+                        buildVariantOptionValue(option2, variant, optionByPosition.get(2)),
+                        buildVariantOptionValue(option3, variant, optionByPosition.get(3))
                 )
                 .filter(Objects::nonNull)
                 .toList();
@@ -494,7 +576,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private List<ProductOption> saveUpdatedOptions(
-            ProductRequest request,
+            ProductUpdateRequest request,
             Product product,
             List<ProductOption> currentOptions
     ) {
@@ -508,7 +590,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductOption resolveOption(
-            ProductOptionRequest request,
+            ProductOptionUpdateRequest request,
             Product product,
             Map<Long, ProductOption> currentOptionById
     ) {
@@ -523,9 +605,9 @@ public class ProductServiceImpl implements ProductService {
         return option;
     }
 
-    private void deleteMissingOptions(ProductRequest request, List<ProductOption> currentOptions) {
+    private void deleteMissingOptions(ProductUpdateRequest request, List<ProductOption> currentOptions) {
         List<Long> requestIds = request.options().stream()
-                .map(ProductOptionRequest::id)
+                .map(ProductOptionUpdateRequest::id)
                 .filter(Objects::nonNull)
                 .toList();
         List<ProductOption> deletedOptions = currentOptions.stream()
@@ -535,13 +617,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private List<ProductVariant> saveUpdatedVariants(
-            ProductRequest request,
+            ProductUpdateRequest request,
             Product product,
             List<ProductVariant> currentVariants
     ) {
         Map<Long, ProductVariant> currentVariantById = currentVariants.stream()
                 .collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
-        boolean hasOptions = hasOptions(request);
+        boolean hasOptions = hasOptions(request.options());
         List<ProductVariant> variants = request.variants().stream()
                 .map(variantRequest -> resolveVariant(variantRequest, product, currentVariantById, hasOptions))
                 .toList();
@@ -550,7 +632,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductVariant resolveVariant(
-            ProductVariantRequest request,
+            ProductVariantUpdateRequest request,
             Product product,
             Map<Long, ProductVariant> currentVariantById,
             boolean hasOptions
@@ -575,13 +657,13 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private boolean hasOptions(ProductRequest request) {
-        return Objects.nonNull(request.options()) && !request.options().isEmpty();
+    private boolean hasOptions(List<?> options) {
+        return Objects.nonNull(options) && !options.isEmpty();
     }
 
-    private void deleteMissingVariants(ProductRequest request, List<ProductVariant> currentVariants) {
+    private void deleteMissingVariants(ProductUpdateRequest request, List<ProductVariant> currentVariants) {
         List<Long> requestIds = request.variants().stream()
-                .map(ProductVariantRequest::id)
+                .map(ProductVariantUpdateRequest::id)
                 .filter(Objects::nonNull)
                 .toList();
         List<ProductVariant> deletedVariants = currentVariants.stream()

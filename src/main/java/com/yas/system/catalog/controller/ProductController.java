@@ -1,6 +1,7 @@
 package com.yas.system.catalog.controller;
 
-import com.yas.system.catalog.internal.dto.request.ProductRequest;
+import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
 import com.yas.system.catalog.internal.service.ProductService;
 import com.yas.system.common.response.ApiResponse;
@@ -19,14 +20,14 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping()
-    public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
+    public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductCreateRequest request) {
         ProductResponse product = productService.createProduct(request);
         return ApiResponse.success(product);
     }
 
     @PutMapping("/{productId}")
     public ApiResponse<ProductResponse> updateProduct(
-            @RequestBody @Valid ProductRequest request,
+            @RequestBody @Valid ProductUpdateRequest request,
             @PathVariable Long productId
     ) {
         ProductResponse product = productService.updateProduct(request, productId);

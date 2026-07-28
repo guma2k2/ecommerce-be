@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record ProductRequest(
+public record ProductUpdateRequest(
         @NotBlank
         String name,
         String description,
@@ -20,14 +20,14 @@ public record ProductRequest(
         Long brandId,
 
         @Valid
-        List<ProductAttributeValueRequest> attributes,
+        List<ProductAttributeValueUpdateRequest> attributes,
 
         @Valid
         @NotEmpty
-        List<ProductVariantRequest> variants,
+        List<ProductVariantUpdateRequest> variants,
 
         @Valid
         @NotNull
-        List<ProductOptionRequest> options
+        List<ProductOptionUpdateRequest> options
 ) {
 }

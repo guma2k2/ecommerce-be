@@ -9,8 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
-public record ProductOptionRequest (
-        Long id,
+public record ProductOptionCreateRequest(
         @NotBlank
         String name,
         @NotEmpty
@@ -20,19 +19,11 @@ public record ProductOptionRequest (
         int position
 ) {
     public ProductOption toEntity(Product product) {
-        ProductOption option = ProductOption.builder()
+        return ProductOption.builder()
                 .name(name)
                 .values(values)
                 .position(position)
                 .product(product)
                 .build();
-        option.setId(id);
-        return option;
-    }
-
-    public void applyTo(ProductOption option) {
-        option.setName(name);
-        option.setValues(values);
-        option.setPosition(position);
     }
 }

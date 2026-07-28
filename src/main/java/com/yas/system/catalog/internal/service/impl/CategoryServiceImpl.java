@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.service.impl;
 
-import com.yas.system.catalog.internal.dto.request.CategoryRequest;
+import com.yas.system.catalog.internal.dto.request.CategoryCreateRequest;
+import com.yas.system.catalog.internal.dto.request.CategoryUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.CategoryResponse;
 import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.repository.CategoryRepository;
@@ -31,7 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public void createCategory(CategoryRequest categoryRequest) {
+    public void createCategory(CategoryCreateRequest categoryRequest) {
         validateCreateCategoryRequest(categoryRequest);
 
         Category parent = resolveParent(categoryRequest.parentId());
@@ -40,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public void updateCategory(CategoryRequest categoryRequest, Integer categoryId) {
+    public void updateCategory(CategoryUpdateRequest categoryRequest, Integer categoryId) {
         validateUpdateCategoryRequest(categoryRequest, categoryId);
 
         Category category = findCategoryById(categoryId);
@@ -93,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.delete(category);
     }
 
-    private void validateCreateCategoryRequest(CategoryRequest categoryRequest) {
+    private void validateCreateCategoryRequest(CategoryCreateRequest categoryRequest) {
         if (Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
         }
@@ -102,7 +103,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private void validateUpdateCategoryRequest(CategoryRequest categoryRequest, Integer categoryId) {
+    private void validateUpdateCategoryRequest(CategoryUpdateRequest categoryRequest, Integer categoryId) {
         if (Objects.isNull(categoryId) || Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
         }
@@ -123,14 +124,14 @@ public class CategoryServiceImpl implements CategoryService {
         return findCategoryById(parentId);
     }
 
-    private Category createCategory(CategoryRequest request, Category parent) {
+    private Category createCategory(CategoryCreateRequest request, Category parent) {
         return Category.builder()
                 .name(request.name())
                 .parent(parent)
                 .build();
     }
 
-    private void updateCategory(CategoryRequest request, Category category, Category parent) {
+    private void updateCategory(CategoryUpdateRequest request, Category category, Category parent) {
         category.setName(request.name());
         category.setParent(parent);
     }
