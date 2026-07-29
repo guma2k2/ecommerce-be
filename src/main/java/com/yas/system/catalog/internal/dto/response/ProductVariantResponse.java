@@ -1,42 +1,41 @@
 package com.yas.system.catalog.internal.dto.response;
 
-import com.yas.system.catalog.internal.entity.ProductVariant;
-import com.yas.system.catalog.internal.entity.VariantOptionValue;
+import com.yas.system.catalog.internal.entity.variant.ProductVariant;
+import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public record ProductVariantResponse(
         Long id,
-        String option1,
-        String option2,
-        String option3,
+        String title,
+        List<VariantOptionValueResponse> options,
         String sku,
         BigDecimal price,
         int quantity
 ) {
     public static ProductVariantResponse from(ProductVariant variant, List<VariantOptionValue> optionValues) {
+        List<VariantOptionValueResponse> optionsList = Objects.isNull(optionValues) ? List.of() : optionValues.stream()
+                .filter(optionValue -> Objects.nonNull(optionValue.getProductVariant())
+                        && Objects.equals(optionValue.getProductVariant().getId(), variant.getId()))
+                .filter(optionValue -> Objects.nonNull(optionValue.getProductOption()))
+                .map(optionValue -> new VariantOptionValueResponse(
+                        optionValue.getProductOption().getId(),
+                        optionValue.getValue(),
+                        optionValue.getPosition()
+                ))
+                .toList();
+
         return new ProductVariantResponse(
                 variant.getId(),
-                findOptionValue(variant, optionValues, 1),
-                findOptionValue(variant, optionValues, 2),
-                findOptionValue(variant, optionValues, 3),
+                variant.getTitle(),
+                optionsList,
                 variant.getSku(),
                 variant.getPrice(),
-                variant.getQuantity()
+                Objects.nonNull(variant.getQuantity()) ? variant.getQuantity() : 0
         );
-    }
-
-    private static String findOptionValue(
-            ProductVariant variant,
-            List<VariantOptionValue> optionValues,
-            int optionPosition
-    ) {
-        return optionValues.stream()
-                .filter(optionValue -> optionValue.getProductVariant().equals(variant))
-                .filter(optionValue -> optionValue.getProductOption().getPosition() == optionPosition)
-                .map(VariantOptionValue::getValue)
-                .findFirst()
-                .orElse(null);
     }
 }

@@ -4,7 +4,7 @@ import com.yas.system.catalog.internal.entity.Brand;
 import java.time.format.DateTimeFormatter;
 
 public record BrandResponse(
-        Long id,
+        Integer id,
         String name,
         String description,
         String createdAt,

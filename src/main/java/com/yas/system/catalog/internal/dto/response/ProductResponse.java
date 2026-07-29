@@ -1,9 +1,9 @@
 package com.yas.system.catalog.internal.dto.response;
 
 import com.yas.system.catalog.internal.entity.Product;
-import com.yas.system.catalog.internal.entity.ProductOption;
-import com.yas.system.catalog.internal.entity.ProductVariant;
-import com.yas.system.catalog.internal.entity.VariantOptionValue;
+import com.yas.system.catalog.internal.entity.option.ProductOption;
+import com.yas.system.catalog.internal.entity.variant.ProductVariant;
+import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;
 
 import java.time.format.DateTimeFormatter;
@@ -19,7 +19,7 @@ public record ProductResponse(
         String metaDescription,
         BrandResponse brand,
         List<ProductAttributeValueResponse> attributes,
-        List<ProductOptionResponse> options,
+        List<ProductOptionCombinationResponse> options,
         List<ProductVariantResponse> variants,
         String createdAt,
         String updatedAt
@@ -27,7 +27,7 @@ public record ProductResponse(
     public static ProductResponse from(
             Product product,
             List<ProductAttributeValue> attributes,
-            List<ProductOption> options,
+            List<ProductOptionCombinationResponse> options,
             List<ProductVariant> variants,
             List<VariantOptionValue> variantOptionValues
     ) {
@@ -43,9 +43,7 @@ public record ProductResponse(
                 attributes.stream()
                         .map(ProductAttributeValueResponse::from)
                         .toList(),
-                options.stream()
-                        .map(ProductOptionResponse::from)
-                        .toList(),
+                options,
                 variants.stream()
                         .map(variant -> ProductVariantResponse.from(variant, variantOptionValues))
                         .toList(),

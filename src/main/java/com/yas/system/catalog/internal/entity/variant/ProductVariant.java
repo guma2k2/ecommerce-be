@@ -1,5 +1,6 @@
-package com.yas.system.catalog.internal.entity;
+package com.yas.system.catalog.internal.entity.variant;
 
+import com.yas.system.catalog.internal.entity.Product;
 import jakarta.persistence.*;
 import lombok.*;
 

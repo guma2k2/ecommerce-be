@@ -1,7 +1,7 @@
 package com.yas.system.catalog.internal.entity;
 
+import com.yas.system.catalog.internal.entity.productCategory.ProductCategory;
 import com.yas.system.common.entity.BaseIntegerEntity;
-import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

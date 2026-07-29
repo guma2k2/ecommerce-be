@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.repository;
 
-import com.yas.system.catalog.internal.entity.VariantOptionValue;
+import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +12,14 @@ import java.util.List;
 @Repository
 public interface VariantOptionValueRepository extends JpaRepository<VariantOptionValue, Long> {
 
-    List<VariantOptionValue> findByProductVariantProductId(Long productId);
+    @Query("""
+        select vov
+        from VariantOptionValue vov
+        join fetch vov.productVariant pv
+        join fetch vov.productOption po
+        where pv.product.id = :productId
+    """)
+    List<VariantOptionValue> findByProductVariantProductId(@Param("productId") Long productId);
 
     @Modifying
     @Query("""

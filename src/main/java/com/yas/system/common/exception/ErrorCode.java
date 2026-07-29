@@ -37,6 +37,9 @@ public enum ErrorCode {
     ROLE_CANNOT_BE_DELETED("role_cannot_be_deleted", "Role cannot be deleted", HttpStatus.BAD_REQUEST),
     PERMISSION_NOT_FOUND("permission_not_found", "Permission not found", HttpStatus.NOT_FOUND),
     ADMIN_PROFILE_NOT_FOUND("admin_profile_not_found", "Admin profile not found", HttpStatus.NOT_FOUND),
+    INVALID_PRODUCT_OPTION("invalid_product_option", "Invalid product option data", HttpStatus.BAD_REQUEST),
+    PRODUCT_OPTION_NOT_FOUND("product_option_not_found", "Product option not found", HttpStatus.NOT_FOUND),
+    PRODUCT_OPTION_ALREADY_EXISTS("product_option_already_exists", "Product option already exists", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(String code, String message, HttpStatusCode statusCode) {

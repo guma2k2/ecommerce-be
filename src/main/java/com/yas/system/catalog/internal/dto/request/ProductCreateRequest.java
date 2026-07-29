@@ -17,17 +17,16 @@ public record ProductCreateRequest(
         String metaKeyword,
         String metaDescription,
         Integer categoryId,
-        Long brandId,
+        Integer brandId,
+
+        @Valid
+        List<ProductOptionCombinationCreateRequest> options,
 
         @Valid
         List<ProductAttributeValueCreateRequest> attributes,
 
         @Valid
         @NotEmpty
-        List<ProductVariantCreateRequest> variants,
-
-        @Valid
-        @NotNull
-        List<ProductOptionCreateRequest> options
+        List<ProductVariantCreateRequest> variants
 ) {
 }
