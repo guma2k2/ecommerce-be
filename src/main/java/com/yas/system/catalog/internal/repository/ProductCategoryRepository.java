@@ -1,7 +1,7 @@
 package com.yas.system.catalog.internal.repository;
 
-import com.yas.system.catalog.internal.entity.ProductCategory;
-import com.yas.system.catalog.internal.entity.ProductCategoryId;
+import com.yas.system.catalog.internal.entity.productCategory.ProductCategory;
+import com.yas.system.catalog.internal.entity.productCategory.ProductCategoryId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

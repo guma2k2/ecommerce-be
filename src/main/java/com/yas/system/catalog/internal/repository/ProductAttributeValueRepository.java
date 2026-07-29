@@ -12,6 +12,13 @@ import java.util.List;
 @Repository
 public interface ProductAttributeValueRepository extends JpaRepository<ProductAttributeValue, Long> {
 
+    @Query("""
+        select pav
+        from ProductAttributeValue pav
+        join fetch pav.product p
+        join fetch pav.productAttribute pa
+        where p.id = :productId
+    """)
     List<ProductAttributeValue> findByProductId(Long productId);
 
     @Modifying

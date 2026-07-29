@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.entity;
+package com.yas.system.catalog.internal.entity.productCategory;
 
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;

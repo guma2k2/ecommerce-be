@@ -1,5 +1,6 @@
-package com.yas.system.catalog.internal.entity;
+package com.yas.system.catalog.internal.entity.variant;
 
+import com.yas.system.catalog.internal.entity.option.ProductOption;
 import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,11 +22,13 @@ public class VariantOptionValue extends BaseLongEntity {
     
     private String value;
 
-    @ManyToOne
+    private int position;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_variant_id")
     private ProductVariant productVariant;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attribute_id")
     private ProductOption productOption;
 }

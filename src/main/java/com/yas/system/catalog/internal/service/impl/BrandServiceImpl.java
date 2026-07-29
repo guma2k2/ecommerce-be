@@ -42,7 +42,7 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     @Transactional
-    public void updateBrand(BrandUpdateRequest request, Long brandId) {
+    public void updateBrand(BrandUpdateRequest request, Integer brandId) {
         validateUpdateBrandRequest(request, brandId);
 
         Brand brand = findBrandById(brandId);
@@ -52,7 +52,7 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     @Transactional
-    public void deleteBrandById(Long brandId) {
+    public void deleteBrandById(Integer brandId) {
         if (Objects.isNull(brandId)) {
             throw new InvalidDataException(ErrorCode.INVALID_BRAND);
         }
@@ -63,7 +63,7 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     @Transactional(readOnly = true)
-    public BrandResponse getById(Long brandId) {
+    public BrandResponse getById(Integer brandId) {
         if (Objects.isNull(brandId)) {
             throw new InvalidDataException(ErrorCode.INVALID_BRAND);
         }
@@ -99,7 +99,7 @@ public class BrandServiceImpl implements BrandService {
         }
     }
 
-    private void validateUpdateBrandRequest(BrandUpdateRequest request, Long brandId) {
+    private void validateUpdateBrandRequest(BrandUpdateRequest request, Integer brandId) {
         if (Objects.isNull(brandId) || Objects.isNull(request) || isBlank(request.name())) {
             throw new InvalidDataException(ErrorCode.INVALID_BRAND);
         }
@@ -108,7 +108,7 @@ public class BrandServiceImpl implements BrandService {
         }
     }
 
-    private Brand findBrandById(Long brandId) {
+    private Brand findBrandById(Integer brandId) {
         return brandRepository.findById(brandId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
     }

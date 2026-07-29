@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.entity;
 
 
+import com.yas.system.common.entity.BaseIntegerEntity;
 import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Brand extends BaseLongEntity {
+public class Brand extends BaseIntegerEntity {
 
     @Column(length = 50, unique = true, nullable = false)
     private String name;

@@ -1,19 +1,18 @@
 package com.yas.system.catalog.internal.dto.request;
 
 import com.yas.system.catalog.internal.entity.Product;
-import com.yas.system.catalog.internal.entity.ProductVariant;
+import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 public record ProductVariantUpdateRequest(
         Long id,
         String title,
-        String option1,
-        String option2,
-        String option3,
+        Map<Long, VariantOptionValueRequest> options, // <ProductOptionId, VariantOptionValue>
         @NotBlank
         String sku,
         @NotNull

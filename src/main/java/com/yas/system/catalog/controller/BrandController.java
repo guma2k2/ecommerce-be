@@ -29,14 +29,14 @@ public class BrandController {
     @PutMapping("/{brandId}")
     public ApiResponse<Void> updateBrand(
             @RequestBody @Valid BrandUpdateRequest request,
-            @PathVariable Long brandId
+            @PathVariable Integer brandId
     ) {
         brandService.updateBrand(request, brandId);
         return ApiResponse.successWithNoContent();
     }
 
     @GetMapping("/{brandId}")
-    public ApiResponse<BrandResponse> getBrand(@PathVariable Long brandId) {
+    public ApiResponse<BrandResponse> getBrand(@PathVariable Integer brandId) {
         return ApiResponse.success(brandService.getById(brandId));
     }
 
@@ -49,7 +49,7 @@ public class BrandController {
     }
 
     @DeleteMapping("/{brandId}")
-    public ApiResponse<Void> deleteBrand(@PathVariable Long brandId) {
+    public ApiResponse<Void> deleteBrand(@PathVariable Integer brandId) {
         brandService.deleteBrandById(brandId);
         return ApiResponse.successWithNoContent();
     }
