@@ -4,13 +4,15 @@ import com.yas.system.catalog.internal.dto.request.ProductAttributeValueCreateRe
 import com.yas.system.catalog.internal.dto.request.ProductAttributeValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductOptionCombinationCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductOptionCombinationUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantUpdateRequest;
-import com.yas.system.catalog.internal.dto.request.VariantOptionValueRequest;
+import com.yas.system.catalog.internal.dto.request.ProductOptionValueCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductOptionValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductOptionCombinationResponse;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
-import com.yas.system.catalog.internal.dto.response.VariantOptionValueResponse;
+import com.yas.system.catalog.internal.dto.response.ProductOptionValueResponse;
 import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.entity.Product;
@@ -19,6 +21,7 @@ import com.yas.system.catalog.internal.entity.productCategory.ProductCategoryId;
 import com.yas.system.catalog.internal.entity.option.ProductOption;
 import com.yas.system.catalog.internal.entity.option.ProductOptionCombination;
 import com.yas.system.catalog.internal.entity.option.ProductOptionCombinationId;
+import com.yas.system.catalog.internal.entity.option.ProductOptionValue;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
@@ -31,6 +34,7 @@ import com.yas.system.catalog.internal.repository.ProductAttributeValueRepositor
 import com.yas.system.catalog.internal.repository.ProductCategoryRepository;
 import com.yas.system.catalog.internal.repository.ProductOptionCombinationRepository;
 import com.yas.system.catalog.internal.repository.ProductOptionRepository;
+import com.yas.system.catalog.internal.repository.ProductOptionValueRepository;
 import com.yas.system.catalog.internal.repository.ProductRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
 import com.yas.system.catalog.internal.repository.VariantOptionValueRepository;
@@ -67,6 +71,7 @@ public class ProductServiceImpl implements ProductService {
     ProductVariantRepository productVariantRepository;
     ProductOptionRepository productOptionRepository;
     ProductOptionCombinationRepository productOptionCombinationRepository;
+    ProductOptionValueRepository productOptionValueRepository;
     VariantOptionValueRepository variantOptionValueRepository;
     ProductAttributeRepository productAttributeRepository;
     ProductAttributeValueRepository productAttributeValueRepository;
@@ -95,8 +100,13 @@ public class ProductServiceImpl implements ProductService {
         List<Category> categoryHierarchy = collectCategoryAndParents(category);
         saveProductCategories(savedProduct, categoryHierarchy);
 
-        // Step 5: Save product option combinations
-        List<ProductOptionCombination> savedOptionCombinations = saveProductOptionCombinations(request.options(), savedProduct);
+        // Step 5: Save product option combinations and values
+        List<ProductOptionValue> savedOptionValues = new ArrayList<>();
+        List<ProductOptionCombination> savedOptionCombinations = saveProductOptionCombinations(
+                request.options(),
+                savedProduct,
+                savedOptionValues
+        );
 
         // Step 6: Save product attribute values
         List<ProductAttributeValue> savedAttributes = saveProductAttributeValues(request, savedProduct);
@@ -104,11 +114,11 @@ public class ProductServiceImpl implements ProductService {
         // Step 7: Save product variants and associated variant option values
         List<ProductVariant> savedVariants = new ArrayList<>();
         List<VariantOptionValue> savedVariantOptionValues = new ArrayList<>();
-        saveVariants(request, savedProduct, savedVariants, savedVariantOptionValues);
+        saveVariants(request, savedProduct, savedOptionValues, savedVariants, savedVariantOptionValues);
         log.info("Created {} variants for product ID: {}", savedVariants.size(), savedProduct.getId());
 
         // Step 8: Build product option combination responses
-        List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(savedOptionCombinations, savedVariantOptionValues);
+        List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
 
         // Step 9: Build and return ProductResponse
         return ProductResponse.from(savedProduct, savedAttributes, options, savedVariants, savedVariantOptionValues);
@@ -133,14 +143,23 @@ public class ProductServiceImpl implements ProductService {
         Product savedProduct = productRepository.save(product);
         log.info("Updated base product fields for ID: {}", productId);
 
-        // Step 4: Update product categories (re-link category hierarchy)
-        productCategoryRepository.deleteByProductId(productId);
+        // Step 4: Perform delta update on product categories
         List<Category> categoryHierarchy = collectCategoryAndParents(category);
-        saveProductCategories(savedProduct, categoryHierarchy);
+        List<ProductCategory> currentProductCategories = productCategoryRepository.findByProductId(productId);
+        saveUpdatedProductCategories(savedProduct, categoryHierarchy, currentProductCategories);
 
-        // Step 5: Update product option combinations
-        productOptionCombinationRepository.deleteByProductId(productId);
-        List<ProductOptionCombination> savedOptionCombinations = saveProductOptionCombinations(request.options(), savedProduct);
+        // Step 5: Perform delta update on product option combinations and values
+        List<ProductOptionCombination> currentCombinations = productOptionCombinationRepository.findByProductIdOrderByPositionAsc(productId);
+        List<ProductOptionValue> currentOptionValues = productOptionValueRepository.findByProductId(productId);
+
+        List<ProductOptionValue> savedOptionValues = new ArrayList<>();
+        List<ProductOptionCombination> savedOptionCombinations = saveUpdatedProductOptionCombinations(
+                request.options(),
+                savedProduct,
+                currentCombinations,
+                currentOptionValues,
+                savedOptionValues
+        );
 
         // Step 6: Perform delta update on product attributes
         List<ProductAttributeValue> currentAttributes = productAttributeValueRepository.findByProductId(productId);
@@ -152,22 +171,23 @@ public class ProductServiceImpl implements ProductService {
 
         // Step 7: Perform in-place delta update on product variants and variant option values
         List<ProductVariant> currentVariants = productVariantRepository.findByProductId(productId);
-        List<VariantOptionValue> currentOptionValues = variantOptionValueRepository.findByProductVariantProductId(productId);
+        List<VariantOptionValue> currentOptionValuesList = variantOptionValueRepository.findByProductVariantProductId(productId);
 
         List<ProductVariant> savedVariants = new ArrayList<>();
         List<VariantOptionValue> savedVariantOptionValues = new ArrayList<>();
         saveUpdatedVariants(
                 request,
                 savedProduct,
+                savedOptionValues,
                 currentVariants,
-                currentOptionValues,
+                currentOptionValuesList,
                 savedVariants,
                 savedVariantOptionValues
         );
         log.info("Updated {} variants and option values for product ID: {}", savedVariants.size(), productId);
 
         // Step 8: Build product option combination responses
-        List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(savedOptionCombinations, savedVariantOptionValues);
+        List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
 
         // Step 9: Build and return updated ProductResponse
         return ProductResponse.from(savedProduct, savedAttributes, options, savedVariants, savedVariantOptionValues);
@@ -182,8 +202,9 @@ public class ProductServiceImpl implements ProductService {
         List<ProductVariant> variants = productVariantRepository.findByProductId(id);
         List<VariantOptionValue> variantOptionValues = variantOptionValueRepository.findByProductVariantProductId(id);
         List<ProductOptionCombination> combinations = productOptionCombinationRepository.findByProductIdOrderByPositionAsc(id);
+        List<ProductOptionValue> optionValues = productOptionValueRepository.findByProductId(id);
 
-        List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(combinations, variantOptionValues);
+        List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(combinations, optionValues);
 
         return ProductResponse.from(product, attributes, options, variants, variantOptionValues);
     }
@@ -191,45 +212,39 @@ public class ProductServiceImpl implements ProductService {
     // Helper: Builds ProductOptionCombinationResponse DTO list for ProductResponse
     private List<ProductOptionCombinationResponse> buildOptionCombinationResponses(
             List<ProductOptionCombination> combinations,
-            List<VariantOptionValue> variantOptionValues
+            List<ProductOptionValue> optionValues
     ) {
-        if (Objects.nonNull(combinations) && !combinations.isEmpty()) {
-            return combinations.stream()
-                    .map(combination -> {
-                        Long optionId = combination.getProductOption().getId();
-                        List<String> values = variantOptionValues.stream()
-                                .filter(vov -> Objects.nonNull(vov.getProductOption()) && Objects.equals(vov.getProductOption().getId(), optionId))
-                                .map(VariantOptionValue::getValue)
-                                .filter(val -> Objects.nonNull(val) && !val.isBlank())
-                                .distinct()
-                                .toList();
-                        return new ProductOptionCombinationResponse(
-                                optionId,
-                                combination.getPosition(),
-                                values
-                        );
-                    })
-                    .toList();
+        if (Objects.isNull(combinations) || combinations.isEmpty()) {
+            return List.of();
         }
 
-        List<ProductOption> distinctOptions = variantOptionValues.stream()
-                .map(VariantOptionValue::getProductOption)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+        Map<Long, List<ProductOptionValueResponse>> valuesByOptionId = Objects.isNull(optionValues)
+                ? Map.of()
+                : optionValues.stream()
+                        .filter(pov -> Objects.nonNull(pov.getProductOptionCombination())
+                                && Objects.nonNull(pov.getProductOptionCombination().getProductOption()))
+                        .collect(Collectors.groupingBy(
+                                pov -> pov.getProductOptionCombination().getProductOption().getId(),
+                                Collectors.mapping(
+                                        pov -> new ProductOptionValueResponse(
+                                                pov.getId(),
+                                                pov.getValue(),
+                                                pov.getPosition()
+                                        ),
+                                        Collectors.toList()
+                                )
+                        ));
 
-        return distinctOptions.stream()
-                .map(option -> {
-                    Long optionId = option.getId();
-                    List<String> values = variantOptionValues.stream()
-                            .filter(vov -> Objects.nonNull(vov.getProductOption()) && Objects.equals(vov.getProductOption().getId(), optionId))
-                            .map(VariantOptionValue::getValue)
-                            .filter(val -> Objects.nonNull(val) && !val.isBlank())
-                            .distinct()
-                            .toList();
+        return combinations.stream()
+                .filter(combination -> Objects.nonNull(combination) && Objects.nonNull(combination.getProductOption()))
+                .map(combination -> {
+                    Long optionId = combination.getProductOption().getId();
+                    String name = combination.getProductOption().getName();
+                    List<ProductOptionValueResponse> values = valuesByOptionId.getOrDefault(optionId, List.of());
                     return new ProductOptionCombinationResponse(
                             optionId,
-                            0,
+                            name,
+                            combination.getPosition(),
                             values
                     );
                 })
@@ -244,16 +259,18 @@ public class ProductServiceImpl implements ProductService {
 
         productCategoryRepository.deleteByProductId(id);
         productAttributeValueRepository.deleteByProductId(id);
+        productOptionValueRepository.deleteByProductId(id);
         productOptionCombinationRepository.deleteByProductId(id);
         variantOptionValueRepository.deleteByProductId(id);
         productVariantRepository.deleteByProductId(id);
         productRepository.delete(product);
     }
 
-    // Helper: Creates and saves ProductOptionCombination entities linking Product and ProductOption at specific positions
+    // Helper: Creates and saves ProductOptionCombination and ProductOptionValue entities for product creation
     private List<ProductOptionCombination> saveProductOptionCombinations(
             List<ProductOptionCombinationCreateRequest> optionRequests,
-            Product product
+            Product product,
+            List<ProductOptionValue> outOptionValues
     ) {
         if (Objects.isNull(optionRequests) || optionRequests.isEmpty()) {
             return List.of();
@@ -281,7 +298,180 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
 
         log.debug("Saving {} product option combinations for product ID: {}", combinations.size(), product.getId());
-        return productOptionCombinationRepository.saveAll(combinations);
+        List<ProductOptionCombination> savedCombinations = productOptionCombinationRepository.saveAll(combinations);
+
+        Map<Long, ProductOptionCombination> savedCombinationByOptionId = savedCombinations.stream()
+                .collect(Collectors.toMap(poc -> poc.getProductOption().getId(), Function.identity(), (e1, e2) -> e1));
+
+        List<ProductOptionValue> valuesToSave = new ArrayList<>();
+        for (ProductOptionCombinationCreateRequest optionRequest : optionRequests) {
+            ProductOptionCombination combination = savedCombinationByOptionId.get(optionRequest.productOptionId());
+            if (Objects.nonNull(optionRequest.values()) && Objects.nonNull(combination)) {
+                for (ProductOptionValueCreateRequest valReq : optionRequest.values()) {
+                    if (Objects.nonNull(valReq) && !isBlank(valReq.value())) {
+                        ProductOptionValue optionValue = ProductOptionValue.builder()
+                                .value(valReq.value())
+                                .position(valReq.position())
+                                .productOptionCombination(combination)
+                                .build();
+                        valuesToSave.add(optionValue);
+                    }
+                }
+            }
+        }
+
+        if (!valuesToSave.isEmpty()) {
+            log.debug("Saving {} product option values for product ID: {}", valuesToSave.size(), product.getId());
+            outOptionValues.addAll(productOptionValueRepository.saveAll(valuesToSave));
+        }
+
+        return savedCombinations;
+    }
+
+    // Helper: Performs delta update on ProductOptionCombination and ProductOptionValue entities for product update
+    private List<ProductOptionCombination> saveUpdatedProductOptionCombinations(
+            List<ProductOptionCombinationUpdateRequest> optionRequests,
+            Product product,
+            List<ProductOptionCombination> currentCombinations,
+            List<ProductOptionValue> currentOptionValues,
+            List<ProductOptionValue> outOptionValues
+    ) {
+        if (Objects.isNull(optionRequests) || optionRequests.isEmpty()) {
+            if (Objects.nonNull(currentOptionValues) && !currentOptionValues.isEmpty()) {
+                log.debug("Clearing all {} product option values for product ID: {}", currentOptionValues.size(), product.getId());
+                productOptionValueRepository.deleteAll(currentOptionValues);
+            }
+            if (Objects.nonNull(currentCombinations) && !currentCombinations.isEmpty()) {
+                log.debug("Clearing all {} product option combinations for product ID: {}", currentCombinations.size(), product.getId());
+                productOptionCombinationRepository.deleteAll(currentCombinations);
+            }
+            return List.of();
+        }
+
+        List<Long> optionIds = optionRequests.stream()
+                .map(ProductOptionCombinationUpdateRequest::productOptionId)
+                .toList();
+        Map<Long, ProductOption> productOptionById = productOptionRepository.findAllById(optionIds).stream()
+                .collect(Collectors.toMap(ProductOption::getId, Function.identity()));
+
+        if (productOptionById.size() != optionIds.stream().distinct().count()) {
+            throw new ResourceNotFoundException(ErrorCode.PRODUCT_OPTION_NOT_FOUND);
+        }
+
+        Set<Long> targetOptionIds = new HashSet<>(optionIds);
+        Map<Long, ProductOptionCombination> currentByOptionId = Objects.isNull(currentCombinations)
+                ? Map.of()
+                : currentCombinations.stream()
+                        .collect(Collectors.toMap(
+                                poc -> poc.getProductOption().getId(),
+                                Function.identity(),
+                                (e1, e2) -> e1
+                        ));
+
+        List<ProductOptionCombination> deletedCombinations = Objects.isNull(currentCombinations)
+                ? List.of()
+                : currentCombinations.stream()
+                        .filter(poc -> !targetOptionIds.contains(poc.getProductOption().getId()))
+                        .toList();
+
+        if (!deletedCombinations.isEmpty()) {
+            Set<Long> deletedOptionIds = deletedCombinations.stream()
+                    .map(poc -> poc.getProductOption().getId())
+                    .collect(Collectors.toSet());
+
+            List<ProductOptionValue> deletedValuesForCombinations = Objects.isNull(currentOptionValues)
+                    ? List.of()
+                    : currentOptionValues.stream()
+                            .filter(pov -> Objects.nonNull(pov.getProductOptionCombination())
+                                    && deletedOptionIds.contains(pov.getProductOptionCombination().getProductOption().getId()))
+                            .toList();
+            if (!deletedValuesForCombinations.isEmpty()) {
+                log.debug("Deleting {} product option values for omitted combinations", deletedValuesForCombinations.size());
+                productOptionValueRepository.deleteAll(deletedValuesForCombinations);
+            }
+
+            log.debug("Deleting {} omitted product option combinations", deletedCombinations.size());
+            productOptionCombinationRepository.deleteAll(deletedCombinations);
+        }
+
+        List<ProductOptionCombination> updatedCombinations = optionRequests.stream()
+                .map(optionRequest -> {
+                    Long optionId = optionRequest.productOptionId();
+                    ProductOptionCombination existing = currentByOptionId.get(optionId);
+                    if (Objects.nonNull(existing)) {
+                        existing.setPosition(optionRequest.position());
+                        return existing;
+                    }
+                    ProductOption option = productOptionById.get(optionId);
+                    return ProductOptionCombination.builder()
+                            .id(new ProductOptionCombinationId(product.getId(), option.getId()))
+                            .product(product)
+                            .productOption(option)
+                            .position(optionRequest.position())
+                            .build();
+                })
+                .toList();
+
+        log.debug("Saving {} updated product option combinations for product ID: {}", updatedCombinations.size(), product.getId());
+        List<ProductOptionCombination> savedCombinations = productOptionCombinationRepository.saveAll(updatedCombinations);
+
+        Map<Long, ProductOptionCombination> savedCombinationByOptionId = savedCombinations.stream()
+                .collect(Collectors.toMap(poc -> poc.getProductOption().getId(), Function.identity(), (e1, e2) -> e1));
+
+        Map<Long, ProductOptionValue> currentPovById = Objects.isNull(currentOptionValues)
+                ? Map.of()
+                : currentOptionValues.stream()
+                        .filter(pov -> Objects.nonNull(pov.getId()))
+                        .collect(Collectors.toMap(ProductOptionValue::getId, Function.identity(), (e1, e2) -> e1));
+
+        Set<Long> processedPovIds = new HashSet<>();
+        List<ProductOptionValue> valuesToSave = new ArrayList<>();
+
+        for (ProductOptionCombinationUpdateRequest optionRequest : optionRequests) {
+            ProductOptionCombination combination = savedCombinationByOptionId.get(optionRequest.productOptionId());
+            if (Objects.nonNull(optionRequest.values()) && Objects.nonNull(combination)) {
+                for (ProductOptionValueUpdateRequest valReq : optionRequest.values()) {
+                    if (Objects.isNull(valReq) || isBlank(valReq.value())) {
+                        continue;
+                    }
+                    if (Objects.nonNull(valReq.id()) && currentPovById.containsKey(valReq.id())) {
+                        ProductOptionValue existingPov = currentPovById.get(valReq.id());
+                        existingPov.setValue(valReq.value());
+                        existingPov.setPosition(valReq.position());
+                        existingPov.setProductOptionCombination(combination);
+                        processedPovIds.add(existingPov.getId());
+                        valuesToSave.add(existingPov);
+                    } else {
+                        ProductOptionValue newPov = ProductOptionValue.builder()
+                                .value(valReq.value())
+                                .position(valReq.position())
+                                .productOptionCombination(combination)
+                                .build();
+                        valuesToSave.add(newPov);
+                    }
+                }
+            }
+        }
+
+        List<ProductOptionValue> deletedOptionValues = Objects.isNull(currentOptionValues)
+                ? List.of()
+                : currentOptionValues.stream()
+                        .filter(pov -> Objects.nonNull(pov.getProductOptionCombination())
+                                && targetOptionIds.contains(pov.getProductOptionCombination().getProductOption().getId())
+                                && !processedPovIds.contains(pov.getId()))
+                        .toList();
+
+        if (!deletedOptionValues.isEmpty()) {
+            log.debug("Deleting {} omitted product option values", deletedOptionValues.size());
+            productOptionValueRepository.deleteAll(deletedOptionValues);
+        }
+
+        if (!valuesToSave.isEmpty()) {
+            log.debug("Saving {} updated product option values for product ID: {}", valuesToSave.size(), product.getId());
+            outOptionValues.addAll(productOptionValueRepository.saveAll(valuesToSave));
+        }
+
+        return savedCombinations;
     }
 
     // Helper: Resolves Category entity by ID from DB
@@ -335,6 +525,62 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
         log.debug("Saving {} product category junction records for product ID: {}", productCategories.size(), product.getId());
         return productCategoryRepository.saveAll(productCategories);
+    }
+
+    // Helper: Performs delta update on ProductCategory entities for product update
+    private List<ProductCategory> saveUpdatedProductCategories(
+            Product product,
+            List<Category> targetCategories,
+            List<ProductCategory> currentProductCategories
+    ) {
+        if (Objects.isNull(targetCategories) || targetCategories.isEmpty()) {
+            if (Objects.nonNull(currentProductCategories) && !currentProductCategories.isEmpty()) {
+                log.debug("Deleting all {} product category records for product ID: {}", currentProductCategories.size(), product.getId());
+                productCategoryRepository.deleteAll(currentProductCategories);
+            }
+            return List.of();
+        }
+
+        Set<Integer> targetCategoryIds = targetCategories.stream()
+                .map(Category::getId)
+                .collect(Collectors.toSet());
+
+        Map<Integer, ProductCategory> currentByCategoryId = Objects.isNull(currentProductCategories)
+                ? Map.of()
+                : currentProductCategories.stream()
+                        .collect(Collectors.toMap(
+                                pc -> pc.getCategory().getId(),
+                                Function.identity(),
+                                (e1, e2) -> e1
+                        ));
+
+        List<ProductCategory> deletedProductCategories = Objects.isNull(currentProductCategories)
+                ? List.of()
+                : currentProductCategories.stream()
+                        .filter(pc -> !targetCategoryIds.contains(pc.getCategory().getId()))
+                        .toList();
+
+        if (!deletedProductCategories.isEmpty()) {
+            log.debug("Deleting {} omitted product category junction records", deletedProductCategories.size());
+            productCategoryRepository.deleteAll(deletedProductCategories);
+        }
+
+        List<ProductCategory> updatedProductCategories = targetCategories.stream()
+                .map(category -> {
+                    ProductCategory existing = currentByCategoryId.get(category.getId());
+                    if (Objects.nonNull(existing)) {
+                        return existing;
+                    }
+                    return ProductCategory.builder()
+                            .id(new ProductCategoryId(product.getId(), category.getId()))
+                            .product(product)
+                            .category(category)
+                            .build();
+                })
+                .toList();
+
+        log.debug("Saving {} updated product category records for product ID: {}", updatedProductCategories.size(), product.getId());
+        return productCategoryRepository.saveAll(updatedProductCategories);
     }
 
     // Helper: Creates and saves ProductAttributeValue entities for product creation
@@ -442,46 +688,57 @@ public class ProductServiceImpl implements ProductService {
     private void saveVariants(
             ProductCreateRequest request,
             Product product,
+            List<ProductOptionValue> productOptionValues,
             List<ProductVariant> savedVariants,
             List<VariantOptionValue> savedOptionValues
     ) {
+        if (Objects.isNull(request.variants()) || request.variants().isEmpty()) {
+            return;
+        }
         log.debug("Saving {} variants for product ID: {}", request.variants().size(), product.getId());
-        Set<Long> optionIds = request.variants().stream()
-                .map(ProductVariantCreateRequest::options)
-                .filter(Objects::nonNull)
-                .flatMap(map -> map.keySet().stream())
-                .collect(Collectors.toSet());
-        Map<Long, ProductOption> productOptionById = optionIds.isEmpty()
-                ? Map.of()
-                : productOptionRepository.findAllById(optionIds).stream()
-                        .collect(Collectors.toMap(ProductOption::getId, Function.identity()));
 
+        List<ProductOptionCombinationCreateRequest> optionRequests = Objects.isNull(request.options())
+                ? List.of()
+                : request.options();
+
+        Map<String, ProductOptionValue> povMap = Objects.isNull(productOptionValues)
+                ? Map.of()
+                : productOptionValues.stream()
+                        .filter(pov -> Objects.nonNull(pov.getProductOptionCombination())
+                                && Objects.nonNull(pov.getProductOptionCombination().getProductOption()))
+                        .collect(Collectors.toMap(
+                                pov -> pov.getProductOptionCombination().getProductOption().getId() + "_" + pov.getValue(),
+                                Function.identity(),
+                                (e1, e2) -> e1
+                        ));
+
+        int variantIndex = 0;
         for (ProductVariantCreateRequest variantRequest : request.variants()) {
             ProductVariant variant = variantRequest.toEntity(product);
             applyDefaultVariantTitle(variant);
             ProductVariant savedVariant = productVariantRepository.save(variant);
             savedVariants.add(savedVariant);
 
-            if (Objects.nonNull(variantRequest.options())) {
-                for (Map.Entry<Long, VariantOptionValueRequest> entry : variantRequest.options().entrySet()) {
-                    Long optionId = entry.getKey();
-                    VariantOptionValueRequest optValReq = entry.getValue();
-                    if (Objects.isNull(optValReq) || isBlank(optValReq.value())) {
-                        continue;
-                    }
-                    ProductOption option = productOptionById.get(optionId);
-                    if (Objects.isNull(option)) {
-                        throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
-                    }
-                    VariantOptionValue optionValue = VariantOptionValue.builder()
-                            .value(optValReq.value())
-                            .position(optValReq.position())
-                            .productVariant(savedVariant)
-                            .productOption(option)
-                            .build();
-                    savedOptionValues.add(variantOptionValueRepository.save(optionValue));
+            for (ProductOptionCombinationCreateRequest optionReq : optionRequests) {
+                if (Objects.isNull(optionReq.values()) || variantIndex >= optionReq.values().size()) {
+                    continue;
                 }
+                ProductOptionValueCreateRequest optValReq = optionReq.values().get(variantIndex);
+                if (Objects.isNull(optValReq) || isBlank(optValReq.value())) {
+                    continue;
+                }
+                String key = optionReq.productOptionId() + "_" + optValReq.value();
+                ProductOptionValue pov = povMap.get(key);
+                if (Objects.isNull(pov)) {
+                    continue;
+                }
+                VariantOptionValue optionValue = VariantOptionValue.builder()
+                        .productVariant(savedVariant)
+                        .productOptionValue(pov)
+                        .build();
+                savedOptionValues.add(variantOptionValueRepository.save(optionValue));
             }
+            variantIndex++;
         }
         log.debug("Saved {} variant option values for product ID: {}", savedOptionValues.size(), product.getId());
     }
@@ -490,85 +747,105 @@ public class ProductServiceImpl implements ProductService {
     private void saveUpdatedVariants(
             ProductUpdateRequest request,
             Product product,
+            List<ProductOptionValue> productOptionValues,
             List<ProductVariant> currentVariants,
             List<VariantOptionValue> currentOptionValues,
             List<ProductVariant> savedVariants,
             List<VariantOptionValue> savedOptionValues
     ) {
+        if (Objects.isNull(request.variants()) || request.variants().isEmpty()) {
+            return;
+        }
         log.debug("Updating variants for product ID: {}", product.getId());
-        Set<Long> optionIds = request.variants().stream()
-                .map(ProductVariantUpdateRequest::options)
-                .filter(Objects::nonNull)
-                .flatMap(map -> map.keySet().stream())
-                .collect(Collectors.toSet());
-        Map<Long, ProductOption> productOptionById = optionIds.isEmpty()
+
+        List<ProductOptionCombinationUpdateRequest> optionRequests = Objects.isNull(request.options())
+                ? List.of()
+                : request.options();
+
+        Map<Long, ProductOptionValue> povById = Objects.isNull(productOptionValues)
                 ? Map.of()
-                : productOptionRepository.findAllById(optionIds).stream()
-                        .collect(Collectors.toMap(ProductOption::getId, Function.identity()));
+                : productOptionValues.stream()
+                        .filter(pov -> Objects.nonNull(pov.getId()))
+                        .collect(Collectors.toMap(ProductOptionValue::getId, Function.identity(), (e1, e2) -> e1));
 
-        Map<Long, ProductVariant> currentVariantById = currentVariants.stream()
-                .collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
+        Map<String, ProductOptionValue> povByOptionAndValue = Objects.isNull(productOptionValues)
+                ? Map.of()
+                : productOptionValues.stream()
+                        .filter(pov -> Objects.nonNull(pov.getProductOptionCombination())
+                                && Objects.nonNull(pov.getProductOptionCombination().getProductOption()))
+                        .collect(Collectors.toMap(
+                                pov -> pov.getProductOptionCombination().getProductOption().getId() + "_" + pov.getValue(),
+                                Function.identity(),
+                                (e1, e2) -> e1
+                        ));
 
-        Map<String, VariantOptionValue> existingOptionValueMap = currentOptionValues.stream()
-                .filter(vov -> Objects.nonNull(vov.getProductVariant()) && Objects.nonNull(vov.getProductOption()))
-                .collect(Collectors.toMap(
-                        vov -> vov.getProductVariant().getId() + "_" + vov.getProductOption().getId(),
-                        Function.identity(),
-                        (e1, e2) -> e1
-                ));
+        Map<Long, ProductVariant> currentVariantById = Objects.isNull(currentVariants)
+                ? Map.of()
+                : currentVariants.stream()
+                        .collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
+
+        Map<String, VariantOptionValue> existingOptionValueMap = Objects.isNull(currentOptionValues)
+                ? Map.of()
+                : currentOptionValues.stream()
+                        .filter(vov -> Objects.nonNull(vov.getProductVariant()) && Objects.nonNull(vov.getProductOptionValue()))
+                        .collect(Collectors.toMap(
+                                vov -> vov.getProductVariant().getId() + "_" + vov.getProductOptionValue().getId(),
+                                Function.identity(),
+                                (e1, e2) -> e1
+                        ));
 
         Set<Long> processedOptionValueIds = new HashSet<>();
 
+        int variantIndex = 0;
         for (ProductVariantUpdateRequest variantRequest : request.variants()) {
             ProductVariant variant = resolveVariant(variantRequest, product, currentVariantById);
             ProductVariant savedVariant = productVariantRepository.save(variant);
             savedVariants.add(savedVariant);
 
-            if (Objects.nonNull(variantRequest.options())) {
-                for (Map.Entry<Long, VariantOptionValueRequest> entry : variantRequest.options().entrySet()) {
-                    Long optionId = entry.getKey();
-                    VariantOptionValueRequest optValReq = entry.getValue();
-                    if (Objects.isNull(optValReq) || isBlank(optValReq.value())) {
-                        continue;
-                    }
-                    String value = optValReq.value();
-                    int position = optValReq.position();
+            for (ProductOptionCombinationUpdateRequest optionReq : optionRequests) {
+                if (Objects.isNull(optionReq.values()) || variantIndex >= optionReq.values().size()) {
+                    continue;
+                }
+                ProductOptionValueUpdateRequest optValReq = optionReq.values().get(variantIndex);
+                if (Objects.isNull(optValReq) || isBlank(optValReq.value())) {
+                    continue;
+                }
+                ProductOptionValue pov = null;
+                if (Objects.nonNull(optValReq.id())) {
+                    pov = povById.get(optValReq.id());
+                }
+                if (Objects.isNull(pov)) {
+                    String key = optionReq.productOptionId() + "_" + optValReq.value();
+                    pov = povByOptionAndValue.get(key);
+                }
+                if (Objects.isNull(pov)) {
+                    continue;
+                }
 
-                    String key = savedVariant.getId() != null ? savedVariant.getId() + "_" + optionId : null;
-                    VariantOptionValue existingOptionValue = key != null ? existingOptionValueMap.get(key) : null;
+                String vovKey = savedVariant.getId() != null ? savedVariant.getId() + "_" + pov.getId() : null;
+                VariantOptionValue existingOptionValue = vovKey != null ? existingOptionValueMap.get(vovKey) : null;
 
-                    if (Objects.nonNull(existingOptionValue)) {
-                        processedOptionValueIds.add(existingOptionValue.getId());
-                        if (!Objects.equals(existingOptionValue.getValue(), value) || existingOptionValue.getPosition() != position) {
-                            log.debug("Updating VariantOptionValue ID: {} (option ID: {}, new value: '{}', position: {})", existingOptionValue.getId(), optionId, value, position);
-                            existingOptionValue.setValue(value);
-                            existingOptionValue.setPosition(position);
-                        } else {
-                            log.debug("Keeping unchanged VariantOptionValue ID: {} (option ID: {}, value: '{}')", existingOptionValue.getId(), optionId, value);
-                        }
-                        savedOptionValues.add(variantOptionValueRepository.save(existingOptionValue));
-                    } else {
-                        ProductOption option = productOptionById.get(optionId);
-                        if (Objects.isNull(option)) {
-                            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
-                        }
-                        VariantOptionValue optionValue = VariantOptionValue.builder()
-                                .value(value)
-                                .position(position)
-                                .productVariant(savedVariant)
-                                .productOption(option)
-                                .build();
-                        VariantOptionValue savedVov = variantOptionValueRepository.save(optionValue);
-                        log.debug("Created new VariantOptionValue ID: {} (option ID: {}, value: '{}', position: {}) for variant ID: {}", savedVov.getId(), optionId, value, position, savedVariant.getId());
-                        savedOptionValues.add(savedVov);
-                    }
+                if (Objects.nonNull(existingOptionValue)) {
+                    processedOptionValueIds.add(existingOptionValue.getId());
+                    savedOptionValues.add(existingOptionValue);
+                } else {
+                    VariantOptionValue optionValue = VariantOptionValue.builder()
+                            .productVariant(savedVariant)
+                            .productOptionValue(pov)
+                            .build();
+                    VariantOptionValue savedVov = variantOptionValueRepository.save(optionValue);
+                    processedOptionValueIds.add(savedVov.getId());
+                    savedOptionValues.add(savedVov);
                 }
             }
+            variantIndex++;
         }
 
-        List<VariantOptionValue> deletedOptionValues = currentOptionValues.stream()
-                .filter(vov -> !processedOptionValueIds.contains(vov.getId()))
-                .toList();
+        List<VariantOptionValue> deletedOptionValues = Objects.isNull(currentOptionValues)
+                ? List.of()
+                : currentOptionValues.stream()
+                        .filter(vov -> !processedOptionValueIds.contains(vov.getId()))
+                        .toList();
         if (!deletedOptionValues.isEmpty()) {
             List<Long> deletedVovIds = deletedOptionValues.stream().map(VariantOptionValue::getId).toList();
             log.debug("Deleting {} omitted variant option values (IDs: {}) for product ID: {}", deletedOptionValues.size(), deletedVovIds, product.getId());

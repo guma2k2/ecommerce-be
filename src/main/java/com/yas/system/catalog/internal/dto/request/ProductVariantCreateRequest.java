@@ -11,7 +11,6 @@ import java.util.Map;
 
 public record ProductVariantCreateRequest(
         String title,
-        Map<Long, VariantOptionValueRequest> options, // <ProductOptionId, VariantOptionValueRequest>
         @NotBlank
         String sku,
         @NotNull

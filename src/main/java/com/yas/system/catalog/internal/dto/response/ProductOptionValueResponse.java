@@ -1,7 +1,7 @@
 package com.yas.system.catalog.internal.dto.response;
 
-public record VariantOptionValueResponse(
-        Long id, // product option id
+public record ProductOptionValueResponse(
+        Long id, // ProductOptionValue id
         String value,
         int position
 ) {
