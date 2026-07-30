@@ -1,7 +1,6 @@
 package com.yas.system.catalog.internal.dto.response;
 
 import com.yas.system.catalog.internal.entity.Product;
-import com.yas.system.catalog.internal.entity.option.ProductOption;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;

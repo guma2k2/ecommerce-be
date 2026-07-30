@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.entity;
 
-import com.yas.system.catalog.internal.dto.enums.ProductImageType;
+import com.yas.system.catalog.internal.dto.enumeration.ProductImageType;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;

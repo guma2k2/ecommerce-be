@@ -19,7 +19,7 @@ public record ProductUpdateRequest(
         Integer categoryId,
         Integer brandId,
         @Valid
-        List<ProductOptionCombinationCreateRequest> options,
+        List<ProductOptionCombinationUpdateRequest> options,
 
         @Valid
         List<ProductAttributeValueUpdateRequest> attributes,
