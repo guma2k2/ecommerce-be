@@ -3,8 +3,10 @@ package com.yas.system.catalog.controller;
 import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
+import com.yas.system.catalog.internal.dto.response.ProductThumbnailResponse;
 import com.yas.system.catalog.internal.service.ProductService;
 import com.yas.system.common.response.ApiResponse;
+import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,17 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     ProductService productService;
+
+    @GetMapping
+    public ApiResponse<PageResponse<ProductThumbnailResponse>> getProducts(
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Integer brandId
+    ) {
+        return ApiResponse.success(productService.getProducts(pageNo, pageSize, name, categoryId, brandId));
+    }
 
     @PostMapping()
     public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductCreateRequest request) {

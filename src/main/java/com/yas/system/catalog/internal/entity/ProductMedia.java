@@ -7,30 +7,20 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tbl_product_image")
+@Table(name = "tbl_product_media")
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductImage extends BaseLongEntity {
+public class ProductMedia extends BaseLongEntity {
 
-    private String url;
+    private int position;
 
-    @Enumerated(EnumType.STRING)
-    private ProductImageType type;
-
-    @Builder.Default
-    private int position = 0;
-
-    private boolean status;
+    @Column(nullable = false)
+    private String mediaId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_variant_id")
-    private ProductVariant productVariant;
-
 }

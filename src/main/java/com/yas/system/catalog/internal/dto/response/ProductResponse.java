@@ -1,12 +1,14 @@
 package com.yas.system.catalog.internal.dto.response;
 
 import com.yas.system.catalog.internal.entity.Product;
+import com.yas.system.catalog.internal.entity.ProductMedia;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeValue;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 public record ProductResponse(
         Long id,
@@ -17,6 +19,7 @@ public record ProductResponse(
         String metaKeyword,
         String metaDescription,
         BrandResponse brand,
+        List<ProductMediaResponse> medias,
         List<ProductAttributeValueResponse> attributes,
         List<ProductOptionCombinationResponse> options,
         List<ProductVariantResponse> variants,
@@ -25,6 +28,8 @@ public record ProductResponse(
 ) {
     public static ProductResponse from(
             Product product,
+            List<ProductMedia> medias,
+            Map<String, String> mediaUrlMap,
             List<ProductAttributeValue> attributes,
             List<ProductOptionCombinationResponse> options,
             List<ProductVariant> variants,
@@ -39,6 +44,11 @@ public record ProductResponse(
                 product.getMetaKeyword(),
                 product.getMetaDescription(),
                 product.getBrand() != null ? BrandResponse.from(product.getBrand()) : null,
+                medias != null
+                        ? medias.stream()
+                                .map(pm -> ProductMediaResponse.from(pm, mediaUrlMap != null ? mediaUrlMap.get(pm.getMediaId()) : null))
+                                .toList()
+                        : List.of(),
                 attributes.stream()
                         .map(ProductAttributeValueResponse::from)
                         .toList(),
@@ -50,4 +60,16 @@ public record ProductResponse(
                 product.getUpdatedAt() != null ? product.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
         );
     }
+
+    public static ProductResponse from(
+            Product product,
+            List<ProductMedia> medias,
+            List<ProductAttributeValue> attributes,
+            List<ProductOptionCombinationResponse> options,
+            List<ProductVariant> variants,
+            List<VariantOptionValue> variantOptionValues
+    ) {
+        return from(product, medias, java.util.Map.of(), attributes, options, variants, variantOptionValues);
+    }
 }
+

@@ -18,6 +18,10 @@ public record ProductUpdateRequest(
         String metaDescription,
         Integer categoryId,
         Integer brandId,
+
+        @Valid
+        List<ProductMediaRequest> medias,
+
         @Valid
         List<ProductOptionCombinationUpdateRequest> options,
 
