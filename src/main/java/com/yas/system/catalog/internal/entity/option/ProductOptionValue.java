@@ -19,7 +19,9 @@ public class ProductOptionValue extends BaseLongEntity {
     private int position;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_option_combination_id")
+    @JoinColumns({
+            @JoinColumn(name = "product_id"),
+            @JoinColumn(name = "product_option_id")
+    })
     private ProductOptionCombination productOptionCombination;
-
 }

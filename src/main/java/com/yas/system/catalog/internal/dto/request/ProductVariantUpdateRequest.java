@@ -18,7 +18,8 @@ public record ProductVariantUpdateRequest(
         @PositiveOrZero
         BigDecimal price,
         @PositiveOrZero
-        int quantity
+        int quantity,
+        String mediaId
 ) {
     public ProductVariant toEntity(Product product) {
         return ProductVariant.builder()

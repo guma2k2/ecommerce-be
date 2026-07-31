@@ -20,6 +20,9 @@ public record ProductCreateRequest(
         Integer brandId,
 
         @Valid
+        List<ProductMediaRequest>  medias,
+
+        @Valid
         List<ProductOptionCombinationCreateRequest> options,
 
         @Valid
