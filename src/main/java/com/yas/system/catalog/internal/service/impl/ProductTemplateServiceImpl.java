@@ -3,8 +3,12 @@ package com.yas.system.catalog.internal.service.impl;
 import com.yas.system.catalog.internal.dto.request.ProductTemplateCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductTemplateUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
+import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
+import com.yas.system.catalog.internal.entity.attribute.ProductAttributeTemplate;
 import com.yas.system.catalog.internal.entity.attribute.ProductTemplate;
 import com.yas.system.catalog.internal.helper.ProductTemplateHelper;
+import com.yas.system.catalog.internal.repository.ProductAttributeRepository;
+import com.yas.system.catalog.internal.repository.ProductAttributeTemplateRepository;
 import com.yas.system.catalog.internal.repository.ProductTemplateRepository;
 import com.yas.system.catalog.internal.service.ProductTemplateService;
 import com.yas.system.common.exception.ErrorCode;
@@ -21,8 +25,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.yas.system.common.util.StringUtils.isBlank;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -31,13 +40,19 @@ import java.util.Objects;
 public class ProductTemplateServiceImpl implements ProductTemplateService {
 
     ProductTemplateRepository productTemplateRepository;
+    ProductAttributeRepository productAttributeRepository;
+    ProductAttributeTemplateRepository productAttributeTemplateRepository;
     ProductTemplateHelper productTemplateHelper;
 
     @Override
     @Transactional
     public void createProductTemplate(ProductTemplateCreateRequest request) {
         validateCreateProductTemplateRequest(request);
-        productTemplateRepository.save(productTemplateHelper.createProductTemplate(request));
+
+        Map<Long, ProductAttribute> productAttributeById = findProductAttributes(request.attributeIds());
+        ProductTemplate productTemplate = productTemplateRepository.save(productTemplateHelper.createProductTemplate(request));
+
+        saveProductAttributeTemplates(productTemplate, request.attributeIds(), productAttributeById);
     }
 
     @Override
@@ -45,9 +60,13 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
     public void updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId) {
         validateUpdateProductTemplateRequest(request, productTemplateId);
 
+        Map<Long, ProductAttribute> productAttributeById = findProductAttributes(request.attributeIds());
         ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
         productTemplateHelper.updateProductTemplate(request, productTemplate);
         productTemplateRepository.save(productTemplate);
+
+        productAttributeTemplateRepository.deleteByProductTemplateId(productTemplateId);
+        saveProductAttributeTemplates(productTemplate, request.attributeIds(), productAttributeById);
     }
 
     @Override
@@ -58,6 +77,7 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
         }
         ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
 
+        productAttributeTemplateRepository.deleteByProductTemplateId(productTemplateId);
         productTemplateRepository.delete(productTemplate);
     }
 
@@ -113,5 +133,43 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_TEMPLATE_NOT_FOUND));
     }
 
+    private Map<Long, ProductAttribute> findProductAttributes(List<Long> attributeIds) {
+        if (Objects.isNull(attributeIds) || attributeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Long> nonNullIds = attributeIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (nonNullIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, ProductAttribute> productAttributeById = productAttributeRepository.findAllById(nonNullIds)
+                .stream()
+                .collect(Collectors.toMap(ProductAttribute::getId, Function.identity()));
+        if (productAttributeById.size() != nonNullIds.size()) {
+            throw new ResourceNotFoundException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND);
+        }
+        return productAttributeById;
+    }
 
+    private void saveProductAttributeTemplates(
+            ProductTemplate productTemplate,
+            List<Long> attributeIds,
+            Map<Long, ProductAttribute> productAttributeById
+    ) {
+        if (Objects.isNull(attributeIds) || attributeIds.isEmpty()) {
+            return;
+        }
+        List<ProductAttributeTemplate> attributeTemplates = new ArrayList<>();
+        for (int i = 0; i < attributeIds.size(); i++) {
+            Long attributeId = attributeIds.get(i);
+            if (Objects.nonNull(attributeId)) {
+                ProductAttribute productAttribute = productAttributeById.get(attributeId);
+                if (Objects.nonNull(productAttribute)) {
+                    attributeTemplates.add(productTemplateHelper.createProductAttributeTemplate(productTemplate, productAttribute, i));
+                }
+            }
+        }
+        if (!attributeTemplates.isEmpty()) {
+            productAttributeTemplateRepository.saveAll(attributeTemplates);
+        }
+    }
 }
