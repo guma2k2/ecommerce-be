@@ -2,8 +2,11 @@ package com.yas.system.catalog.internal.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
+
 public record ProductTemplateUpdateRequest(
         @NotBlank
-        String name
+        String name,
+        List<Long> attributeIds
 ) {
 }
