@@ -87,7 +87,12 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
         if (Objects.isNull(productTemplateId)) {
             throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
-        return ProductTemplateResponse.from(findProductTemplateById(productTemplateId));
+        ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
+        List<ProductAttributeTemplate> attributeTemplates = productAttributeTemplateRepository.findByProductTemplateId(productTemplateId);
+        List<Long> attributeIds = attributeTemplates.stream()
+                .map(pat -> pat.getProductAttribute().getId())
+                .toList();
+        return ProductTemplateResponse.from(productTemplate, attributeIds);
     }
 
     @Override
