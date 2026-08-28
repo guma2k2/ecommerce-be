@@ -1,6 +1,7 @@
 package com.yas.system.catalog.internal.entity.variant;
 
 import com.yas.system.catalog.internal.entity.Product;
+import com.yas.system.catalog.internal.entity.attribute.ProductVariantAttributeValue;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +30,11 @@ public class ProductVariant {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL)
-    private List<VariantOptionValue> attributeValues = new ArrayList<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "productVariant")
+    private List<VariantOptionValue> variantOptionValues = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "productVariant")
+    private List<ProductVariantAttributeValue> attributeValues = new ArrayList<>();
 }
