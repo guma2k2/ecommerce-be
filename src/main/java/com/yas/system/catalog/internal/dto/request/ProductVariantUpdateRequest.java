@@ -2,12 +2,13 @@ package com.yas.system.catalog.internal.dto.request;
 
 import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
-import java.util.Map;
+import java.util.List;
 
 public record ProductVariantUpdateRequest(
         Long id,
@@ -19,7 +20,9 @@ public record ProductVariantUpdateRequest(
         BigDecimal price,
         @PositiveOrZero
         int quantity,
-        String mediaId
+        String mediaId,
+        @Valid
+        List<ProductVariantAttributeValueUpdateRequest> attributeValues
 ) {
     public ProductVariant toEntity(Product product) {
         return ProductVariant.builder()
