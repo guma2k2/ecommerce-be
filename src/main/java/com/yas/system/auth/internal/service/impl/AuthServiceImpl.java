@@ -172,17 +172,23 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public String refreshToken(String refreshToken, AuthUser authUser) {
-        // validate refresh token
+    public String refreshToken(String refreshToken) {
+        log.info("refresh token={}", refreshToken);
+        // validate refresh token in Redis
         refreshTokenService.getRefreshTokenByToken(refreshToken)
                 .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_TOKEN));
-        // generate access token
-        String email = authUser.email();
+
+        String email;
+        try {
+            email = jwtService.extractUsername(refreshToken);
+        } catch (Exception e) {
+            throw new InvalidDataException(ErrorCode.INVALID_TOKEN);
+        }
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
         AuthUser userDetails = AuthUser.fromUser(user);
-        String accessToken = jwtService.generateAccessToken(userDetails);
-        return accessToken;
+        return jwtService.generateAccessToken(userDetails);
     }
 
 

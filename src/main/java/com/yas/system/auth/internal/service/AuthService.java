@@ -12,7 +12,7 @@ public interface AuthService {
     void verifyEmail(VerifyRequest  verifyRequest);
     void sendVerificationCode(SendVerificationRequest sendVerificationRequest);
     void verifyMfaCode(AuthUser authUser, VerifyRequest verifyRequest);
-    String refreshToken(String refreshToken, AuthUser authUser);
+    String refreshToken(String refreshToken);
     String startOauth2Login(String registrationId, HttpServletResponse response);
     AuthenticationResponse outboundAuthenticate(OutboundAuthenticationRequest outboundAuthenticationRequest, String savedState, HttpServletResponse response);
     String setUp2fa(AuthUser authUser);
