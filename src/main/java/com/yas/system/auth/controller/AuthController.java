@@ -92,12 +92,11 @@ public class AuthController {
         return ApiResponse.successWithNoContent();
     }
 
-    @PostMapping("/refresh")
+    @PostMapping("/public/refresh")
     public ApiResponse<String> refreshToken(
-            @ActiveUser AuthUser authUser,
             @Parameter(hidden = true) @CookieValue(name = Constant.REFRESH_COOKIE_HEADER) String cookieToken
     ) {
-        String accessToken = authService.refreshToken(cookieToken, authUser);
+        String accessToken = authService.refreshToken(cookieToken);
         return ApiResponse.success(accessToken);
     }
 
