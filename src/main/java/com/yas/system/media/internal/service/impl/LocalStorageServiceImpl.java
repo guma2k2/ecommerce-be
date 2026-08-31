@@ -5,6 +5,7 @@ import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
+import com.yas.system.media.internal.helper.MediaHelper;
 import com.yas.system.media.internal.repository.MediaRepository;
 import com.yas.system.media.internal.service.UploadService;
 import lombok.RequiredArgsConstructor;
@@ -27,20 +28,15 @@ import java.util.UUID;
 public class LocalStorageServiceImpl implements UploadService {
 
     private final MediaRepository mediaRepository;
+    private final MediaHelper mediaHelper;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
     @Override
-    public MediaResponse upload(MultipartFile multipartFile, String type, String altText) {
-        MediaType mediaType;
-        if ("image".equalsIgnoreCase(type)) {
-            mediaType = MediaType.IMAGE;
-        } else if ("video".equalsIgnoreCase(type)) {
-            mediaType = MediaType.VIDEO;
-        } else {
-            throw new InvalidDataException(ErrorCode.INVALID_MEDIA_TYPE, type);
-        }
+    public MediaResponse upload(MultipartFile multipartFile, String altText) {
+        MediaType mediaType = mediaHelper.detectMediaType(multipartFile);
+        String fileType = mediaHelper.extractFileType(multipartFile);
 
         try {
             File directory = new File(uploadDir);
@@ -65,25 +61,15 @@ public class LocalStorageServiceImpl implements UploadService {
             }
             String finalAltText = (altText != null && !altText.isBlank()) ? altText : finalName;
 
-            String fileType = "";
-            if (extension.startsWith(".")) {
-                fileType = extension.substring(1);
-            } else if (multipartFile.getContentType() != null) {
-                fileType = multipartFile.getContentType();
-            }
-            if (fileType.length() > 20) {
-                fileType = fileType.substring(0, 20);
-            }
-
-            Media media = Media.builder()
-                    .name(finalName)
-                    .url(url)
-                    .type(mediaType)
-                    .size(multipartFile.getSize())
-                    .altText(finalAltText)
-                    .fileType(fileType)
-                    .active(true)
-                    .build();
+            Media media = mediaHelper.createMedia(
+                    finalName,
+                    url,
+                    mediaType,
+                    multipartFile.getSize(),
+                    finalAltText,
+                    fileType,
+                    null
+            );
 
             media = mediaRepository.save(media);
             return MediaResponse.fromModel(media);

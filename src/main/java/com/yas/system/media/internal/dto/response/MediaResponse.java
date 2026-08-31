@@ -27,7 +27,7 @@ public record MediaResponse(
                 media.getId().toString(),
                 media.getName(),
                 url,
-                media.getType().toString(),
+                media.getType() != null ? media.getType().name() : null,
                 media.getSize(),
                 media.getAltText(),
                 media.getFileType(),

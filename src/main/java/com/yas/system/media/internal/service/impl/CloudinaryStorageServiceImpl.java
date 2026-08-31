@@ -1,11 +1,10 @@
 package com.yas.system.media.internal.service.impl;
 
 import com.cloudinary.Cloudinary;
-import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
+import com.yas.system.media.internal.helper.MediaHelper;
 import com.yas.system.media.internal.repository.MediaRepository;
 import com.yas.system.media.internal.service.UploadService;
 import lombok.AccessLevel;
@@ -17,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 
 @ConditionalOnProperty(name = "app.upload.location", havingValue = "cloudinary")
 @Service
@@ -27,17 +25,12 @@ public class CloudinaryStorageServiceImpl implements UploadService {
 
     Cloudinary cloudinary;
     MediaRepository mediaRepository;
+    MediaHelper mediaHelper;
 
     @Override
-    public MediaResponse upload(MultipartFile multipartFile, String type, String altText) {
-        MediaType mediaType;
-        if ("image".equalsIgnoreCase(type)) {
-            mediaType = MediaType.IMAGE;
-        } else if ("video".equalsIgnoreCase(type)) {
-            mediaType = MediaType.VIDEO;
-        } else {
-            throw new InvalidDataException(ErrorCode.INVALID_MEDIA_TYPE, type);
-        }
+    public MediaResponse upload(MultipartFile multipartFile, String altText) {
+        MediaType mediaType = mediaHelper.detectMediaType(multipartFile);
+        String fileType = mediaHelper.extractFileType(multipartFile);
 
         try {
             Map<?, ?> uploadResult = cloudinary
@@ -57,26 +50,15 @@ public class CloudinaryStorageServiceImpl implements UploadService {
             }
             String finalAltText = (altText != null && !altText.isBlank()) ? altText : finalName;
 
-            String fileType = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                fileType = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
-            } else if (multipartFile.getContentType() != null) {
-                fileType = multipartFile.getContentType();
-            }
-            if (fileType.length() > 20) {
-                fileType = fileType.substring(0, 20);
-            }
-
-            Media media = Media.builder()
-                    .name(finalName)
-                    .url(url)
-                    .type(mediaType)
-                    .size(multipartFile.getSize())
-                    .altText(finalAltText)
-                    .fileType(fileType)
-                    .duration(duration)
-                    .active(true)
-                    .build();
+            Media media = mediaHelper.createMedia(
+                    finalName,
+                    url,
+                    mediaType,
+                    multipartFile.getSize(),
+                    finalAltText,
+                    fileType,
+                    duration
+            );
 
             media = mediaRepository.save(media);
             return MediaResponse.fromModel(media);
