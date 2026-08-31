@@ -5,5 +5,5 @@ import com.yas.system.media.internal.dto.response.MediaResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UploadService {
-    MediaResponse upload(MultipartFile multipartFile, String type, String altText);
+    MediaResponse upload(MultipartFile multipartFile, String altText);
 }

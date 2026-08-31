@@ -19,6 +19,7 @@ public class Media extends BaseUuidEntity {
 
     private String url;
 
+    @Builder.Default
     private boolean active = false;
 
     private long size;
