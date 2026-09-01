@@ -16,7 +16,7 @@ public class AccessDeniedException implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, org.springframework.security.access.AccessDeniedException accessDeniedException) throws IOException, ServletException {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-        response.setStatus(errorCode.getStatusCode().value());
+        response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ApiResponse<?> apiResponse = ApiResponse.error(errorCode.getCode(), errorCode.getMessage());
