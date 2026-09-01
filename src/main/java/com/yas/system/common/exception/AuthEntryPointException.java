@@ -20,7 +20,7 @@ public class AuthEntryPointException implements AuthenticationEntryPoint {
             AuthenticationException authException
     ) throws IOException {
         ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
-        response.setStatus(errorCode.getStatusCode().value());
+        response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ApiResponse<?> apiResponse = ApiResponse.error(errorCode.getCode(), errorCode.getMessage());
