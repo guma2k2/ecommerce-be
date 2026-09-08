@@ -1,6 +1,5 @@
 package com.yas.system.catalog.internal.entity;
 
-import com.yas.system.catalog.internal.entity.productCategory.ProductCategory;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;
@@ -8,7 +7,6 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "tbl_product")
@@ -37,12 +35,13 @@ public class Product extends BaseLongEntity {
     private String metaDescription;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
     private List<ProductVariant> productVariants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "product")
-    private Set<ProductCategory> productCategories;
 }

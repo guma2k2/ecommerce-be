@@ -8,8 +8,7 @@ import com.yas.system.catalog.internal.helper.ProductAttributeHelper;
 import com.yas.system.catalog.internal.repository.ProductAttributeRepository;
 import com.yas.system.catalog.internal.service.ProductAttributeService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
     @Transactional
     public void deleteProductAttributeById(Long productAttributeId) {
         if (Objects.isNull(productAttributeId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
         }
         ProductAttribute productAttribute = findProductAttributeById(productAttributeId);
 
@@ -65,7 +64,7 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
     @Transactional(readOnly = true)
     public ProductAttributeResponse getById(Long productAttributeId) {
         if (Objects.isNull(productAttributeId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
         }
         return ProductAttributeResponse.from(findProductAttributeById(productAttributeId));
     }
@@ -92,25 +91,25 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
 
     private void validateCreateProductAttributeRequest(ProductAttributeCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
         }
         if (productAttributeRepository.checkExited(request.name(), null).isPresent()) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_ATTRIBUTE_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_ATTRIBUTE_ALREADY_EXISTS);
         }
     }
 
     private void validateUpdateProductAttributeRequest(ProductAttributeUpdateRequest request, Long productAttributeId) {
         if (Objects.isNull(productAttributeId) || Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_ATTRIBUTE);
         }
         if (productAttributeRepository.checkExited(request.name(), productAttributeId).isPresent()) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_ATTRIBUTE_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_ATTRIBUTE_ALREADY_EXISTS);
         }
     }
 
     private ProductAttribute findProductAttributeById(Long productAttributeId) {
         return productAttributeRepository.findById(productAttributeId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND));
     }
 
 

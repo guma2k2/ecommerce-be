@@ -21,15 +21,15 @@ public class ProductController {
 
     ProductService productService;
 
-    @GetMapping
+    @GetMapping("/page")
     public ApiResponse<PageResponse<ProductThumbnailResponse>> getProducts(
-            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) Integer brandId
     ) {
-        return ApiResponse.success(productService.getProducts(pageNo, pageSize, name, categoryId, brandId));
+        return ApiResponse.success(productService.getProducts(pageNumber, pageSize, name, categoryId, brandId));
     }
 
     @PostMapping()

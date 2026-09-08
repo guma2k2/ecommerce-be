@@ -9,7 +9,7 @@ import com.yas.system.auth.internal.repository.AdminProfileRepository;
 import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.service.AdminProfileService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.security.annotation.AuthUser;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +30,10 @@ public class AdminProfileServiceImpl implements AdminProfileService {
     @Transactional(readOnly = true)
     public AdminProfileResponse getAdminProfile(AuthUser authUser) {
         User user = userRepository.findByEmail(authUser.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
         AdminProfile adminProfile = adminProfileRepository.findById(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ADMIN_PROFILE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.ADMIN_PROFILE_NOT_FOUND));
 
         return AdminProfileResponse.fromModel(adminProfile);
     }
@@ -42,10 +42,10 @@ public class AdminProfileServiceImpl implements AdminProfileService {
     @Transactional
     public AdminProfileResponse updateAdminProfile(AuthUser authUser, AdminProfileRequest request) {
         User user = userRepository.findByEmail(authUser.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
         AdminProfile adminProfile = adminProfileRepository.findById(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ADMIN_PROFILE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.ADMIN_PROFILE_NOT_FOUND));
 
         adminProfileHelper.updateAdminProfile(adminProfile, request);
 

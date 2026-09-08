@@ -1,7 +1,6 @@
 package com.yas.system.media.internal.service.impl;
 
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
@@ -35,7 +34,7 @@ public class LocalStorageServiceImpl implements UploadService {
 
     @Override
     public MediaResponse upload(MultipartFile multipartFile, String altText) {
-        MediaType mediaType = mediaHelper.detectMediaType(multipartFile);
+        MediaType mediaType = mediaHelper.validateMedia(multipartFile);
         String fileType = mediaHelper.extractFileType(multipartFile);
 
         try {

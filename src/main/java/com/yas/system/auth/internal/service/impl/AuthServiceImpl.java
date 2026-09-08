@@ -25,8 +25,7 @@ import com.yas.system.auth.internal.util.CookieUtil;
 import com.yas.system.common.config.AppProperties;
 import com.yas.system.common.constant.AppConstant;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.notification.events.ResetPasswordEvent;
 import com.yas.system.notification.events.VerifyEmailEvent;
 import com.yas.system.common.security.annotation.AuthUser;
@@ -98,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
     public void signUp(SignUpRequest signUpRequest) {
         Optional<User> userOptional = userRepository.findByEmail(signUpRequest.email());
         if(userOptional.isPresent()) {
-            throw new InvalidDataException(ErrorCode.INVALID_EMAIL);
+            throw new ApplicationException(ErrorCode.INVALID_EMAIL);
         }
         User user = userHelper.createUser(signUpRequest);
         User savedUser = userRepository.save(user);
@@ -138,10 +137,10 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void verifyEmail(VerifyRequest verifyRequest) {
         VerifyEmail verifyEmail = verifyEmailService.getByVerifyCode(verifyRequest.code())
-                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_CODE));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.INVALID_CODE));
 
         User user = userRepository.findById(UUID.fromString(verifyEmail.getUserId()))
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         user.setVerified(true);
         userRepository.save(user);
     }
@@ -150,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public void sendVerificationCode(SendVerificationRequest sendVerificationRequest) {
         User user = userRepository.findByEmail(sendVerificationRequest.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         // send email
         String verifyCode = RandomUtil.generatesOtp();
         VerifyEmail verifyEmail = VerifyEmail.builder()
@@ -176,17 +175,17 @@ public class AuthServiceImpl implements AuthService {
         log.info("refresh token={}", refreshToken);
         // validate refresh token in Redis
         refreshTokenService.getRefreshTokenByToken(refreshToken)
-                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_TOKEN));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.INVALID_TOKEN));
 
         String email;
         try {
             email = jwtService.extractUsername(refreshToken);
         } catch (Exception e) {
-            throw new InvalidDataException(ErrorCode.INVALID_TOKEN);
+            throw new ApplicationException(ErrorCode.INVALID_TOKEN);
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         AuthUser userDetails = AuthUser.fromUser(user);
         return jwtService.generateAccessToken(userDetails);
     }
@@ -200,7 +199,7 @@ public class AuthServiceImpl implements AuthService {
             case GOOGLE -> googleOauthService.buildAuthorizationUrl(state);
             case GITHUB -> githubOauthService.buildAuthorizationUrl(state);
             case FACEBOOK ->  facebookOauthService.buildAuthorizationUrl(state);
-            default -> throw new InvalidDataException(ErrorCode.INVALID_PROVIDER);
+            default -> throw new ApplicationException(ErrorCode.INVALID_PROVIDER);
         };
         var stateCookie = CookieUtil.createCookie(Constant.OAUTH2_STATE, state, false);
         response.addHeader(HttpHeaders.SET_COOKIE, stateCookie.toString());
@@ -221,7 +220,7 @@ public class AuthServiceImpl implements AuthService {
         OauthProvider provider = OauthProvider.valueOf(outboundAuthenticationRequest.registrationId().toUpperCase());
 
         if (code == null || state == null || !state.equals(savedState)) {
-            throw new InvalidDataException(ErrorCode.UNCATEGORIZED);
+            throw new ApplicationException(ErrorCode.UNCATEGORIZED);
         }
 
         OauthUserInfo oauthUserInfo = switch (provider) {
@@ -249,11 +248,11 @@ public class AuthServiceImpl implements AuthService {
                         .getUserInfo(facebookTokenResponse.accessToken());
                 yield OauthUserInfo.fromFacebookOauthUser(facebookUserInfoResponse);
             default:
-                throw new InvalidDataException(ErrorCode.INVALID_PROVIDER);
+                throw new ApplicationException(ErrorCode.INVALID_PROVIDER);
         };
 
         if (Objects.isNull(oauthUserInfo)) {
-            throw new InvalidDataException(ErrorCode.UNCATEGORIZED);
+            throw new ApplicationException(ErrorCode.UNCATEGORIZED);
         }
 
 
@@ -268,7 +267,7 @@ public class AuthServiceImpl implements AuthService {
         });
 
         if (!activeUser.getProvider().equals(provider)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PROVIDER);
+            throw new ApplicationException(ErrorCode.INVALID_PROVIDER);
         }
 
         AuthUser userDetails = AuthUser.fromUser(activeUser);
@@ -283,7 +282,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public String setUp2fa(AuthUser authUser) {
         User user = userRepository.findByEmail(authUser.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
         String mfaSecret = mfaService.generateMfaSecret(authUser.email());
         String issuer = appProperties.name();
@@ -297,9 +296,9 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public void verifyMfaCode(AuthUser authUser, VerifyRequest verifyRequest) {
         User user = userRepository.findByEmail(authUser.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         if (!mfaService.verifyTotpCode(user.getMfaSecret(),  verifyRequest.code())) {
-            throw new InvalidDataException(ErrorCode.INVALID_CODE);
+            throw new ApplicationException(ErrorCode.INVALID_CODE);
         }
     }
 
@@ -307,9 +306,9 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void enable2fa(AuthUser authUser, EnableMfaRequest enableMfaRequest) {
         User user = userRepository.findByEmail(authUser.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         if (!mfaService.verifyTotpCode(user.getMfaSecret(),  enableMfaRequest.code())) {
-            throw new InvalidDataException(ErrorCode.INVALID_CODE);
+            throw new ApplicationException(ErrorCode.INVALID_CODE);
         }
         user.setEnabledMfa(true);
         userRepository.save(user);
@@ -319,7 +318,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void disable2fa(AuthUser authUser) {
         User user = userRepository.findByEmail(authUser.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         user.setEnabledMfa(false);
         user.setMfaSecret(null);
         userRepository.save(user);
@@ -329,7 +328,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public void forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
         User user = userRepository.findByEmail(forgotPasswordRequest.email())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
         String token = RandomUtil.generateRandomToken();
         PasswordResetToken passwordResetToken = PasswordResetToken
@@ -354,9 +353,9 @@ public class AuthServiceImpl implements AuthService {
     public void resetPasswordRequest(ResetPasswordRequest resetPasswordRequest) {
         PasswordResetToken passwordResetToken = passwordResetTokenService
                 .getResetPasswordByCode(resetPasswordRequest.token())
-                .orElseThrow(() -> new InvalidDataException(ErrorCode.INVALID_TOKEN));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.INVALID_TOKEN));
         User user = userRepository.findById(UUID.fromString(passwordResetToken.getUserId()))
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(resetPasswordRequest.password()));
         userRepository.save(user);
         passwordResetTokenService.delete(passwordResetToken.getId());

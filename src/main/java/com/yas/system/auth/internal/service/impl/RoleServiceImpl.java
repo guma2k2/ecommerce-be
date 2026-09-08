@@ -7,8 +7,7 @@ import com.yas.system.auth.internal.entity.Role;
 import com.yas.system.auth.internal.repository.RoleRepository;
 import com.yas.system.auth.internal.service.RoleService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +54,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public RoleResponse getRoleDetail(Integer id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.ROLE_NOT_FOUND));
         List<Integer> permissionIds = role.getPermissions().stream()
                 .map(Permission::getId)
                 .toList();
@@ -66,7 +65,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse createRole(RoleRequest roleRequest) {
         if (roleRepository.existsByName(roleRequest.name())) {
-            throw new InvalidDataException(ErrorCode.ROLE_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.ROLE_ALREADY_EXISTS);
         }
         Role role = new Role();
         role.setName(roleRequest.name());
@@ -79,10 +78,10 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse updateRole(Integer id, RoleRequest roleRequest) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.ROLE_NOT_FOUND));
 
         if (!role.getName().equalsIgnoreCase(roleRequest.name()) && roleRepository.existsByName(roleRequest.name())) {
-            throw new InvalidDataException(ErrorCode.ROLE_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.ROLE_ALREADY_EXISTS);
         }
 
         role.setName(roleRequest.name());
@@ -95,11 +94,11 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void assignPermissions(Integer roleId, AssignPermissionRequest request) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.ROLE_NOT_FOUND));
 
         List<Permission> permissions = permissionRepository.findAllById(request.permissionIds());
         if (permissions.size() != request.permissionIds().size()) {
-            throw new ResourceNotFoundException(ErrorCode.PERMISSION_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.PERMISSION_NOT_FOUND);
         }
 
         role.setPermissions(new HashSet<>(permissions));
@@ -110,10 +109,10 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void deleteRole(Integer id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.ROLE_NOT_FOUND));
 
         if ("SUPER_ADMIN".equalsIgnoreCase(role.getName())) {
-            throw new InvalidDataException(ErrorCode.ROLE_CANNOT_BE_DELETED);
+            throw new ApplicationException(ErrorCode.ROLE_CANNOT_BE_DELETED);
         }
 
         roleRepository.deleteUserRolesByRoleId(id);

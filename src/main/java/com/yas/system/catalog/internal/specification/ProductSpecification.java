@@ -1,9 +1,6 @@
 package com.yas.system.catalog.internal.specification;
 
 import com.yas.system.catalog.internal.entity.Product;
-import com.yas.system.catalog.internal.entity.productCategory.ProductCategory;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Objects;
@@ -24,8 +21,7 @@ public class ProductSpecification {
             if (Objects.isNull(categoryId)) {
                 return null;
             }
-            Join<Product, ProductCategory> productCategoryJoin = root.join("productCategories", JoinType.INNER);
-            return criteriaBuilder.equal(productCategoryJoin.get("id").get("categoryId"), categoryId);
+            return criteriaBuilder.equal(root.get("category").get("id"), categoryId);
         };
     }
 

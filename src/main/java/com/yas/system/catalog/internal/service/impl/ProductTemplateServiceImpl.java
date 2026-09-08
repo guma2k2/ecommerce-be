@@ -2,6 +2,7 @@ package com.yas.system.catalog.internal.service.impl;
 
 import com.yas.system.catalog.internal.dto.request.ProductTemplateCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductTemplateUpdateRequest;
+import com.yas.system.catalog.internal.dto.response.ProductAttributeResponse;
 import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttributeTemplate;
@@ -12,8 +13,7 @@ import com.yas.system.catalog.internal.repository.ProductAttributeTemplateReposi
 import com.yas.system.catalog.internal.repository.ProductTemplateRepository;
 import com.yas.system.catalog.internal.service.ProductTemplateService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +73,7 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
     @Transactional
     public void deleteProductTemplateById(Integer productTemplateId) {
         if (Objects.isNull(productTemplateId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
         ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
 
@@ -85,24 +85,66 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
     @Transactional(readOnly = true)
     public ProductTemplateResponse getById(Integer productTemplateId) {
         if (Objects.isNull(productTemplateId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
         ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
         List<ProductAttributeTemplate> attributeTemplates = productAttributeTemplateRepository.findByProductTemplateId(productTemplateId);
-        List<Long> attributeIds = attributeTemplates.stream()
-                .map(pat -> pat.getProductAttribute().getId())
+        List<ProductAttributeResponse> attributes = attributeTemplates.stream()
+                .map(ProductAttributeTemplate::getProductAttribute)
+                .filter(Objects::nonNull)
+                .map(ProductAttributeResponse::from)
                 .toList();
-        return ProductTemplateResponse.from(productTemplate, attributeIds);
+        return ProductTemplateResponse.from(productTemplate, attributes);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProductTemplateResponse> getProductTemplatePage(Integer pageNumber, Integer pageSize) {
+    public PageResponse<ProductTemplateResponse> getProductTemplatePage(Integer pageNumber, Integer pageSize, Boolean isIncludeAttributes) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<ProductTemplate> productTemplatePage = productTemplateRepository.findAll(pageable);
 
+        if (productTemplatePage.isEmpty()) {
+            return new PageResponse<>(
+                    productTemplatePage.getNumber(),
+                    productTemplatePage.getSize(),
+                    productTemplatePage.getTotalPages(),
+                    productTemplatePage.getTotalElements(),
+                    Collections.emptyList()
+            );
+        }
+
+        if (Boolean.FALSE.equals(isIncludeAttributes) || Objects.isNull(isIncludeAttributes)) {
+            List<ProductTemplateResponse> content = productTemplatePage.getContent().stream()
+                    .map(ProductTemplateResponse::from)
+                    .toList();
+
+            return new PageResponse<>(
+                    productTemplatePage.getNumber(),
+                    productTemplatePage.getSize(),
+                    productTemplatePage.getTotalPages(),
+                    productTemplatePage.getTotalElements(),
+                    content
+            );
+        }
+
+        List<Integer> templateIds = productTemplatePage.getContent().stream()
+                .map(ProductTemplate::getId)
+                .toList();
+
+        List<ProductAttributeTemplate> attributeTemplates = productAttributeTemplateRepository.findByProductTemplateIdIn(templateIds);
+
+        Map<Integer, List<ProductAttributeResponse>> attributesByTemplateId = attributeTemplates.stream()
+                .filter(pat -> Objects.nonNull(pat.getProductTemplate()) && Objects.nonNull(pat.getProductAttribute()))
+                .collect(Collectors.groupingBy(
+                        pat -> pat.getProductTemplate().getId(),
+                        Collectors.mapping(
+                                pat -> ProductAttributeResponse.from(pat.getProductAttribute()),
+                                Collectors.toList()
+                        )
+                ));
+
         List<ProductTemplateResponse> content = productTemplatePage.getContent().stream()
-                .map(ProductTemplateResponse::from)
+                .map(pt -> ProductTemplateResponse.from(pt, attributesByTemplateId.getOrDefault(pt.getId(), Collections.emptyList())))
                 .toList();
 
         return new PageResponse<>(
@@ -117,25 +159,25 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
 
     private void validateCreateProductTemplateRequest(ProductTemplateCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
         if (productTemplateRepository.checkExited(request.name(), null).isPresent()) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_TEMPLATE_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_TEMPLATE_ALREADY_EXISTS);
         }
     }
 
     private void validateUpdateProductTemplateRequest(ProductTemplateUpdateRequest request, Integer productTemplateId) {
         if (Objects.isNull(productTemplateId) || Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_TEMPLATE);
         }
         if (productTemplateRepository.checkExited(request.name(), productTemplateId).isPresent()) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_TEMPLATE_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_TEMPLATE_ALREADY_EXISTS);
         }
     }
 
     private ProductTemplate findProductTemplateById(Integer productTemplateId) {
         return productTemplateRepository.findById(productTemplateId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_TEMPLATE_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_TEMPLATE_NOT_FOUND));
     }
 
     private Map<Long, ProductAttribute> findProductAttributes(List<Long> attributeIds) {
@@ -150,7 +192,7 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
                 .stream()
                 .collect(Collectors.toMap(ProductAttribute::getId, Function.identity()));
         if (productAttributeById.size() != nonNullIds.size()) {
-            throw new ResourceNotFoundException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND);
         }
         return productAttributeById;
     }

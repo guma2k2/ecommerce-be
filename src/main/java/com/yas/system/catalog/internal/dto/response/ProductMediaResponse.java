@@ -10,17 +10,21 @@ public record ProductMediaResponse(
         String url,
         List<Long> variantIds
 ) {
-    public static ProductMediaResponse from(ProductMedia productMedia, String url) {
+    public static ProductMediaResponse from(ProductMedia productMedia, String url, List<Long> variantIds) {
         return new ProductMediaResponse(
                 productMedia.getMediaId(),
                 productMedia.getPosition(),
                 url,
-                List.of()
+                variantIds != null ? variantIds : List.of()
         );
     }
 
+    public static ProductMediaResponse from(ProductMedia productMedia, String url) {
+        return from(productMedia, url, List.of());
+    }
+
     public static ProductMediaResponse from(ProductMedia productMedia) {
-        return from(productMedia, null);
+        return from(productMedia, null, List.of());
     }
 }
 

@@ -26,11 +26,11 @@ public record ProductVariantUpdateRequest(
 ) {
     public ProductVariant toEntity(Product product) {
         return ProductVariant.builder()
-                .id(id)
                 .title(title)
                 .sku(sku)
                 .price(price)
                 .quantity(quantity)
+                .mediaId(mediaId)
                 .product(product)
                 .build();
     }
@@ -40,5 +40,6 @@ public record ProductVariantUpdateRequest(
         variant.setSku(sku);
         variant.setPrice(price);
         variant.setQuantity(quantity);
+        variant.setMediaId(mediaId);
     }
 }

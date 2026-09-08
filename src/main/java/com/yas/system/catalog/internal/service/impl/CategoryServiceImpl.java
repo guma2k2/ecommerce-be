@@ -7,8 +7,7 @@ import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.repository.CategoryRepository;
 import com.yas.system.catalog.internal.service.CategoryService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -56,10 +55,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Integer categoryId) {
         if (Objects.isNull(categoryId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
         }
         Category category = categoryRepository.findByIdCustom(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
 
         return CategoryResponse.from(category);
     }
@@ -87,7 +86,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(Integer categoryId) {
         if (Objects.isNull(categoryId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
         }
         Category category = findCategoryById(categoryId);
 
@@ -96,25 +95,25 @@ public class CategoryServiceImpl implements CategoryService {
 
     private void validateCreateCategoryRequest(CategoryCreateRequest categoryRequest) {
         if (Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
         }
         if (categoryRepository.checkExited(categoryRequest.name(), null).isPresent()) {
-            throw new InvalidDataException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.CATEGORY_ALREADY_EXISTS);
         }
     }
 
     private void validateUpdateCategoryRequest(CategoryUpdateRequest categoryRequest, Integer categoryId) {
         if (Objects.isNull(categoryId) || Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
         }
         if (categoryRepository.checkExited(categoryRequest.name(), categoryId).isPresent()) {
-            throw new InvalidDataException(ErrorCode.CATEGORY_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.CATEGORY_ALREADY_EXISTS);
         }
     }
 
     private Category findCategoryById(Integer categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
     private Category resolveParent(Integer parentId) {
@@ -140,7 +139,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category currentParent = parent;
         while (Objects.nonNull(currentParent)) {
             if (categoryId.equals(currentParent.getId())) {
-                throw new InvalidDataException(ErrorCode.INVALID_CATEGORY);
+                throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
             }
             currentParent = currentParent.getParent();
         }

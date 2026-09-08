@@ -7,6 +7,7 @@ public enum ErrorCode {
     UNCATEGORIZED("internal_error", "Uncategorized error"),
     UNAUTHENTICATED("unauthenticated", "Unauthenticated"),
     UNAUTHORIZED("unauthorized", "You don't have permission"),
+    BAD_REQUEST("bad_request", "Bad request"),
     USER_NOT_FOUND("user_not_found", "User not found"),
     INCORRECT_PASSWORD("incorrect_password", "Incorrect password"),
     INVALID_TOKEN("invalid_token", "Invalid token"),
@@ -38,6 +39,8 @@ public enum ErrorCode {
     INVALID_PRODUCT_OPTION("invalid_product_option", "Invalid product option data"),
     PRODUCT_OPTION_NOT_FOUND("product_option_not_found", "Product option not found"),
     PRODUCT_OPTION_ALREADY_EXISTS("product_option_already_exists", "Product option already exists"),
+    FILE_TOO_LARGE("file_too_large", "File size exceeds maximum allowed limit: %s"),
+    MAX_UPLOAD_SIZE_EXCEEDED("max_upload_size_exceeded", "Maximum upload size exceeded"),
     ;
 
     ErrorCode(String code, String message) {

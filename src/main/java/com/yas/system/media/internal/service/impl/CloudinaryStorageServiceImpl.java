@@ -29,7 +29,7 @@ public class CloudinaryStorageServiceImpl implements UploadService {
 
     @Override
     public MediaResponse upload(MultipartFile multipartFile, String altText) {
-        MediaType mediaType = mediaHelper.detectMediaType(multipartFile);
+        MediaType mediaType = mediaHelper.validateMedia(multipartFile);
         String fileType = mediaHelper.extractFileType(multipartFile);
 
         try {

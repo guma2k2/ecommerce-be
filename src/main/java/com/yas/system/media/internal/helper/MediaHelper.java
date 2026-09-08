@@ -1,10 +1,12 @@
 package com.yas.system.media.internal.helper;
 
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Locale;
@@ -17,38 +19,78 @@ public class MediaHelper {
             "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "tiff", "ico", "avif", "heic", "heif"
     );
 
-    private static final Set<String> VIDEO_EXTENSIONS = Set.of(
-            "mp4", "mov", "avi", "mkv", "flv", "wmv", "webm", "m4v", "3gp", "ts", "mpg", "mpeg"
-    );
+    private static final Set<String> VIDEO_EXTENSIONS = Set.of("mp4");
+
+    @Value("${app.upload.max-image-size:10MB}")
+    private DataSize maxImageSize;
+
+    @Value("${app.upload.max-video-size:50MB}")
+    private DataSize maxVideoSize;
 
     public MediaType detectMediaType(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new InvalidDataException(ErrorCode.INVALID_MEDIA_TYPE, "Empty file");
+            throw new ApplicationException(ErrorCode.INVALID_MEDIA_TYPE, "Empty file");
         }
 
         String contentType = file.getContentType();
-        if (contentType != null && !contentType.isBlank()) {
-            String lowerContentType = contentType.toLowerCase(Locale.ROOT);
-            if (lowerContentType.startsWith("image/")) {
-                return MediaType.IMAGE;
-            }
-            if (lowerContentType.startsWith("video/")) {
-                return MediaType.VIDEO;
-            }
-        }
-
+        String lowerContentType = (contentType != null && !contentType.isBlank())
+                ? contentType.toLowerCase(Locale.ROOT).trim()
+                : "";
         String extension = extractExtension(file.getOriginalFilename());
-        if (!extension.isBlank()) {
-            if (IMAGE_EXTENSIONS.contains(extension)) {
-                return MediaType.IMAGE;
-            }
-            if (VIDEO_EXTENSIONS.contains(extension)) {
-                return MediaType.VIDEO;
-            }
+
+        // Accept standard image types
+        if (lowerContentType.startsWith("image/") || IMAGE_EXTENSIONS.contains(extension)) {
+            return MediaType.IMAGE;
         }
 
-        String invalidTypeDesc = (contentType != null && !contentType.isBlank()) ? contentType : (!extension.isBlank() ? extension : "unknown");
-        throw new InvalidDataException(ErrorCode.INVALID_MEDIA_TYPE, invalidTypeDesc);
+        // Accept MP4 video type only
+        if (isMp4Video(lowerContentType, extension)) {
+            return MediaType.VIDEO;
+        }
+
+        String invalidTypeDesc = !lowerContentType.isBlank() ? lowerContentType : (!extension.isBlank() ? extension : "unknown");
+        throw new ApplicationException(ErrorCode.INVALID_MEDIA_TYPE, invalidTypeDesc);
+    }
+
+    public void validateFileSize(MultipartFile file, MediaType mediaType) {
+        if (file == null || file.isEmpty()) {
+            throw new ApplicationException(ErrorCode.INVALID_MEDIA_TYPE, "Empty file");
+        }
+
+        long size = file.getSize();
+        if (mediaType == MediaType.IMAGE && size > maxImageSize.toBytes()) {
+            throw new ApplicationException(ErrorCode.FILE_TOO_LARGE, formatSize(maxImageSize.toBytes()));
+        } else if (mediaType == MediaType.VIDEO && size > maxVideoSize.toBytes()) {
+            throw new ApplicationException(ErrorCode.FILE_TOO_LARGE, formatSize(maxVideoSize.toBytes()));
+        }
+    }
+
+    public MediaType validateMedia(MultipartFile file) {
+        MediaType mediaType = detectMediaType(file);
+        validateFileSize(file, mediaType);
+        return mediaType;
+    }
+
+    private boolean isMp4Video(String lowerContentType, String extension) {
+        if ("video/mp4".equals(lowerContentType)) {
+            return true;
+        }
+        if ("mp4".equalsIgnoreCase(extension)) {
+            return lowerContentType.isEmpty()
+                    || "application/octet-stream".equals(lowerContentType)
+                    || "video/mp4".equals(lowerContentType);
+        }
+        return false;
+    }
+
+    private String formatSize(long sizeInBytes) {
+        if (sizeInBytes >= 1024 * 1024) {
+            return (sizeInBytes / (1024 * 1024)) + "MB";
+        }
+        if (sizeInBytes >= 1024) {
+            return (sizeInBytes / 1024) + "KB";
+        }
+        return sizeInBytes + "B";
     }
 
     public String extractFileType(MultipartFile file) {

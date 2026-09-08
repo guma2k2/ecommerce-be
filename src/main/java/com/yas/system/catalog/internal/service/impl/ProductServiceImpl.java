@@ -24,8 +24,6 @@ import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.ProductMedia;
 import com.yas.system.media.api.MediaPublicService;
-import com.yas.system.catalog.internal.entity.productCategory.ProductCategory;
-import com.yas.system.catalog.internal.entity.productCategory.ProductCategoryId;
 import com.yas.system.catalog.internal.entity.option.ProductOption;
 import com.yas.system.catalog.internal.entity.option.ProductOptionCombination;
 import com.yas.system.catalog.internal.entity.option.ProductOptionCombinationId;
@@ -40,7 +38,6 @@ import com.yas.system.catalog.internal.repository.BrandRepository;
 import com.yas.system.catalog.internal.repository.CategoryRepository;
 import com.yas.system.catalog.internal.repository.ProductAttributeRepository;
 import com.yas.system.catalog.internal.repository.ProductAttributeValueRepository;
-import com.yas.system.catalog.internal.repository.ProductCategoryRepository;
 import com.yas.system.catalog.internal.repository.ProductMediaRepository;
 import com.yas.system.catalog.internal.repository.ProductOptionCombinationRepository;
 import com.yas.system.catalog.internal.repository.ProductOptionRepository;
@@ -51,8 +48,7 @@ import com.yas.system.catalog.internal.repository.ProductVariantRepository;
 import com.yas.system.catalog.internal.repository.VariantOptionValueRepository;
 import com.yas.system.catalog.internal.service.ProductService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -94,7 +90,6 @@ public class ProductServiceImpl implements ProductService {
     ProductAttributeValueRepository productAttributeValueRepository;
     CategoryRepository categoryRepository;
     BrandRepository brandRepository;
-    ProductCategoryRepository productCategoryRepository;
     ProductMediaRepository productMediaRepository;
     MediaPublicService mediaPublicService;
     ProductHelper productHelper;
@@ -112,14 +107,10 @@ public class ProductServiceImpl implements ProductService {
         Brand brand = resolveBrand(request.brandId());
 
         // Step 3: Create and save base Product entity
-        Product savedProduct = productRepository.save(productHelper.createProduct(request, brand));
+        Product savedProduct = productRepository.save(productHelper.createProduct(request, category, brand));
         log.info("Saved base product entity with ID: {}", savedProduct.getId());
 
-        // Step 4: Collect category hierarchy and save product categories
-        List<Category> categoryHierarchy = collectCategoryAndParents(category);
-        saveProductCategories(savedProduct, categoryHierarchy);
-
-        // Step 5: Save product medias
+        // Step 4: Save product medias
         List<ProductMedia> savedMedias = saveProductMedias(request.medias(), savedProduct);
 
         // Step 6: Save product option combinations and values
@@ -144,7 +135,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
 
         // Step 10: Fetch media URLs via public Media service
-        List<String> mediaIds = savedMedias.stream().map(ProductMedia::getMediaId).toList();
+        List<String> mediaIds = extractAllMediaIds(savedMedias, savedVariants);
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         // Step 11: Build and return ProductResponse
@@ -165,17 +156,12 @@ public class ProductServiceImpl implements ProductService {
 
         // Step 3: Fetch existing product entity and apply updates
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        productHelper.updateProduct(request, product, brand);
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
+        productHelper.updateProduct(request, product, category, brand);
         Product savedProduct = productRepository.save(product);
         log.info("Updated base product fields for ID: {}", productId);
 
-        // Step 4: Perform delta update on product categories
-        List<Category> categoryHierarchy = collectCategoryAndParents(category);
-        List<ProductCategory> currentProductCategories = productCategoryRepository.findByProductId(productId);
-        saveUpdatedProductCategories(savedProduct, categoryHierarchy, currentProductCategories);
-
-        // Step 5: Perform delta update on product media
+        // Step 4: Perform delta update on product media
         List<ProductMedia> currentMedias = productMediaRepository.findByProductIdOrderByPositionAsc(productId);
         List<ProductMedia> savedMedias = saveUpdatedProductMedias(request.medias(), savedProduct, currentMedias);
 
@@ -228,7 +214,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
 
         // Step 11: Fetch media URLs via public Media service
-        List<String> mediaIds = savedMedias.stream().map(ProductMedia::getMediaId).toList();
+        List<String> mediaIds = extractAllMediaIds(savedMedias, savedVariants);
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         // Step 12: Build and return updated ProductResponse
@@ -239,7 +225,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
         List<ProductMedia> medias = productMediaRepository.findByProductIdOrderByPositionAsc(id);
         List<ProductAttributeValue> attributes = productAttributeValueRepository.findByProductId(id);
         List<ProductVariant> variants = productVariantRepository.findByProductId(id);
@@ -250,7 +236,7 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductOptionCombinationResponse> options = buildOptionCombinationResponses(combinations, optionValues);
 
-        List<String> mediaIds = medias.stream().map(ProductMedia::getMediaId).toList();
+        List<String> mediaIds = extractAllMediaIds(medias, variants);
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         return ProductResponse.from(product, medias, mediaUrlMap, attributes, options, variants, variantOptionValues, variantAttributeValues);
@@ -331,10 +317,9 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
 
         productMediaRepository.deleteByProductId(id);
-        productCategoryRepository.deleteByProductId(id);
         productAttributeValueRepository.deleteByProductId(id);
         productOptionValueRepository.deleteByProductId(id);
         productOptionCombinationRepository.deleteByProductId(id);
@@ -677,7 +662,7 @@ public class ProductServiceImpl implements ProductService {
         }
         log.debug("Resolving category with ID: {}", categoryId);
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
     // Helper: Resolves Brand entity by ID from DB
@@ -687,103 +672,10 @@ public class ProductServiceImpl implements ProductService {
         }
         log.debug("Resolving brand with ID: {}", brandId);
         return brandRepository.findById(brandId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.BRAND_NOT_FOUND));
     }
 
-    // Helper: Recursively collects a category and all of its parent categories up to the root
-    private List<Category> collectCategoryAndParents(Category category) {
-        if (Objects.isNull(category)) {
-            return List.of();
-        }
-        List<Category> categories = new ArrayList<>();
-        Category current = category;
-        Set<Integer> visitedIds = new HashSet<>();
-        while (Objects.nonNull(current) && !visitedIds.contains(current.getId())) {
-            categories.add(current);
-            visitedIds.add(current.getId());
-            current = current.getParent();
-        }
-        log.debug("Collected {} category hierarchy entries for category ID: {}", categories.size(), category.getId());
-        return categories;
-    }
 
-    // Helper: Persists ProductCategory junction records for product and category hierarchy
-    private List<ProductCategory> saveProductCategories(Product product, List<Category> categories) {
-        if (Objects.isNull(categories) || categories.isEmpty()) {
-            return List.of();
-        }
-        List<ProductCategory> productCategories = categories.stream()
-                .map(category -> createProductCategory(product, category))
-                .toList();
-        log.debug("Saving {} product category junction records for product ID: {}", productCategories.size(), product.getId());
-        return productCategoryRepository.saveAll(productCategories);
-    }
-
-    // Helper: Performs delta update on ProductCategory entities for product update
-    private List<ProductCategory> saveUpdatedProductCategories(
-            Product product,
-            List<Category> targetCategories,
-            List<ProductCategory> currentProductCategories
-    ) {
-        if (Objects.isNull(targetCategories) || targetCategories.isEmpty()) {
-            if (Objects.nonNull(currentProductCategories) && !currentProductCategories.isEmpty()) {
-                log.debug("Deleting all {} product category records for product ID: {}", currentProductCategories.size(), product.getId());
-                productCategoryRepository.deleteAll(currentProductCategories);
-            }
-            return List.of();
-        }
-
-        deleteOmittedProductCategories(targetCategories, currentProductCategories);
-        return upsertProductCategories(product, targetCategories, currentProductCategories);
-    }
-
-    // Helper: Deletes product category junction records that were omitted in the update request
-    private void deleteOmittedProductCategories(
-            List<Category> targetCategories,
-            List<ProductCategory> currentProductCategories
-    ) {
-        if (Objects.isNull(currentProductCategories) || currentProductCategories.isEmpty()) {
-            return;
-        }
-        Set<Integer> targetCategoryIds = targetCategories.stream()
-                .map(Category::getId)
-                .collect(Collectors.toSet());
-
-        List<ProductCategory> deletedProductCategories = currentProductCategories.stream()
-                .filter(pc -> !targetCategoryIds.contains(pc.getCategory().getId()))
-                .toList();
-
-        if (!deletedProductCategories.isEmpty()) {
-            log.debug("Deleting {} omitted product category junction records", deletedProductCategories.size());
-            productCategoryRepository.deleteAll(deletedProductCategories);
-        }
-    }
-
-    // Helper: Upserts target product category junction records and persists them
-    private List<ProductCategory> upsertProductCategories(
-            Product product,
-            List<Category> targetCategories,
-            List<ProductCategory> currentProductCategories
-    ) {
-        Map<Integer, ProductCategory> currentByCategoryId = Objects.isNull(currentProductCategories)
-                ? Map.of()
-                : currentProductCategories.stream()
-                        .collect(Collectors.toMap(
-                                pc -> pc.getCategory().getId(),
-                                Function.identity(),
-                                (e1, _) -> e1
-                        ));
-
-        List<ProductCategory> updatedProductCategories = targetCategories.stream()
-                .map(category -> {
-                    ProductCategory existing = currentByCategoryId.get(category.getId());
-                    return Objects.nonNull(existing) ? existing : createProductCategory(product, category);
-                })
-                .toList();
-
-        log.debug("Saving {} updated product category records for product ID: {}", updatedProductCategories.size(), product.getId());
-        return productCategoryRepository.saveAll(updatedProductCategories);
-    }
 
     // Helper: Creates and saves ProductAttributeValue entities for product creation
     private List<ProductAttributeValue> saveProductAttributeValues(ProductCreateRequest request, Product product) {
@@ -845,7 +737,7 @@ public class ProductServiceImpl implements ProductService {
                 .stream()
                 .collect(Collectors.toMap(ProductAttribute::getId, Function.identity()));
         if (productAttributeById.size() != productAttributeIds.stream().distinct().count()) {
-            throw new ResourceNotFoundException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.PRODUCT_ATTRIBUTE_NOT_FOUND);
         }
         return productAttributeById;
     }
@@ -1248,7 +1140,7 @@ public class ProductServiceImpl implements ProductService {
     private void validateProductRequest(ProductCreateRequest request) {
         log.debug("Validating uniqueness of name: '{}' and slug: '{}' for product creation", request.name(), request.slug());
         if (productRepository.existsByName(request.name()) || productRepository.existsBySlug(request.slug())) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_ALREADY_EXISTS);
         }
     }
 
@@ -1257,7 +1149,7 @@ public class ProductServiceImpl implements ProductService {
         log.debug("Validating uniqueness of name: '{}' and slug: '{}' for product update ID: {}", request.name(), request.slug(), productId);
         if (productRepository.existsByNameAndIdNot(request.name(), productId)
                 || productRepository.existsBySlugAndIdNot(request.slug(), productId)) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_ALREADY_EXISTS);
         }
     }
 
@@ -1275,7 +1167,7 @@ public class ProductServiceImpl implements ProductService {
         }
         ProductVariant variant = currentVariantById.get(request.id());
         if (Objects.isNull(variant)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT);
         }
         request.applyTo(variant);
         applyDefaultVariantTitle(variant);
@@ -1313,7 +1205,7 @@ public class ProductServiceImpl implements ProductService {
                 .stream()
                 .collect(Collectors.toMap(ProductOption::getId, Function.identity()));
         if (productOptionById.size() != optionIds.stream().distinct().count()) {
-            throw new ResourceNotFoundException(ErrorCode.PRODUCT_OPTION_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.PRODUCT_OPTION_NOT_FOUND);
         }
         return productOptionById;
     }
@@ -1352,14 +1244,7 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-    // Helper: Constructs a ProductCategory entity
-    private ProductCategory createProductCategory(Product product, Category category) {
-        return ProductCategory.builder()
-                .id(new ProductCategoryId(product.getId(), category.getId()))
-                .product(product)
-                .category(category)
-                .build();
-    }
+
 
     // Helper: Constructs a VariantOptionValue entity
     private VariantOptionValue createVariantOptionValue(ProductVariant productVariant, ProductOptionValue productOptionValue) {
@@ -1367,6 +1252,24 @@ public class ProductServiceImpl implements ProductService {
                 .productVariant(productVariant)
                 .productOptionValue(productOptionValue)
                 .build();
+    }
+
+    // Helper: Collects all non-blank media IDs from product medias and variants
+    private List<String> extractAllMediaIds(List<ProductMedia> medias, List<ProductVariant> variants) {
+        List<String> mediaIds = new ArrayList<>();
+        if (medias != null) {
+            medias.stream()
+                    .map(ProductMedia::getMediaId)
+                    .filter(id -> id != null && !id.isBlank())
+                    .forEach(mediaIds::add);
+        }
+        if (variants != null) {
+            variants.stream()
+                    .map(ProductVariant::getMediaId)
+                    .filter(id -> id != null && !id.isBlank())
+                    .forEach(mediaIds::add);
+        }
+        return mediaIds;
     }
 
 }
