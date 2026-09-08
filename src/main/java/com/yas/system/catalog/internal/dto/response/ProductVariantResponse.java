@@ -15,12 +15,15 @@ public record ProductVariantResponse(
         List<ProductVariantAttributeValueResponse> attributeValues,
         String sku,
         BigDecimal price,
-        int quantity
+        int quantity,
+        String mediaId,
+        String mediaUrl
 ) {
     public static ProductVariantResponse from(
             ProductVariant variant,
             List<VariantOptionValue> optionValues,
-            List<ProductVariantAttributeValue> variantAttributeValues
+            List<ProductVariantAttributeValue> variantAttributeValues,
+            String mediaUrl
     ) {
         List<Long> productOptionValueIds = Objects.isNull(optionValues) ? List.of() : optionValues.stream()
                 .filter(optionValue -> Objects.nonNull(optionValue.getProductVariant())
@@ -42,7 +45,17 @@ public record ProductVariantResponse(
                 attributeValueResponses,
                 variant.getSku(),
                 variant.getPrice(),
-                Objects.nonNull(variant.getQuantity()) ? variant.getQuantity() : 0
+                Objects.nonNull(variant.getQuantity()) ? variant.getQuantity() : 0,
+                variant.getMediaId(),
+                mediaUrl
         );
+    }
+
+    public static ProductVariantResponse from(
+            ProductVariant variant,
+            List<VariantOptionValue> optionValues,
+            List<ProductVariantAttributeValue> variantAttributeValues
+    ) {
+        return from(variant, optionValues, variantAttributeValues, null);
     }
 }

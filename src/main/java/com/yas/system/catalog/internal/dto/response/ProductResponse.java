@@ -10,6 +10,7 @@ import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public record ProductResponse(
         Long id,
@@ -20,6 +21,7 @@ public record ProductResponse(
         String metaKeyword,
         String metaDescription,
         BrandResponse brand,
+        CategoryResponse category,
         List<ProductMediaResponse> medias,
         List<ProductAttributeValueResponse> attributes,
         List<ProductOptionCombinationResponse> options,
@@ -46,18 +48,39 @@ public record ProductResponse(
                 product.getMetaKeyword(),
                 product.getMetaDescription(),
                 product.getBrand() != null ? BrandResponse.from(product.getBrand()) : null,
+                product.getCategory() != null ? CategoryResponse.fromWithoutChildren(product.getCategory()) : null,
                 medias != null
                         ? medias.stream()
-                                .map(pm -> ProductMediaResponse.from(pm, mediaUrlMap != null ? mediaUrlMap.get(pm.getMediaId()) : null))
+                                .map(pm -> {
+                                    List<Long> linkedVariantIds = variants != null
+                                            ? variants.stream()
+                                                    .filter(v -> Objects.nonNull(v.getMediaId()) && Objects.equals(v.getMediaId(), pm.getMediaId()))
+                                                    .map(ProductVariant::getId)
+                                                    .filter(Objects::nonNull)
+                                                    .toList()
+                                            : List.of();
+                                    return ProductMediaResponse.from(
+                                            pm,
+                                            mediaUrlMap != null ? mediaUrlMap.get(pm.getMediaId()) : null,
+                                            linkedVariantIds
+                                    );
+                                })
                                 .toList()
                         : List.of(),
                 attributes.stream()
                         .map(ProductAttributeValueResponse::from)
                         .toList(),
                 options,
-                variants.stream()
-                        .map(variant -> ProductVariantResponse.from(variant, variantOptionValues, variantAttributeValues))
-                        .toList(),
+                variants != null
+                        ? variants.stream()
+                                .map(variant -> ProductVariantResponse.from(
+                                        variant,
+                                        variantOptionValues,
+                                        variantAttributeValues,
+                                        mediaUrlMap != null && variant.getMediaId() != null ? mediaUrlMap.get(variant.getMediaId()) : null
+                                ))
+                                .toList()
+                        : List.of(),
                 product.getCreatedAt() != null ? product.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
                 product.getUpdatedAt() != null ? product.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
         );

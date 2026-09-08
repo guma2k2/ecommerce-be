@@ -6,7 +6,6 @@ public record ProductMediaRequest(
         @NotBlank
         String mediaId,
 
-        @NotBlank
-        int position
+        Integer position
 ) {
 }

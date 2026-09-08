@@ -10,15 +10,15 @@ public record ProductTemplateResponse (
         String name,
         String createdAt,
         String updatedAt,
-        List<Long> attributeIds
+        List<ProductAttributeResponse> attributes
 ) {
-    public static ProductTemplateResponse from(ProductTemplate productTemplate, List<Long> attributeIds) {
+    public static ProductTemplateResponse from(ProductTemplate productTemplate, List<ProductAttributeResponse> attributes) {
         return new ProductTemplateResponse(
                 productTemplate.getId(),
                 productTemplate.getName(),
                 productTemplate.getCreatedAt() != null ? productTemplate.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
                 productTemplate.getUpdatedAt() != null ? productTemplate.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
-                attributeIds != null ? attributeIds : List.of()
+                attributes != null ? attributes : List.of()
         );
     }
 

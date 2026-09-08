@@ -29,6 +29,7 @@ public record ProductVariantCreateRequest(
                 .sku(sku)
                 .price(price)
                 .quantity(quantity)
+                .mediaId(mediaId)
                 .product(product)
                 .build();
     }

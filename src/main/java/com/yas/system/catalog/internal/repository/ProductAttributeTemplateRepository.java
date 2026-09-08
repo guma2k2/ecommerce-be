@@ -21,6 +21,16 @@ public interface ProductAttributeTemplateRepository extends JpaRepository<Produc
     """)
     List<ProductAttributeTemplate> findByProductTemplateId(@Param("productTemplateId") Integer productTemplateId);
 
+    @Query("""
+        select pat
+        from ProductAttributeTemplate pat
+        join fetch pat.productAttribute pa
+        join fetch pat.productTemplate pt
+        where pt.id in :productTemplateIds
+        order by pat.position asc
+    """)
+    List<ProductAttributeTemplate> findByProductTemplateIdIn(@Param("productTemplateIds") List<Integer> productTemplateIds);
+
     @Modifying
     @Query("""
         delete from ProductAttributeTemplate pat

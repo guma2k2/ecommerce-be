@@ -43,9 +43,10 @@ public class ProductTemplateController {
     @GetMapping("/page")
     public ApiResponse<PageResponse<ProductTemplateResponse>> getProductTemplatePage(
             @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "is_include_attributes", defaultValue = "false") Boolean isIncludeAttributes
     ) {
-        return ApiResponse.success(productTemplateService.getProductTemplatePage(pageNumber, pageSize));
+        return ApiResponse.success(productTemplateService.getProductTemplatePage(pageNumber, pageSize, isIncludeAttributes));
     }
 
     @DeleteMapping("/{productTemplateId}")

@@ -10,6 +10,6 @@ public interface ProductTemplateService {
     void updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId);
     void deleteProductTemplateById(Integer productTemplateId);
     ProductTemplateResponse getById(Integer productTemplateId);
-    PageResponse<ProductTemplateResponse> getProductTemplatePage(Integer pageNumber, Integer pageSize);
+    PageResponse<ProductTemplateResponse> getProductTemplatePage(Integer pageNumber, Integer pageSize, Boolean isIncludeAttributes);
 }
 

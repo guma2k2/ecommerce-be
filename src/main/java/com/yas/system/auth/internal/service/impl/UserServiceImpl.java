@@ -9,8 +9,7 @@ import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.repository.RoleRepository;
 import com.yas.system.auth.internal.service.UserService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +38,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse createUser(UserRequest userRequest) {
         if (userRepository.findByEmail(userRequest.email()).isPresent()) {
-            throw new InvalidDataException(ErrorCode.INVALID_EMAIL);
+            throw new ApplicationException(ErrorCode.INVALID_EMAIL);
         }
 
         List<Role> roles = roleRepository.findAllById(userRequest.roleIds());
         if (roles.size() != userRequest.roleIds().size()) {
-            throw new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.ROLE_NOT_FOUND);
         }
 
         User user = new User();
@@ -63,7 +62,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getUser(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         return UserResponse.fromModel(user);
     }
 
@@ -71,11 +70,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse updateUser(UUID id, UserRequest userRequest) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
         if (!user.getEmail().equalsIgnoreCase(userRequest.email())) {
             if (userRepository.findByEmail(userRequest.email()).isPresent()) {
-                throw new InvalidDataException(ErrorCode.INVALID_EMAIL);
+                throw new ApplicationException(ErrorCode.INVALID_EMAIL);
             }
             user.setEmail(userRequest.email());
         }
@@ -86,7 +85,7 @@ public class UserServiceImpl implements UserService {
 
         List<Role> roles = roleRepository.findAllById(userRequest.roleIds());
         if (roles.size() != userRequest.roleIds().size()) {
-            throw new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.ROLE_NOT_FOUND);
         }
 
 //        user.setName(userRequest.name());

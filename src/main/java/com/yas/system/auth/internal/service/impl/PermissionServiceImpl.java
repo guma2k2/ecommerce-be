@@ -5,7 +5,7 @@ import com.yas.system.auth.internal.entity.Permission;
 import com.yas.system.auth.internal.repository.PermissionRepository;
 import com.yas.system.auth.internal.service.PermissionService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional(readOnly = true)
     public PermissionResponse getPermissionDetail(Integer id) {
         Permission permission = permissionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PERMISSION_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PERMISSION_NOT_FOUND));
         return PermissionResponse.fromModel(permission);
     }
 }

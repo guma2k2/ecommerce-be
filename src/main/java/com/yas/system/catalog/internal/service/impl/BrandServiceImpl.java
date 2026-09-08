@@ -8,8 +8,7 @@ import com.yas.system.catalog.internal.helper.BrandHelper;
 import com.yas.system.catalog.internal.repository.BrandRepository;
 import com.yas.system.catalog.internal.service.BrandService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class BrandServiceImpl implements BrandService {
     @Transactional
     public void deleteBrandById(Integer brandId) {
         if (Objects.isNull(brandId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_BRAND);
+            throw new ApplicationException(ErrorCode.INVALID_BRAND);
         }
         Brand brand = findBrandById(brandId);
 
@@ -65,7 +64,7 @@ public class BrandServiceImpl implements BrandService {
     @Transactional(readOnly = true)
     public BrandResponse getById(Integer brandId) {
         if (Objects.isNull(brandId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_BRAND);
+            throw new ApplicationException(ErrorCode.INVALID_BRAND);
         }
         return BrandResponse.from(findBrandById(brandId));
     }
@@ -92,25 +91,25 @@ public class BrandServiceImpl implements BrandService {
 
     private void validateCreateBrandRequest(BrandCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_BRAND);
+            throw new ApplicationException(ErrorCode.INVALID_BRAND);
         }
         if (brandRepository.checkExited(request.name(), null).isPresent()) {
-            throw new InvalidDataException(ErrorCode.BRAND_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.BRAND_ALREADY_EXISTS);
         }
     }
 
     private void validateUpdateBrandRequest(BrandUpdateRequest request, Integer brandId) {
         if (Objects.isNull(brandId) || Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_BRAND);
+            throw new ApplicationException(ErrorCode.INVALID_BRAND);
         }
         if (brandRepository.checkExited(request.name(), brandId).isPresent()) {
-            throw new InvalidDataException(ErrorCode.BRAND_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.BRAND_ALREADY_EXISTS);
         }
     }
 
     private Brand findBrandById(Integer brandId) {
         return brandRepository.findById(brandId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.BRAND_NOT_FOUND));
     }
 
 

@@ -1,7 +1,7 @@
 package com.yas.system.media.internal.service.impl;
 
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
@@ -31,10 +31,10 @@ public class MediaServiceImpl implements MediaService {
         try {
             uuid = UUID.fromString(id);
         } catch (IllegalArgumentException e) {
-            throw new ResourceNotFoundException(ErrorCode.MEDIA_NOT_FOUND);
+            throw new ApplicationException(ErrorCode.MEDIA_NOT_FOUND);
         }
         Media media = mediaRepository.findById(uuid)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEDIA_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.MEDIA_NOT_FOUND));
         return MediaResponse.fromModel(media);
     }
 

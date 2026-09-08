@@ -8,8 +8,7 @@ import com.yas.system.catalog.internal.helper.ProductOptionHelper;
 import com.yas.system.catalog.internal.repository.ProductOptionRepository;
 import com.yas.system.catalog.internal.service.ProductOptionService;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.common.exception.InvalidDataException;
-import com.yas.system.common.exception.ResourceNotFoundException;
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class ProductOptionServiceImpl implements ProductOptionService {
     @Transactional
     public void deleteProductOptionById(Long productOptionId) {
         if (Objects.isNull(productOptionId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_OPTION);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_OPTION);
         }
         ProductOption productOption = findProductOptionById(productOptionId);
         productOptionRepository.delete(productOption);
@@ -64,7 +63,7 @@ public class ProductOptionServiceImpl implements ProductOptionService {
     @Transactional(readOnly = true)
     public ProductOptionResponse getById(Long productOptionId) {
         if (Objects.isNull(productOptionId)) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_OPTION);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_OPTION);
         }
         return ProductOptionResponse.from(findProductOptionById(productOptionId));
     }
@@ -90,24 +89,24 @@ public class ProductOptionServiceImpl implements ProductOptionService {
 
     private void validateCreateProductOptionRequest(ProductOptionCreateRequest request) {
         if (Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_OPTION);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_OPTION);
         }
         if (productOptionRepository.checkExited(request.name(), null).isPresent()) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_OPTION_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_OPTION_ALREADY_EXISTS);
         }
     }
 
     private void validateUpdateProductOptionRequest(ProductOptionUpdateRequest request, Long productOptionId) {
         if (Objects.isNull(productOptionId) || Objects.isNull(request) || isBlank(request.name())) {
-            throw new InvalidDataException(ErrorCode.INVALID_PRODUCT_OPTION);
+            throw new ApplicationException(ErrorCode.INVALID_PRODUCT_OPTION);
         }
         if (productOptionRepository.checkExited(request.name(), productOptionId).isPresent()) {
-            throw new InvalidDataException(ErrorCode.PRODUCT_OPTION_ALREADY_EXISTS);
+            throw new ApplicationException(ErrorCode.PRODUCT_OPTION_ALREADY_EXISTS);
         }
     }
 
     private ProductOption findProductOptionById(Long productOptionId) {
         return productOptionRepository.findById(productOptionId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_OPTION_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_OPTION_NOT_FOUND));
     }
 }

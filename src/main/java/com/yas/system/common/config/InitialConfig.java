@@ -38,10 +38,10 @@ public class InitialConfig implements CommandLineRunner {
                     return roleRepository.save(role);
                 });
 
-        if (userRepository.findByEmail("superadminyas@yopmail.com").isEmpty()) {
+        if (userRepository.findByEmail("admin@yopmail.com").isEmpty()) {
             User superAdmin = new User();
-            superAdmin.setEmail("superadminyas@yopmail.com");
-            superAdmin.setPassword(passwordEncoder.encode("superadmin123"));
+            superAdmin.setEmail("admin@yopmail.com");
+            superAdmin.setPassword(passwordEncoder.encode("@Abc123456"));
             superAdmin.setVerified(true);
             superAdmin.setProvider(OauthProvider.LOCAL);
             superAdmin.setRoles(Set.of(superAdminRole));

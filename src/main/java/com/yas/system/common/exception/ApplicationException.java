@@ -1,15 +1,15 @@
 package com.yas.system.common.exception;
 
-public class InvalidDataException extends RuntimeException {
+public class ApplicationException extends RuntimeException {
 
     private ErrorCode errorCode;
 
-    public InvalidDataException(ErrorCode errorCode) {
+    public ApplicationException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
-    public InvalidDataException(ErrorCode errorCode, Object... args) {
+    public ApplicationException(ErrorCode errorCode, Object... args) {
         super(errorCode.format(args));
         this.errorCode = errorCode;
     }
@@ -21,5 +21,4 @@ public class InvalidDataException extends RuntimeException {
     public void setErrorCode(ErrorCode errorCode) {
         this.errorCode = errorCode;
     }
-
 }
