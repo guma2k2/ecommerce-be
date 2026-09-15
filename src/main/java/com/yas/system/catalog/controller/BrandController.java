@@ -21,18 +21,16 @@ public class BrandController {
     BrandService brandService;
 
     @PostMapping()
-    public ApiResponse<Void> createBrand(@RequestBody @Valid BrandCreateRequest request) {
-        brandService.createBrand(request);
-        return ApiResponse.successWithNoContent();
+    public ApiResponse<BrandResponse> createBrand(@RequestBody @Valid BrandCreateRequest request) {
+        return ApiResponse.success(brandService.createBrand(request));
     }
 
     @PutMapping("/{brandId}")
-    public ApiResponse<Void> updateBrand(
+    public ApiResponse<BrandResponse> updateBrand(
             @RequestBody @Valid BrandUpdateRequest request,
             @PathVariable Integer brandId
     ) {
-        brandService.updateBrand(request, brandId);
-        return ApiResponse.successWithNoContent();
+        return ApiResponse.success(brandService.updateBrand(request, brandId));
     }
 
     @GetMapping("/{brandId}")

@@ -31,16 +31,17 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public void createCategory(CategoryCreateRequest categoryRequest) {
+    public CategoryResponse createCategory(CategoryCreateRequest categoryRequest) {
         validateCreateCategoryRequest(categoryRequest);
 
         Category parent = resolveParent(categoryRequest.parentId());
-        categoryRepository.save(createCategory(categoryRequest, parent));
+        Category savedCategory = categoryRepository.save(createCategory(categoryRequest, parent));
+        return CategoryResponse.from(savedCategory);
     }
 
     @Override
     @Transactional
-    public void updateCategory(CategoryUpdateRequest categoryRequest, Integer categoryId) {
+    public CategoryResponse updateCategory(CategoryUpdateRequest categoryRequest, Integer categoryId) {
         validateUpdateCategoryRequest(categoryRequest, categoryId);
 
         Category category = findCategoryById(categoryId);
@@ -48,7 +49,8 @@ public class CategoryServiceImpl implements CategoryService {
         validateParent(categoryId, parent);
 
         updateCategory(categoryRequest, category, parent);
-        categoryRepository.save(category);
+        Category savedCategory = categoryRepository.save(category);
+        return CategoryResponse.from(savedCategory);
     }
 
     @Override

@@ -21,18 +21,16 @@ public class ProductAttributeController {
     ProductAttributeService productAttributeService;
 
     @PostMapping()
-    public ApiResponse<Void> createProductAttribute(@RequestBody @Valid ProductAttributeCreateRequest request) {
-        productAttributeService.createProductAttribute(request);
-        return ApiResponse.successWithNoContent();
+    public ApiResponse<ProductAttributeResponse> createProductAttribute(@RequestBody @Valid ProductAttributeCreateRequest request) {
+        return ApiResponse.success(productAttributeService.createProductAttribute(request));
     }
 
     @PutMapping("/{productAttributeId}")
-    public ApiResponse<Void> updateProductAttribute(
+    public ApiResponse<ProductAttributeResponse> updateProductAttribute(
             @RequestBody @Valid ProductAttributeUpdateRequest request,
             @PathVariable Long productAttributeId
     ) {
-        productAttributeService.updateProductAttribute(request, productAttributeId);
-        return ApiResponse.successWithNoContent();
+        return ApiResponse.success(productAttributeService.updateProductAttribute(request, productAttributeId));
     }
 
     @GetMapping("/{productAttributeId}")

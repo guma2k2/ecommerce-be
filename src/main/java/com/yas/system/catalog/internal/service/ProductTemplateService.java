@@ -6,8 +6,8 @@ import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
 import com.yas.system.common.response.PageResponse;
 
 public interface ProductTemplateService {
-    void createProductTemplate(ProductTemplateCreateRequest request);
-    void updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId);
+    ProductTemplateResponse createProductTemplate(ProductTemplateCreateRequest request);
+    ProductTemplateResponse updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId);
     void deleteProductTemplateById(Integer productTemplateId);
     ProductTemplateResponse getById(Integer productTemplateId);
     PageResponse<ProductTemplateResponse> getProductTemplatePage(Integer pageNumber, Integer pageSize, Boolean isIncludeAttributes);

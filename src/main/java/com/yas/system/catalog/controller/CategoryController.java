@@ -21,18 +21,16 @@ public class CategoryController {
     CategoryService categoryService;
 
     @PostMapping()
-    public ApiResponse<Void> createCategory(@RequestBody @Valid CategoryCreateRequest request) {
-        categoryService.createCategory(request);
-        return ApiResponse.successWithNoContent();
+    public ApiResponse<CategoryResponse> createCategory(@RequestBody @Valid CategoryCreateRequest request) {
+        return ApiResponse.success(categoryService.createCategory(request));
     }
 
     @PutMapping("/{categoryId}")
-    public ApiResponse<Void> updateCategory(
+    public ApiResponse<CategoryResponse> updateCategory(
             @RequestBody @Valid CategoryUpdateRequest request,
             @PathVariable Integer categoryId
     ) {
-        categoryService.updateCategory(request, categoryId);
-        return ApiResponse.successWithNoContent();
+        return ApiResponse.success(categoryService.updateCategory(request, categoryId));
     }
 
     @GetMapping("/{categoryId}")
