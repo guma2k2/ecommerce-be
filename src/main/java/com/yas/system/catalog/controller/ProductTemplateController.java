@@ -21,18 +21,16 @@ public class ProductTemplateController {
     ProductTemplateService productTemplateService;
 
     @PostMapping()
-    public ApiResponse<Void> createProductTemplate(@RequestBody @Valid ProductTemplateCreateRequest request) {
-        productTemplateService.createProductTemplate(request);
-        return ApiResponse.successWithNoContent();
+    public ApiResponse<ProductTemplateResponse> createProductTemplate(@RequestBody @Valid ProductTemplateCreateRequest request) {
+        return ApiResponse.success(productTemplateService.createProductTemplate(request));
     }
 
     @PutMapping("/{productTemplateId}")
-    public ApiResponse<Void> updateProductTemplate(
+    public ApiResponse<ProductTemplateResponse> updateProductTemplate(
             @RequestBody @Valid ProductTemplateUpdateRequest request,
             @PathVariable Integer productTemplateId
     ) {
-        productTemplateService.updateProductTemplate(request, productTemplateId);
-        return ApiResponse.successWithNoContent();
+        return ApiResponse.success(productTemplateService.updateProductTemplate(request, productTemplateId));
     }
 
     @GetMapping("/{productTemplateId}")

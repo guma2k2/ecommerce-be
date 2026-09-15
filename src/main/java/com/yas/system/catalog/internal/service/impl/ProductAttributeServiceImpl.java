@@ -34,19 +34,21 @@ public class ProductAttributeServiceImpl implements ProductAttributeService {
 
     @Override
     @Transactional
-    public void createProductAttribute(ProductAttributeCreateRequest request) {
+    public ProductAttributeResponse createProductAttribute(ProductAttributeCreateRequest request) {
         validateCreateProductAttributeRequest(request);
-        productAttributeRepository.save(productAttributeHelper.createProductAttribute(request));
+        ProductAttribute productAttribute = productAttributeRepository.save(productAttributeHelper.createProductAttribute(request));
+        return ProductAttributeResponse.from(productAttribute);
     }
 
     @Override
     @Transactional
-    public void updateProductAttribute(ProductAttributeUpdateRequest request, Long productAttributeId) {
+    public ProductAttributeResponse updateProductAttribute(ProductAttributeUpdateRequest request, Long productAttributeId) {
         validateUpdateProductAttributeRequest(request, productAttributeId);
 
         ProductAttribute productAttribute = findProductAttributeById(productAttributeId);
         productAttributeHelper.updateProductAttribute(request, productAttribute);
-        productAttributeRepository.save(productAttribute);
+        ProductAttribute savedAttribute = productAttributeRepository.save(productAttribute);
+        return ProductAttributeResponse.from(savedAttribute);
     }
 
     @Override

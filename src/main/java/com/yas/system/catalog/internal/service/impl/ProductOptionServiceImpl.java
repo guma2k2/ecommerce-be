@@ -34,19 +34,21 @@ public class ProductOptionServiceImpl implements ProductOptionService {
 
     @Override
     @Transactional
-    public void createProductOption(ProductOptionCreateRequest request) {
+    public ProductOptionResponse createProductOption(ProductOptionCreateRequest request) {
         validateCreateProductOptionRequest(request);
-        productOptionRepository.save(productOptionHelper.createProductOption(request));
+        ProductOption productOption = productOptionRepository.save(productOptionHelper.createProductOption(request));
+        return ProductOptionResponse.from(productOption);
     }
 
     @Override
     @Transactional
-    public void updateProductOption(ProductOptionUpdateRequest request, Long productOptionId) {
+    public ProductOptionResponse updateProductOption(ProductOptionUpdateRequest request, Long productOptionId) {
         validateUpdateProductOptionRequest(request, productOptionId);
 
         ProductOption productOption = findProductOptionById(productOptionId);
         productOptionHelper.updateProductOption(request, productOption);
-        productOptionRepository.save(productOption);
+        ProductOption savedOption = productOptionRepository.save(productOption);
+        return ProductOptionResponse.from(savedOption);
     }
 
     @Override

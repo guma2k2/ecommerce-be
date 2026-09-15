@@ -46,27 +46,31 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
 
     @Override
     @Transactional
-    public void createProductTemplate(ProductTemplateCreateRequest request) {
+    public ProductTemplateResponse createProductTemplate(ProductTemplateCreateRequest request) {
         validateCreateProductTemplateRequest(request);
 
         Map<Long, ProductAttribute> productAttributeById = findProductAttributes(request.attributeIds());
         ProductTemplate productTemplate = productTemplateRepository.save(productTemplateHelper.createProductTemplate(request));
 
         saveProductAttributeTemplates(productTemplate, request.attributeIds(), productAttributeById);
+        List<ProductAttributeResponse> attributes = buildProductAttributeResponses(request.attributeIds(), productAttributeById);
+        return ProductTemplateResponse.from(productTemplate, attributes);
     }
 
     @Override
     @Transactional
-    public void updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId) {
+    public ProductTemplateResponse updateProductTemplate(ProductTemplateUpdateRequest request, Integer productTemplateId) {
         validateUpdateProductTemplateRequest(request, productTemplateId);
 
         Map<Long, ProductAttribute> productAttributeById = findProductAttributes(request.attributeIds());
         ProductTemplate productTemplate = findProductTemplateById(productTemplateId);
         productTemplateHelper.updateProductTemplate(request, productTemplate);
-        productTemplateRepository.save(productTemplate);
+        ProductTemplate savedProductTemplate = productTemplateRepository.save(productTemplate);
 
         productAttributeTemplateRepository.deleteByProductTemplateId(productTemplateId);
-        saveProductAttributeTemplates(productTemplate, request.attributeIds(), productAttributeById);
+        saveProductAttributeTemplates(savedProductTemplate, request.attributeIds(), productAttributeById);
+        List<ProductAttributeResponse> attributes = buildProductAttributeResponses(request.attributeIds(), productAttributeById);
+        return ProductTemplateResponse.from(savedProductTemplate, attributes);
     }
 
     @Override
@@ -218,5 +222,20 @@ public class ProductTemplateServiceImpl implements ProductTemplateService {
         if (!attributeTemplates.isEmpty()) {
             productAttributeTemplateRepository.saveAll(attributeTemplates);
         }
+    }
+
+    private List<ProductAttributeResponse> buildProductAttributeResponses(
+            List<Long> attributeIds,
+            Map<Long, ProductAttribute> productAttributeById
+    ) {
+        if (Objects.isNull(attributeIds) || attributeIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return attributeIds.stream()
+                .filter(Objects::nonNull)
+                .map(productAttributeById::get)
+                .filter(Objects::nonNull)
+                .map(ProductAttributeResponse::from)
+                .toList();
     }
 }

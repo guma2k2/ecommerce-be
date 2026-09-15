@@ -21,18 +21,16 @@ public class ProductOptionController {
     ProductOptionService productOptionService;
 
     @PostMapping()
-    public ApiResponse<Void> createProductOption(@RequestBody @Valid ProductOptionCreateRequest request) {
-        productOptionService.createProductOption(request);
-        return ApiResponse.successWithNoContent();
+    public ApiResponse<ProductOptionResponse> createProductOption(@RequestBody @Valid ProductOptionCreateRequest request) {
+        return ApiResponse.success(productOptionService.createProductOption(request));
     }
 
     @PutMapping("/{productOptionId}")
-    public ApiResponse<Void> updateProductOption(
+    public ApiResponse<ProductOptionResponse> updateProductOption(
             @RequestBody @Valid ProductOptionUpdateRequest request,
             @PathVariable Long productOptionId
     ) {
-        productOptionService.updateProductOption(request, productOptionId);
-        return ApiResponse.successWithNoContent();
+        return ApiResponse.success(productOptionService.updateProductOption(request, productOptionId));
     }
 
     @GetMapping("/{productOptionId}")

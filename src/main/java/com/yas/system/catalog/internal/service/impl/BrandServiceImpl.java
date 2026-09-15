@@ -34,19 +34,21 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     @Transactional
-    public void createBrand(BrandCreateRequest request) {
+    public BrandResponse createBrand(BrandCreateRequest request) {
         validateCreateBrandRequest(request);
-        brandRepository.save(brandHelper.createBrand(request));
+        Brand brand = brandRepository.save(brandHelper.createBrand(request));
+        return BrandResponse.from(brand);
     }
 
     @Override
     @Transactional
-    public void updateBrand(BrandUpdateRequest request, Integer brandId) {
+    public BrandResponse updateBrand(BrandUpdateRequest request, Integer brandId) {
         validateUpdateBrandRequest(request, brandId);
 
         Brand brand = findBrandById(brandId);
         brandHelper.updateBrand(request, brand);
-        brandRepository.save(brand);
+        Brand savedBrand = brandRepository.save(brand);
+        return BrandResponse.from(savedBrand);
     }
 
     @Override
