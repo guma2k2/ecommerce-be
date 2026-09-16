@@ -41,6 +41,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleRuntimeException(Exception ex){
+        log.error("Unhandled exception: ", ex);
         return ResponseEntity.ok(ApiResponse.error(ErrorCode.UNCATEGORIZED.getCode(), ErrorCode.UNCATEGORIZED.getMessage()));
     }
 }
