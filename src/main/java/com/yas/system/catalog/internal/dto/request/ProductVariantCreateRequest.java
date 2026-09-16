@@ -1,7 +1,5 @@
 package com.yas.system.catalog.internal.dto.request;
 
-import com.yas.system.catalog.internal.entity.Product;
-import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,14 +21,4 @@ public record ProductVariantCreateRequest(
         @Valid
         List<ProductVariantAttributeValueCreateRequest> attributeValues
 ) {
-    public ProductVariant toEntity(Product product) {
-        return ProductVariant.builder()
-                .title(title)
-                .sku(sku)
-                .price(price)
-                .quantity(quantity)
-                .mediaId(mediaId)
-                .product(product)
-                .build();
-    }
 }

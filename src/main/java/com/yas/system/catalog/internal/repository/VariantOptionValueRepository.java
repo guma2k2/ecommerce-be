@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -27,4 +28,11 @@ public interface VariantOptionValueRepository extends JpaRepository<VariantOptio
         where vov.productVariant.product.id = :productId
     """)
     void deleteByProductId(@Param("productId") Long productId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+        delete from VariantOptionValue vov
+        where vov.productOptionValue.id in :productOptionValueIds
+    """)
+    void deleteByProductOptionValueIdIn(@Param("productOptionValueIds") Collection<Long> productOptionValueIds);
 }

@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: ecommerce-test
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  mail:
+    host: localhost
+    port: 2525
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: false
+          auth: false
+  cloudinary:
+    api:
+      name: test-cloudinary
+      key: test-key
+      secret: test-secret
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+app:
+  name: ecommerce-test
+  clientUrl:
+    backoffice: http://localhost:5173
+    storefront: http://localhost:3000
+  upload:
+    location: local
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    access-token-expiration-ms: 60000
+    refresh-token-expiration-ms: 86400000
+  frontendErrorUrl: http://localhost:3000/400
+  oauth2:
+    google:
+      clientId: dummy-google-id
+      clientSecret: dummy-google-secret
+      redirectUri: http://localhost:3000/oauth2/callback/google
+      scope:
+        - email
+        - profile
+    facebook:
+      clientId: dummy-fb-id
+      clientSecret: dummy-fb-secret
+      redirectUri: http://localhost:3000/oauth2/callback/facebook
+      scope:
+        - email
+        - public_profile
+    github:
+      clientId: dummy-gh-id
+      clientSecret: dummy-gh-secret
+      redirectUri: http://localhost:3000/oauth2/callback/github
+      scope:
+        - user:email
+        - read:user

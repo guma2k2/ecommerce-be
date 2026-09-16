@@ -17,6 +17,8 @@ public enum ErrorCode {
     INVALID_PRODUCT("invalid_product", "Invalid product data"),
     PRODUCT_NOT_FOUND("product_not_found", "Product not found"),
     PRODUCT_ALREADY_EXISTS("product_already_exists", "Product already exists"),
+    PRODUCT_NAME_ALREADY_EXISTS("product_name_already_exists", "Product name already exists"),
+    PRODUCT_SLUG_ALREADY_EXISTS("product_slug_already_exists", "Product slug already exists"),
     INVALID_CATEGORY("invalid_category", "Invalid category data"),
     CATEGORY_NOT_FOUND("category_not_found", "Category not found"),
     CATEGORY_ALREADY_EXISTS("category_already_exists", "Category already exists"),
