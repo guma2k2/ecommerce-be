@@ -894,7 +894,16 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
                             )
                     )),
                     null,
-                    List.of(new ProductVariantUpdateRequest(variant.getId(), variant.getTitle(), variant.getSku(), variant.getPrice(), variant.getQuantity(), null, null))
+                    List.of(new ProductVariantUpdateRequest(
+                            variant.getId(),
+                            variant.getTitle(),
+                            variant.getSku(),
+                            variant.getPrice(),
+                            variant.getQuantity(),
+                            null,
+                            List.of(new ProductVariantOptionValueUpdateRequest(optVal1.getId(), testOption.getId(), optVal1.getValue())),
+                            null
+                    ))
             );
 
             mockMvc.perform(put("/api/v1/products/{id}", seededProduct.getId())

@@ -20,6 +20,19 @@ public record ProductVariantUpdateRequest(
         int quantity,
         String mediaId,
         @Valid
+        List<ProductVariantOptionValueUpdateRequest> optionValues,
+        @Valid
         List<ProductVariantAttributeValueUpdateRequest> attributeValues
 ) {
+    public ProductVariantUpdateRequest(
+            Long id,
+            String title,
+            String sku,
+            BigDecimal price,
+            int quantity,
+            String mediaId,
+            List<ProductVariantAttributeValueUpdateRequest> attributeValues
+    ) {
+        this(id, title, sku, price, quantity, mediaId, null, attributeValues);
+    }
 }

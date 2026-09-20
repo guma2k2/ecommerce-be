@@ -7,6 +7,7 @@ import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.entity.option.ProductOption;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
+import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 import com.yas.system.catalog.internal.repository.*;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.media.internal.entity.Media;
@@ -662,6 +663,12 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("VR4 - 1 variant with options -> VariantOptionValue linked")
         void vr4_oneVariantWithOptions() throws Exception {
+            ProductVariantCreateRequest variant = new ProductVariantCreateRequest(
+                    "Standard Variant", "SKU-VR4", new BigDecimal("100.00"), 10, null,
+                    List.of(new ProductVariantOptionValueCreateRequest(testOption.getId(), "Black")),
+                    null
+            );
+
             ProductCreateRequest request = new ProductCreateRequest(
                     "Var With Opt", "Desc", "var-with-opt", null, null, null,
                     null, null, null,
@@ -670,7 +677,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                             List.of(new ProductOptionValueCreateRequest("Black", 1))
                     )),
                     null,
-                    List.of(defaultVariant("SKU-VR4"))
+                    List.of(variant)
             );
 
             mockMvc.perform(post("/api/v1/products")
@@ -689,6 +696,17 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("VR5 - N variants with options -> N ProductVariants linked to options")
         void vr5_multipleVariantsWithOptions() throws Exception {
+            ProductVariantCreateRequest variantRed = new ProductVariantCreateRequest(
+                    "Standard Variant", "SKU-VR5-RED", new BigDecimal("100.00"), 10, null,
+                    List.of(new ProductVariantOptionValueCreateRequest(testOption.getId(), "Red")),
+                    null
+            );
+            ProductVariantCreateRequest variantBlue = new ProductVariantCreateRequest(
+                    "Standard Variant", "SKU-VR5-BLUE", new BigDecimal("100.00"), 10, null,
+                    List.of(new ProductVariantOptionValueCreateRequest(testOption.getId(), "Blue")),
+                    null
+            );
+
             ProductCreateRequest request = new ProductCreateRequest(
                     "Multi Var Multi Opt", "Desc", "multi-var-multi-opt", null, null, null,
                     null, null, null,
@@ -700,10 +718,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                             )
                     )),
                     null,
-                    List.of(
-                            defaultVariant("SKU-VR5-RED"),
-                            defaultVariant("SKU-VR5-BLUE")
-                    )
+                    List.of(variantRed, variantBlue)
             );
 
             mockMvc.perform(post("/api/v1/products")
@@ -809,6 +824,83 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
             Product saved = fixture.findProductBySlug("var-media-prod");
             ProductVariant variant = productVariantRepository.findByProductId(saved.getId()).getFirst();
             assertThat(variant.getMediaId()).isEqualTo(testMedia.getId().toString());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("VR10 - Cartesian product multi-option variants (e.g. Color x Size) -> all VariantOptionValues linked")
+        void vr10_multiOptionCartesianProductVariants() throws Exception {
+            ProductOption sizeOption = fixture.createProductOption("Size");
+
+            ProductOptionCombinationCreateRequest colorOptReq = new ProductOptionCombinationCreateRequest(
+                    testOption.getId(), 1,
+                    List.of(
+                            new ProductOptionValueCreateRequest("Red", 1),
+                            new ProductOptionValueCreateRequest("Blue", 2)
+                    )
+            );
+            ProductOptionCombinationCreateRequest sizeOptReq = new ProductOptionCombinationCreateRequest(
+                    sizeOption.getId(), 2,
+                    List.of(
+                            new ProductOptionValueCreateRequest("S", 1),
+                            new ProductOptionValueCreateRequest("M", 2)
+                    )
+            );
+
+            ProductVariantCreateRequest vRedS = new ProductVariantCreateRequest(
+                    "Red - S", "SKU-RED-S", new BigDecimal("50.00"), 10, null,
+                    List.of(
+                            new ProductVariantOptionValueCreateRequest(testOption.getId(), "Red"),
+                            new ProductVariantOptionValueCreateRequest(sizeOption.getId(), "S")
+                    ),
+                    null
+            );
+            ProductVariantCreateRequest vRedM = new ProductVariantCreateRequest(
+                    "Red - M", "SKU-RED-M", new BigDecimal("50.00"), 15, null,
+                    List.of(
+                            new ProductVariantOptionValueCreateRequest(testOption.getId(), "Red"),
+                            new ProductVariantOptionValueCreateRequest(sizeOption.getId(), "M")
+                    ),
+                    null
+            );
+            ProductVariantCreateRequest vBlueS = new ProductVariantCreateRequest(
+                    "Blue - S", "SKU-BLUE-S", new BigDecimal("50.00"), 20, null,
+                    List.of(
+                            new ProductVariantOptionValueCreateRequest(testOption.getId(), "Blue"),
+                            new ProductVariantOptionValueCreateRequest(sizeOption.getId(), "S")
+                    ),
+                    null
+            );
+            ProductVariantCreateRequest vBlueM = new ProductVariantCreateRequest(
+                    "Blue - M", "SKU-BLUE-M", new BigDecimal("50.00"), 25, null,
+                    List.of(
+                            new ProductVariantOptionValueCreateRequest(testOption.getId(), "Blue"),
+                            new ProductVariantOptionValueCreateRequest(sizeOption.getId(), "M")
+                    ),
+                    null
+            );
+
+            ProductCreateRequest request = new ProductCreateRequest(
+                    "Multi Option Cartesian", "Desc", "multi-option-cartesian", null, null, null,
+                    null, null, null,
+                    List.of(colorOptReq, sizeOptReq),
+                    null,
+                    List.of(vRedS, vRedM, vBlueS, vBlueM)
+            );
+
+            mockMvc.perform(post("/api/v1/products")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.variants", hasSize(4)))
+                    .andExpect(jsonPath("$.data.variants[0].product_option_value_ids", hasSize(2)))
+                    .andExpect(jsonPath("$.data.variants[1].product_option_value_ids", hasSize(2)))
+                    .andExpect(jsonPath("$.data.variants[2].product_option_value_ids", hasSize(2)))
+                    .andExpect(jsonPath("$.data.variants[3].product_option_value_ids", hasSize(2)));
+
+            Product saved = fixture.findProductBySlug("multi-option-cartesian");
+            List<VariantOptionValue> allVovs = variantOptionValueRepository.findByProductVariantProductId(saved.getId());
+            assertThat(allVovs).hasSize(8);
         }
     }
 

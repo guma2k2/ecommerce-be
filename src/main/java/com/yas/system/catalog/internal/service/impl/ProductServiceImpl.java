@@ -9,6 +9,8 @@ import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantAttributeValueCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantAttributeValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductVariantOptionValueCreateRequest;
+import com.yas.system.catalog.internal.dto.request.ProductVariantOptionValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductMediaRequest;
 import com.yas.system.catalog.internal.dto.request.ProductOptionValueCreateRequest;
@@ -283,13 +285,13 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        productMediaRepository.deleteByProductId(id);
-        productAttributeValueRepository.deleteByProductId(id);
+        variantOptionValueRepository.deleteByProductId(id);
+        productVariantAttributeValueRepository.deleteByProductVariantProductId(id);
+        productVariantRepository.deleteByProductId(id);
         productOptionValueRepository.deleteByProductId(id);
         productOptionCombinationRepository.deleteByProductId(id);
-        productVariantAttributeValueRepository.deleteByProductVariantProductId(id);
-        variantOptionValueRepository.deleteByProductId(id);
-        productVariantRepository.deleteByProductId(id);
+        productAttributeValueRepository.deleteByProductId(id);
+        productMediaRepository.deleteByProductId(id);
         productRepository.delete(product);
     }
 
@@ -686,14 +688,8 @@ public class ProductServiceImpl implements ProductService {
             Product product,
             List<ProductOptionValue> productOptionValues
     ) {
-        if (Objects.isNull(request.variants()) || request.variants().isEmpty()) {
-            return new VariantCreateResult(List.of(), List.of(), List.of());
-        }
         log.debug("Saving {} variants for product ID: {}", request.variants().size(), product.getId());
 
-        List<ProductOptionCombinationCreateRequest> optionRequests = Objects.isNull(request.options())
-                ? List.of()
-                : request.options();
         Map<String, ProductOptionValue> povMap = productOptionCombinationHelper.mapOptionValuesByOptionAndValue(productOptionValues);
 
         List<Long> allVariantAttributeIds = request.variants().stream()
@@ -720,8 +716,8 @@ public class ProductServiceImpl implements ProductService {
             ProductVariantCreateRequest variantRequest = request.variants().get(i);
             ProductVariant savedVariant = savedVariants.get(i);
 
-            collectVariantOptionValuesForCreatedVariant(
-                    savedVariant, i, optionRequests, povMap, allVariantOptionValues
+            saveVariantOptionValuesForCreatedVariant(
+                    savedVariant, variantRequest.optionValues(), povMap, allVariantOptionValues
             );
             saveVariantAttributeValuesForCreatedVariant(
                     savedVariant, variantRequest.attributeValues(), productAttributeById, savedVariantAttributeValues
@@ -749,7 +745,6 @@ public class ProductServiceImpl implements ProductService {
             return;
         }
         List<ProductVariantAttributeValue> toSave = attributeRequests.stream()
-                .filter(req -> Objects.nonNull(req) && Objects.nonNull(req.productAttributeId()))
                 .map(req -> productVariantHelper.createVariantAttributeValue(
                         savedVariant,
                         productAttributeById.get(req.productAttributeId()),
@@ -762,26 +757,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     // Helper: Collects VariantOptionValue entries for a newly created variant
-    private void collectVariantOptionValuesForCreatedVariant(
+    private void saveVariantOptionValuesForCreatedVariant(
             ProductVariant savedVariant,
-            int variantIndex,
-            List<ProductOptionCombinationCreateRequest> optionRequests,
+            List<ProductVariantOptionValueCreateRequest> optionRequests,
             Map<String, ProductOptionValue> povMap,
             List<VariantOptionValue> outVariantOptionValues
     ) {
-        for (ProductOptionCombinationCreateRequest optionReq : optionRequests) {
-            if (Objects.isNull(optionReq.values()) || variantIndex >= optionReq.values().size()) {
-                continue;
-            }
-            ProductOptionValueCreateRequest optValReq = optionReq.values().get(variantIndex);
-            if (Objects.isNull(optValReq) || isBlank(optValReq.value())) {
-                continue;
-            }
-            String key = optionReq.productOptionId() + "_" + optValReq.value();
+        if (Objects.isNull(optionRequests) || optionRequests.isEmpty()) {
+            return;
+        }
+        for (ProductVariantOptionValueCreateRequest optValReq : optionRequests) {
+            String key = optValReq.productOptionId() + "_" + optValReq.value();
             ProductOptionValue pov = povMap.get(key);
-            if (Objects.nonNull(pov)) {
-                outVariantOptionValues.add(productVariantHelper.createVariantOptionValue(savedVariant, pov));
+            if (Objects.isNull(pov)) {
+                throw new ApplicationException(ErrorCode.PRODUCT_OPTION_NOT_FOUND);
             }
+            outVariantOptionValues.add(productVariantHelper.createVariantOptionValue(savedVariant, pov));
         }
     }
 
@@ -828,10 +819,6 @@ public class ProductServiceImpl implements ProductService {
             List<VariantOptionValue> currentOptionValues,
             List<ProductVariantAttributeValue> currentVariantAttributes
     ) {
-        List<ProductOptionCombinationUpdateRequest> optionRequests = Objects.isNull(request.options())
-                ? List.of()
-                : request.options();
-
         Map<String, ProductOptionValue> povByOptionAndValue = productOptionCombinationHelper.mapOptionValuesByOptionAndValue(productOptionValues);
 
         List<Long> allVariantAttributeIds = request.variants().stream()
@@ -867,7 +854,7 @@ public class ProductServiceImpl implements ProductService {
             ProductVariant savedVariant = savedVariants.get(i);
 
             updateSingleVariantOptionValues(
-                    savedVariant, i, optionRequests,
+                    savedVariant, variantRequest.optionValues(),
                     ctx.povById(), ctx.povByOptionAndValue(), ctx.existingOptionValueMap(),
                     processedOptionValueIds, savedOptionValues
             );
@@ -899,9 +886,6 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductVariantAttributeValue> toSave = new ArrayList<>();
         for (ProductVariantAttributeValueUpdateRequest attrReq : attributeRequests) {
-            if (Objects.isNull(attrReq) || Objects.isNull(attrReq.productAttributeId())) {
-                continue;
-            }
             String key = savedVariant.getId() != null ? savedVariant.getId() + "_" + attrReq.productAttributeId() : null;
             ProductVariantAttributeValue existingAttrVal = key != null ? existingVariantAttrMap.get(key) : null;
 
@@ -950,26 +934,21 @@ public class ProductServiceImpl implements ProductService {
     // Helper: Processes option value mappings for a single variant during update
     private void updateSingleVariantOptionValues(
             ProductVariant savedVariant,
-            int variantIndex,
-            List<ProductOptionCombinationUpdateRequest> optionRequests,
+            List<ProductVariantOptionValueUpdateRequest> optionRequests,
             Map<Long, ProductOptionValue> povById,
             Map<String, ProductOptionValue> povByOptionAndValue,
             Map<String, VariantOptionValue> existingOptionValueMap,
             Set<Long> processedOptionValueIds,
             List<VariantOptionValue> savedOptionValues
     ) {
+        if (Objects.isNull(optionRequests) || optionRequests.isEmpty()) {
+            return;
+        }
         List<VariantOptionValue> toSave = new ArrayList<>();
-        for (ProductOptionCombinationUpdateRequest optionReq : optionRequests) {
-            if (Objects.isNull(optionReq.values()) || variantIndex >= optionReq.values().size()) {
-                continue;
-            }
-            ProductOptionValueUpdateRequest optValReq = optionReq.values().get(variantIndex);
-            if (Objects.isNull(optValReq) || isBlank(optValReq.value())) {
-                continue;
-            }
-            ProductOptionValue pov = resolveOptionValue(optValReq, optionReq.productOptionId(), povById, povByOptionAndValue);
+        for (ProductVariantOptionValueUpdateRequest optValReq : optionRequests) {
+            ProductOptionValue pov = resolveOptionValue(optValReq, povById, povByOptionAndValue);
             if (Objects.isNull(pov)) {
-                continue;
+                throw new ApplicationException(ErrorCode.PRODUCT_OPTION_NOT_FOUND);
             }
 
             String vovKey = savedVariant.getId() != null ? savedVariant.getId() + "_" + pov.getId() : null;
@@ -994,20 +973,21 @@ public class ProductServiceImpl implements ProductService {
 
     // Helper: Resolves ProductOptionValue by ID or composite key
     private ProductOptionValue resolveOptionValue(
-            ProductOptionValueUpdateRequest optValReq,
-            Long productOptionId,
+            ProductVariantOptionValueUpdateRequest optValReq,
             Map<Long, ProductOptionValue> povById,
             Map<String, ProductOptionValue> povByOptionAndValue
     ) {
-        ProductOptionValue pov = null;
-        if (Objects.nonNull(optValReq.id())) {
-            pov = povById.get(optValReq.id());
+        if (Objects.nonNull(optValReq.productOptionValueId())) {
+            ProductOptionValue pov = povById.get(optValReq.productOptionValueId());
+            if (Objects.nonNull(pov)) {
+                return pov;
+            }
         }
-        if (Objects.isNull(pov)) {
-            String key = productOptionId + "_" + optValReq.value();
-            pov = povByOptionAndValue.get(key);
+        if (Objects.nonNull(optValReq.productOptionId()) && Objects.nonNull(optValReq.value())) {
+            String key = optValReq.productOptionId() + "_" + optValReq.value();
+            return povByOptionAndValue.get(key);
         }
-        return pov;
+        return null;
     }
 
     // Helper: Deletes variant option values that were omitted during update
