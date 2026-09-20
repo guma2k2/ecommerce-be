@@ -65,7 +65,7 @@ public class ProductOptionCombinationHelper {
             ProductOptionCombination combination = savedCombinationByOptionId.get(optionRequest.productOptionId());
             if (Objects.nonNull(optionRequest.values()) && Objects.nonNull(combination)) {
                 for (ProductOptionValueCreateRequest valReq : optionRequest.values()) {
-                    if (Objects.nonNull(valReq) && !isBlank(valReq.value())) {
+                    if (Objects.nonNull(valReq)) {
                         valuesToSave.add(createProductOptionValue(valReq.value(), valReq.position(), combination));
                     }
                 }

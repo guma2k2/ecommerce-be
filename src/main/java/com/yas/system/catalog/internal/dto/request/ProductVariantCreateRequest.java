@@ -19,6 +19,18 @@ public record ProductVariantCreateRequest(
         int quantity,
         String mediaId,
         @Valid
+        List<ProductVariantOptionValueCreateRequest> optionValues,
+        @Valid
         List<ProductVariantAttributeValueCreateRequest> attributeValues
 ) {
+    public ProductVariantCreateRequest(
+            String title,
+            String sku,
+            BigDecimal price,
+            int quantity,
+            String mediaId,
+            List<ProductVariantAttributeValueCreateRequest> attributeValues
+    ) {
+        this(title, sku, price, quantity, mediaId, null, attributeValues);
+    }
 }
