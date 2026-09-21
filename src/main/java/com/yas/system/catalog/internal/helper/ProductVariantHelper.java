@@ -1,5 +1,6 @@
 package com.yas.system.catalog.internal.helper;
 
+import com.yas.system.catalog.internal.dto.internal.VariantUpdateContext;
 import com.yas.system.catalog.internal.dto.request.ProductVariantAttributeValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductVariantUpdateRequest;
