@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.helper;
+package com.yas.system.catalog.internal.dto.internal;
 
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.entity.attribute.ProductVariantAttributeValue;
@@ -6,7 +6,6 @@ import com.yas.system.catalog.internal.entity.option.ProductOptionValue;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 
-import java.util.List;
 import java.util.Map;
 
 /**

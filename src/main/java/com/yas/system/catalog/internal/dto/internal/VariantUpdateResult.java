@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.helper;
+package com.yas.system.catalog.internal.dto.internal;
 
 import com.yas.system.catalog.internal.entity.attribute.ProductVariantAttributeValue;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
