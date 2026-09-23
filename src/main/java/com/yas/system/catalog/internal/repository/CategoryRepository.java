@@ -34,4 +34,17 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
         where c.id = :id 
     """)
     Optional<Category> findByIdCustom(Integer id);
+
+    @Query(value = """
+        WITH RECURSIVE category_tree AS (
+            SELECT id FROM tbl_category WHERE id = :categoryId
+            UNION ALL
+            SELECT c.id FROM tbl_category c
+            INNER JOIN category_tree ct ON c.parent_id = ct.id
+        )
+        SELECT id FROM category_tree
+    """, nativeQuery = true)
+    List<Integer> findCategoryAndDescendantIds(@org.springframework.data.repository.query.Param("categoryId") Integer categoryId);
+
+    Optional<Category> findByName(String name);
 }

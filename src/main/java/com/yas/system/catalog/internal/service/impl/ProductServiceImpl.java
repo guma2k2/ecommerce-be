@@ -34,6 +34,8 @@ import com.yas.system.catalog.internal.helper.ProductHelper;
 import com.yas.system.catalog.internal.helper.ProductMediaHelper;
 import com.yas.system.catalog.internal.helper.ProductOptionCombinationHelper;
 import com.yas.system.catalog.internal.helper.ProductVariantHelper;
+import com.yas.system.catalog.events.ProductSyncEvent;
+import com.yas.system.catalog.events.SyncAction;
 import com.yas.system.catalog.internal.dto.internal.VariantCreateResult;
 import com.yas.system.catalog.internal.dto.internal.VariantUpdateContext;
 import com.yas.system.catalog.internal.dto.internal.VariantUpdateResult;
@@ -58,6 +60,7 @@ import com.yas.system.media.api.MediaPublicService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -101,6 +104,7 @@ public class ProductServiceImpl implements ProductService {
     ProductVariantHelper productVariantHelper;
     ProductMediaHelper productMediaHelper;
     ProductOptionCombinationHelper productOptionCombinationHelper;
+    ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -147,6 +151,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         // Step 10: Build and return ProductResponse
+        eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT));
         return ProductResponse.from(savedProduct, savedMedias, mediaUrlMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
     }
 
@@ -226,6 +231,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         // Step 11: Build and return updated ProductResponse
+        eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT));
         return ProductResponse.from(savedProduct, savedMedias, mediaUrlMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
     }
 
@@ -293,6 +299,7 @@ public class ProductServiceImpl implements ProductService {
         productAttributeValueRepository.deleteByProductId(id);
         productMediaRepository.deleteByProductId(id);
         productRepository.delete(product);
+        eventPublisher.publishEvent(new ProductSyncEvent(id, SyncAction.DELETE));
     }
 
     // Helper: Creates and saves ProductMedia entities for product creation
