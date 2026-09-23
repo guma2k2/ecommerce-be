@@ -14,6 +14,8 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     List<ProductVariant> findByProductId(Long productId);
 
+    List<ProductVariant> findByProductIdIn(List<Long> productIds);
+
     @Modifying
     @Query("""
         delete from ProductVariant pv
