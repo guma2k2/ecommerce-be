@@ -1,5 +1,6 @@
 package com.yas.system.catalog.internal.service.search.impl;
 
+import com.yas.system.catalog.internal.dto.request.ProductSearchQuery;
 import com.yas.system.catalog.internal.dto.request.ProductSearchRequest;
 import com.yas.system.catalog.internal.dto.request.ProductSortOption;
 import com.yas.system.catalog.internal.dto.response.*;
@@ -85,33 +86,56 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
 
     @Override
     @Transactional(readOnly = true)
-    public SearchFacetsResponse getCategoryFacets(Integer categoryId) {
-        if (categoryId == null) {
+    public SearchFacetsResponse getFacets(String keyword, Integer categoryId) {
+        if (keyword == null || keyword.isBlank()) {
             return SearchFacetsResponse.empty();
         }
 
-        List<Integer> categoryIds = categoryRepository.findCategoryAndDescendantIds(categoryId);
-        return buildFacets(categoryIds, true);
+        List<Integer> categoryIds = (categoryId != null)
+                ? categoryRepository.findCategoryAndDescendantIds(categoryId)
+                : List.of();
+
+        return buildFacets(keyword.trim(), categoryIds, !categoryIds.isEmpty());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ProductSearchResultResponse searchProducts(ProductSearchRequest request) {
-        // Step 1: Resolve category and descendant subcategory IDs
+    public ProductSearchResultResponse searchProducts(ProductSearchQuery query) {
+        // Step 1: Normalize query and parse attribute filters in service layer
+        String keyword = query.keyword() != null && !query.keyword().isBlank() ? query.keyword().trim() : null;
+        Map<Long, List<String>> attributeFilters = parseAttributeFilters(query.attributes());
+        ProductSortOption sortOption = query.sort() != null ? query.sort() : ProductSortOption.RELEVANCE;
+        int pageNumber = query.pageNumber() != null && query.pageNumber() >= 0 ? query.pageNumber() : 0;
+        int pageSize = query.pageSize() != null && query.pageSize() > 0 ? query.pageSize() : 12;
+
+        ProductSearchRequest request = new ProductSearchRequest(
+                keyword,
+                query.categoryId(),
+                query.categorySlug(),
+                query.brandIds(),
+                attributeFilters,
+                query.minPrice(),
+                query.maxPrice(),
+                sortOption,
+                pageNumber,
+                pageSize
+        );
+
+        // Step 2: Resolve category and descendant subcategory IDs
         List<Integer> categoryIds = resolveCategoryIds(request);
 
-        // Step 2: Build pagination and sort
-        Sort sort = switch (request.sort() != null ? request.sort() : ProductSortOption.RELEVANCE) {
+        // Step 3: Build pagination and sort
+        Sort sort = switch (sortOption) {
             case NEWEST -> Sort.by(Sort.Direction.DESC, "createdAt");
             case PRICE_ASC, PRICE_DESC, RELEVANCE -> Sort.by(Sort.Direction.DESC, "id");
         };
-        Pageable pageable = PageRequest.of(request.pageNumber(), request.pageSize(), sort);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
-        // Step 3: Build dynamic JPA specification and query products
+        // Step 4: Build dynamic JPA specification and query products
         Specification<Product> spec = ProductSearchSpecification.buildSpecification(request, categoryIds);
         Page<Product> productPage = productSearchRepository.findAll(spec, pageable);
 
-        // Step 4: Map paginated products with thumbnails and prices
+        // Step 5: Map paginated products with thumbnails and prices
         List<ProductSearchItemResponse> searchItems = mapProductSearchItems(productPage.getContent());
 
         PageResponse<ProductSearchItemResponse> pageResponse = new PageResponse<>(
@@ -122,9 +146,9 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
                 searchItems
         );
 
-        // Step 5: Build facets (attributes, brands, price range)
+        // Step 6: Build facets (attributes, brands, price range)
         boolean hasCategoryFilter = !categoryIds.isEmpty();
-        SearchFacetsResponse facets = buildFacets(categoryIds, hasCategoryFilter);
+        SearchFacetsResponse facets = buildFacets(keyword, categoryIds, hasCategoryFilter);
 
         return new ProductSearchResultResponse(pageResponse, facets);
     }
@@ -180,16 +204,18 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
                     String thumbnailUrl = mediaId != null ? mediaUrls.get(mediaId) : null;
 
                     List<ProductVariant> productVariants = variantsByProductId.getOrDefault(product.getId(), List.of());
-                    BigDecimal minPrice = productVariants.stream()
-                            .map(ProductVariant::getPrice)
-                            .filter(Objects::nonNull)
-                            .min(BigDecimal::compareTo)
+                    ProductVariant cheapestVariant = productVariants.stream()
+                            .filter(v -> v.getPrice() != null)
+                            .min(Comparator.comparing(ProductVariant::getPrice))
                             .orElse(null);
+
+                    BigDecimal minPrice = cheapestVariant != null ? cheapestVariant.getPrice() : null;
                     BigDecimal maxPrice = productVariants.stream()
                             .map(ProductVariant::getPrice)
                             .filter(Objects::nonNull)
                             .max(BigDecimal::compareTo)
                             .orElse(null);
+                    Long defaultVariantId = cheapestVariant != null ? cheapestVariant.getId() : null;
 
                     String brandName = product.getBrand() != null ? product.getBrand().getName() : null;
                     String categoryName = product.getCategory() != null ? product.getCategory().getName() : null;
@@ -202,17 +228,22 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
                             minPrice,
                             maxPrice,
                             brandName,
-                            categoryName
+                            categoryName,
+                            defaultVariantId
                     );
                 })
                 .toList();
     }
 
-    private SearchFacetsResponse buildFacets(List<Integer> categoryIds, boolean hasCategories) {
+    private SearchFacetsResponse buildFacets(String keyword, List<Integer> categoryIds, boolean hasCategories) {
         List<Integer> effectiveCategoryIds = categoryIds.isEmpty() ? List.of(0) : categoryIds;
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        String effectiveKeyword = hasKeyword ? keyword.trim() : "";
 
         // 1. Attribute facets
-        List<AttributeFacetProjection> attrProjections = productSearchRepository.findAttributeFacets(effectiveCategoryIds, hasCategories);
+        List<AttributeFacetProjection> attrProjections = productSearchRepository.findAttributeFacets(
+                effectiveKeyword, hasKeyword, effectiveCategoryIds, hasCategories
+        );
         Map<Long, List<AttributeFacetProjection>> groupedByAttribute = attrProjections.stream()
                 .collect(Collectors.groupingBy(
                         AttributeFacetProjection::getAttributeId,
@@ -233,17 +264,47 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
                 .toList();
 
         // 2. Brand facets
-        List<BrandFacetProjection> brandProjections = productSearchRepository.findBrandFacets(effectiveCategoryIds, hasCategories);
+        List<BrandFacetProjection> brandProjections = productSearchRepository.findBrandFacets(
+                effectiveKeyword, hasKeyword, effectiveCategoryIds, hasCategories
+        );
         List<BrandFacetResponse> brandFacets = brandProjections.stream()
                 .map(p -> new BrandFacetResponse(p.getBrandId(), p.getBrandName(), p.getProductCount()))
                 .toList();
 
         // 3. Price range facet
-        PriceRangeProjection priceRangeProj = productSearchRepository.findPriceRange(effectiveCategoryIds, hasCategories);
+        PriceRangeProjection priceRangeProj = productSearchRepository.findPriceRange(
+                effectiveKeyword, hasKeyword, effectiveCategoryIds, hasCategories
+        );
         PriceRangeFacetResponse priceRange = priceRangeProj != null
                 ? new PriceRangeFacetResponse(priceRangeProj.getMinPrice(), priceRangeProj.getMaxPrice())
                 : new PriceRangeFacetResponse(null, null);
 
         return new SearchFacetsResponse(attributeFacets, brandFacets, priceRange);
+    }
+
+    private Map<Long, List<String>> parseAttributeFilters(List<String> rawAttributes) {
+        if (rawAttributes == null || rawAttributes.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, List<String>> result = new HashMap<>();
+        for (String raw : rawAttributes) {
+            String[] parts = raw.split(":", 2);
+            if (parts.length == 2) {
+                try {
+                    Long attrId = Long.parseLong(parts[0].trim());
+                    List<String> values = Arrays.stream(parts[1].split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isBlank())
+                            .toList();
+                    if (!values.isEmpty()) {
+                        result.computeIfAbsent(attrId, k -> new ArrayList<>()).addAll(values);
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid attribute filter format: '{}', expected '<attributeId>:<value1,value2>'", raw);
+                }
+            }
+        }
+        return result;
     }
 }

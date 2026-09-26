@@ -1,6 +1,5 @@
 package com.yas.system.catalog.internal.entity.attribute;
 
-import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.common.entity.BaseLongEntity;
 import jakarta.persistence.*;

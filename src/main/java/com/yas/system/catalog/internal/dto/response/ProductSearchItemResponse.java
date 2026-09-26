@@ -10,6 +10,7 @@ public record ProductSearchItemResponse(
         BigDecimal minPrice,
         BigDecimal maxPrice,
         String brandName,
-        String categoryName
+        String categoryName,
+        Long defaultVariantId
 ) {
 }

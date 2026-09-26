@@ -3,6 +3,7 @@ package com.yas.system.catalog.controller;
 import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
+import com.yas.system.catalog.internal.dto.response.ProductSearchItemResponse;
 import com.yas.system.catalog.internal.dto.response.ProductThumbnailResponse;
 import com.yas.system.catalog.internal.service.ProductService;
 import com.yas.system.common.response.ApiResponse;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/products")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -20,6 +23,18 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     ProductService productService;
+
+    @GetMapping("/public/best-sellers")
+    public ApiResponse<List<ProductSearchItemResponse>> getBestSellers(
+            @RequestParam(defaultValue = "10") Integer limit
+    ) {
+        return ApiResponse.success(productService.getBestSellers(limit));
+    }
+
+    @GetMapping("/public/{slug}")
+    public ApiResponse<ProductResponse> getProductBySlug(@PathVariable String slug) {
+        return ApiResponse.success(productService.getBySlug(slug));
+    }
 
     @GetMapping("/page")
     public ApiResponse<PageResponse<ProductThumbnailResponse>> getProducts(

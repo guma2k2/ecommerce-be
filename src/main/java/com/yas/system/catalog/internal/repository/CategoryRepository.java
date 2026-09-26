@@ -21,11 +21,20 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
 
     @Query("""
-        select c 
+        select distinct c 
         from Category c 
+        left join fetch c.children 
         where c.parent is null 
         """)
     List<Category> findAllCategoryParents();
+
+    @Query("""
+        select c 
+        from Category c 
+        left join fetch c.children 
+        where lower(c.name) = lower(:name)
+        """)
+    Optional<Category> findByNameIgnoreCaseCustom(String name);
 
     @Query("""
         select c 

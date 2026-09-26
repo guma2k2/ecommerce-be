@@ -48,6 +48,12 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long>, J
             JOIN tbl_product_attribute_value pav ON p.id = pav.product_id
             JOIN tbl_product_attribute pa ON pa.id = pav.product_attribute_id
             WHERE (:hasCategories = false OR p.category_id IN (:categoryIds))
+              AND (:hasKeyword = false OR (
+                    LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(p.slug) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(p.meta_keyword) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              ))
 
             UNION
 
@@ -58,9 +64,15 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long>, J
                 pvav.value AS attribute_value
             FROM tbl_product p
             JOIN tbl_product_variant pv ON p.id = pv.product_id
-            JOIN tbl_product_variant_attribute_value pvav ON pv.id = pvav.product_variant_id
+            JOIN tbl_variant_attribute_value pvav ON pv.id = pvav.variant_id
             JOIN tbl_product_attribute pa ON pa.id = pvav.product_attribute_id
             WHERE (:hasCategories = false OR p.category_id IN (:categoryIds))
+              AND (:hasKeyword = false OR (
+                    LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(p.slug) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(p.meta_keyword) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              ))
         )
         SELECT 
             attribute_id AS attributeId,
@@ -72,6 +84,8 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long>, J
         ORDER BY attribute_name ASC, attribute_value ASC
     """, nativeQuery = true)
     List<AttributeFacetProjection> findAttributeFacets(
+            @Param("keyword") String keyword,
+            @Param("hasKeyword") boolean hasKeyword,
             @Param("categoryIds") List<Integer> categoryIds,
             @Param("hasCategories") boolean hasCategories
     );
@@ -84,10 +98,18 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long>, J
         FROM tbl_product p
         JOIN tbl_brand b ON p.brand_id = b.id
         WHERE (:hasCategories = false OR p.category_id IN (:categoryIds))
+          AND (:hasKeyword = false OR (
+                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(p.slug) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(p.meta_keyword) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          ))
         GROUP BY b.id, b.name
         ORDER BY b.name ASC
     """, nativeQuery = true)
     List<BrandFacetProjection> findBrandFacets(
+            @Param("keyword") String keyword,
+            @Param("hasKeyword") boolean hasKeyword,
             @Param("categoryIds") List<Integer> categoryIds,
             @Param("hasCategories") boolean hasCategories
     );
@@ -99,8 +121,16 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long>, J
         FROM tbl_product p
         JOIN tbl_product_variant pv ON p.id = pv.product_id
         WHERE (:hasCategories = false OR p.category_id IN (:categoryIds))
+          AND (:hasKeyword = false OR (
+                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(p.slug) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(p.meta_keyword) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          ))
     """, nativeQuery = true)
     PriceRangeProjection findPriceRange(
+            @Param("keyword") String keyword,
+            @Param("hasKeyword") boolean hasKeyword,
             @Param("categoryIds") List<Integer> categoryIds,
             @Param("hasCategories") boolean hasCategories
     );

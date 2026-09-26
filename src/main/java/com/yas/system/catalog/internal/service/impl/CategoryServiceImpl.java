@@ -95,6 +95,26 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.delete(category);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getAllParentCategories() {
+        return categoryRepository.findAllCategoryParents().stream()
+                .map(CategoryResponse::from)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CategoryResponse getCategoryByName(String name) {
+        if (isBlank(name)) {
+            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
+        }
+        Category category = categoryRepository.findByNameIgnoreCaseCustom(name.trim())
+                .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        return CategoryResponse.from(category);
+    }
+
     private void validateCreateCategoryRequest(CategoryCreateRequest categoryRequest) {
         if (Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
             throw new ApplicationException(ErrorCode.INVALID_CATEGORY);

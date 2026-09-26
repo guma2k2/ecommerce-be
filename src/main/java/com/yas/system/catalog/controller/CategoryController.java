@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/categories")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -19,6 +21,16 @@ import org.springframework.web.bind.annotation.*;
 public class CategoryController {
 
     CategoryService categoryService;
+
+    @GetMapping("/public/parents")
+    public ApiResponse<List<CategoryResponse>> getAllParentCategories() {
+        return ApiResponse.success(categoryService.getAllParentCategories());
+    }
+
+    @GetMapping("/public/{name}")
+    public ApiResponse<CategoryResponse> getCategoryByName(@PathVariable String name) {
+        return ApiResponse.success(categoryService.getCategoryByName(name));
+    }
 
     @PostMapping()
     public ApiResponse<CategoryResponse> createCategory(@RequestBody @Valid CategoryCreateRequest request) {

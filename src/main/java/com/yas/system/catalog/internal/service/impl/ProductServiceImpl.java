@@ -17,7 +17,11 @@ import com.yas.system.catalog.internal.dto.request.ProductOptionValueCreateReque
 import com.yas.system.catalog.internal.dto.request.ProductOptionValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductOptionCombinationResponse;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
+import com.yas.system.catalog.internal.dto.response.ProductSearchItemResponse;
 import com.yas.system.catalog.internal.dto.response.ProductThumbnailResponse;
+import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.entity.Product;
@@ -240,6 +244,93 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
+        return buildProductResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductResponse getBySlug(String slug) {
+        if (slug == null || slug.isBlank()) {
+            throw new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        Product product = productRepository.findBySlug(slug.trim())
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
+        return buildProductResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductSearchItemResponse> getBestSellers(Integer limit) {
+        int queryLimit = (limit == null || limit <= 0) ? 10 : Math.min(limit, 50);
+        List<Long> productIds = productRepository.findRandomProductIds(queryLimit);
+        if (productIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Product> products = productRepository.findByIdInWithBrandAndCategory(productIds);
+
+        // Batch resolve primary media
+        List<ProductMedia> medias = productMediaRepository.findByProductIdInOrderByPositionAsc(productIds);
+        Map<Long, String> primaryMediaIdByProductId = medias.stream()
+                .collect(Collectors.groupingBy(
+                        pm -> pm.getProduct().getId(),
+                        LinkedHashMap::new,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> list.isEmpty() ? null : list.getFirst().getMediaId()
+                        )
+                ));
+
+        List<String> allMediaIds = primaryMediaIdByProductId.values().stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<String, String> mediaUrls = allMediaIds.isEmpty() ? Map.of() : mediaPublicService.getMediaUrls(allMediaIds);
+
+        // Batch resolve variant prices & defaultVariantId
+        List<ProductVariant> variants = productVariantRepository.findByProductIdIn(productIds);
+        Map<Long, List<ProductVariant>> variantsByProductId = variants.stream()
+                .collect(Collectors.groupingBy(pv -> pv.getProduct().getId()));
+
+        return products.stream()
+                .map(product -> {
+                    String mediaId = primaryMediaIdByProductId.get(product.getId());
+                    String thumbnailUrl = mediaId != null ? mediaUrls.get(mediaId) : null;
+
+                    List<ProductVariant> productVariants = variantsByProductId.getOrDefault(product.getId(), List.of());
+                    ProductVariant cheapestVariant = productVariants.stream()
+                            .filter(v -> v.getPrice() != null)
+                            .min(Comparator.comparing(ProductVariant::getPrice))
+                            .orElse(null);
+
+                    BigDecimal minPrice = cheapestVariant != null ? cheapestVariant.getPrice() : null;
+                    BigDecimal maxPrice = productVariants.stream()
+                            .map(ProductVariant::getPrice)
+                            .filter(Objects::nonNull)
+                            .max(BigDecimal::compareTo)
+                            .orElse(null);
+                    Long defaultVariantId = cheapestVariant != null ? cheapestVariant.getId() : null;
+
+                    String brandName = product.getBrand() != null ? product.getBrand().getName() : null;
+                    String categoryName = product.getCategory() != null ? product.getCategory().getName() : null;
+
+                    return new ProductSearchItemResponse(
+                            product.getId(),
+                            product.getName(),
+                            product.getSlug(),
+                            thumbnailUrl,
+                            minPrice,
+                            maxPrice,
+                            brandName,
+                            categoryName,
+                            defaultVariantId
+                    );
+                })
+                .toList();
+    }
+
+    private ProductResponse buildProductResponse(Product product) {
+        Long id = product.getId();
         List<ProductMedia> medias = productMediaRepository.findByProductIdOrderByPositionAsc(id);
         List<ProductAttributeValue> attributes = productAttributeValueRepository.findByProductId(id);
         List<ProductVariant> variants = productVariantRepository.findByProductId(id);

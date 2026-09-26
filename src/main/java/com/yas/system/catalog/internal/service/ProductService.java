@@ -6,6 +6,10 @@ import com.yas.system.catalog.internal.dto.response.ProductResponse;
 import com.yas.system.catalog.internal.dto.response.ProductThumbnailResponse;
 import com.yas.system.common.response.PageResponse;
 
+import com.yas.system.catalog.internal.dto.response.ProductSearchItemResponse;
+
+import java.util.List;
+
 public interface ProductService {
     ProductResponse createProduct(ProductCreateRequest request);
     ProductResponse updateProduct(ProductUpdateRequest request, Long productId);
@@ -18,4 +22,6 @@ public interface ProductService {
             Integer categoryId,
             Integer brandId
     );
+    List<ProductSearchItemResponse> getBestSellers(Integer limit);
+    ProductResponse getBySlug(String slug);
 }

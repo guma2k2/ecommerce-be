@@ -1,6 +1,6 @@
 package com.yas.system.catalog.internal.service.search;
 
-import com.yas.system.catalog.internal.dto.request.ProductSearchRequest;
+import com.yas.system.catalog.internal.dto.request.ProductSearchQuery;
 import com.yas.system.catalog.internal.dto.response.ProductSearchResultResponse;
 import com.yas.system.catalog.internal.dto.response.ProductSuggestionResponse;
 import com.yas.system.catalog.internal.dto.response.SearchFacetsResponse;
@@ -11,7 +11,7 @@ public interface ProductSearchService {
 
     List<ProductSuggestionResponse> getSuggestions(String keyword, int limit);
 
-    ProductSearchResultResponse searchProducts(ProductSearchRequest request);
+    ProductSearchResultResponse searchProducts(ProductSearchQuery query);
 
-    SearchFacetsResponse getCategoryFacets(Integer categoryId);
+    SearchFacetsResponse getFacets(String keyword, Integer categoryId);
 }
