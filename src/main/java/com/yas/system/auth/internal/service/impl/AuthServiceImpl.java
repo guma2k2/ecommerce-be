@@ -251,10 +251,6 @@ public class AuthServiceImpl implements AuthService {
                 throw new ApplicationException(ErrorCode.INVALID_PROVIDER);
         };
 
-        if (Objects.isNull(oauthUserInfo)) {
-            throw new ApplicationException(ErrorCode.UNCATEGORIZED);
-        }
-
 
         User activeUser = userRepository.findByEmail(oauthUserInfo.email()).orElseGet(() -> {
             User user = userHelper.createUser(oauthUserInfo);

@@ -15,11 +15,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public record AuthUser(
+        String id,
         String email,
         String roleName,
         String password,
         Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
+
+    public AuthUser(String email, String roleName, String password, Collection<? extends GrantedAuthority> authorities) {
+        this(null, email, roleName, password, authorities);
+    }
 
     public static AuthUser fromUser(User user) {
         String roleName = user.getRoles().stream()
@@ -38,7 +43,8 @@ public record AuthUser(
             }
         }
 
-        return new AuthUser(user.getEmail(), roleName, user.getPassword(), authorities);
+        String userId = user.getId() != null ? user.getId().toString() : null;
+        return new AuthUser(userId, user.getEmail(), roleName, user.getPassword(), authorities);
     }
 
     @Override

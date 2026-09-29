@@ -44,6 +44,10 @@ public enum ErrorCode {
     PRODUCT_OPTION_ALREADY_EXISTS("product_option_already_exists", "Product option already exists"),
     FILE_TOO_LARGE("file_too_large", "File size exceeds maximum allowed limit: %s"),
     MAX_UPLOAD_SIZE_EXCEEDED("max_upload_size_exceeded", "Maximum upload size exceeded"),
+    CART_ITEM_NOT_FOUND("cart_item_not_found", "Cart item not found"),
+    PRODUCT_VARIANT_NOT_FOUND("product_variant_not_found", "Product variant not found"),
+    INSUFFICIENT_STOCK("insufficient_stock", "Requested quantity (%s) exceeds available stock (%s)"),
+    PRODUCT_VARIANT_INACTIVE("product_variant_inactive", "Product variant is unavailable"),
     ;
 
     ErrorCode(String code, String message) {
