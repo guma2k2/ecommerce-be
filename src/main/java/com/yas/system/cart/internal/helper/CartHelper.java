@@ -2,6 +2,7 @@ package com.yas.system.cart.internal.helper;
 
 import com.yas.system.cart.internal.dto.response.CartItemResponse;
 import com.yas.system.cart.internal.dto.response.CartResponse;
+import com.yas.system.cart.internal.dto.response.ProductOptionResponse;
 import com.yas.system.cart.internal.dto.response.ProductVariantResponse;
 import com.yas.system.cart.internal.entity.Cart;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
@@ -27,6 +28,12 @@ public class CartHelper {
         for (Cart cart : cartList) {
             ProductVariantPublicDto variantDto = variantMap.get(cart.getProductVariantId());
             if (variantDto != null) {
+                List<ProductOptionResponse> optionResponses = variantDto.options() != null
+                        ? variantDto.options().stream()
+                                .map(opt -> new ProductOptionResponse(opt.id(), opt.name(), opt.value()))
+                                .toList()
+                        : List.of();
+
                 ProductVariantResponse variantResponse = new ProductVariantResponse(
                         variantDto.variantId(),
                         variantDto.productId(),
@@ -35,7 +42,8 @@ public class CartHelper {
                         variantDto.thumbnailUrl(),
                         variantDto.stockQuantity() != null ? variantDto.stockQuantity() : 0,
                         variantDto.sku(),
-                        variantDto.price()
+                        variantDto.price(),
+                        optionResponses
                 );
 
                 BigDecimal price = variantDto.price() != null ? variantDto.price() : BigDecimal.ZERO;

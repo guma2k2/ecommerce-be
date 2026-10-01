@@ -32,7 +32,7 @@ app:
     location: cloudinary
   jwt:
     secret: ${JWT_SECRET}
-    access-token-expiration-ms: 60000
+    access-token-expiration-ms: 900000
     refresh-token-expiration-ms: 86400000
   frontendErrorUrl: ${CLIENT_URL}/400
   oauth2:
@@ -59,6 +59,11 @@ app:
       scope:
         - user:email
         - read:user
+  stripe:
+    apiKey: ${STRIPE_SECRET_KEY:${STRIPE.SECRET_KEY:}}
+    webhookSecret: ${STRIPE_WEBHOOK_SECRET:${stripe.webhook.secret:}}
+    successUrl: ${CLIENT_URL:http://localhost:3000}/checkout/success?session_id={CHECKOUT_SESSION_ID}
+    cancelUrl: ${CLIENT_URL:http://localhost:3000}/checkout/cancelled
 openapi:
   service:
     api-docs: api-service

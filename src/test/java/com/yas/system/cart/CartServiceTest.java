@@ -8,6 +8,7 @@ import com.yas.system.cart.internal.helper.CartHelper;
 import com.yas.system.cart.internal.repository.CartRepository;
 import com.yas.system.cart.internal.service.impl.CartServiceImpl;
 import com.yas.system.catalog.api.CatalogPublicService;
+import com.yas.system.catalog.api.dto.ProductOptionPublicDto;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
@@ -77,7 +78,8 @@ class CartServiceTest {
 
         ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
                 100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE"
+                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE",
+                List.of(new ProductOptionPublicDto(1L, "Color", "Black"))
         );
 
         when(cartRepository.findByCustomerId(customerId)).thenReturn(List.of(cart));
@@ -90,6 +92,9 @@ class CartServiceTest {
         assertThat(response.totalPrice()).isEqualByComparingTo(BigDecimal.valueOf(1998));
         assertThat(response.items().getFirst().subtotal()).isEqualByComparingTo(BigDecimal.valueOf(1998));
         assertThat(response.items().getFirst().variant().productName()).isEqualTo("iPhone 16");
+        assertThat(response.items().getFirst().variant().options()).hasSize(1);
+        assertThat(response.items().getFirst().variant().options().getFirst().name()).isEqualTo("Color");
+        assertThat(response.items().getFirst().variant().options().getFirst().value()).isEqualTo("Black");
     }
 
     @Test
