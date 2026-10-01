@@ -48,6 +48,13 @@ public enum ErrorCode {
     PRODUCT_VARIANT_NOT_FOUND("product_variant_not_found", "Product variant not found"),
     INSUFFICIENT_STOCK("insufficient_stock", "Requested quantity (%s) exceeds available stock (%s)"),
     PRODUCT_VARIANT_INACTIVE("product_variant_inactive", "Product variant is unavailable"),
+    PAYMENT_NOT_FOUND("payment_not_found", "Payment with ID %s not found"),
+    STRIPE_CHECKOUT_FAILED("stripe_checkout_failed", "Failed to create Stripe checkout session: %s"),
+    INVALID_WEBHOOK_SIGNATURE("invalid_webhook_signature", "Invalid Stripe webhook signature"),
+    PAYMENT_ALREADY_PROCESSED("payment_already_processed", "Payment has already been processed"),
+    ORDER_NOT_FOUND("order_not_found", "Order with ID %s not found"),
+    ORDER_ITEMS_EMPTY("order_items_empty", "Order must contain at least one item"),
+    ORDER_CANNOT_BE_CANCELLED("order_cannot_be_cancelled", "Order %s cannot be cancelled in status: %s"),
     ;
 
     ErrorCode(String code, String message) {

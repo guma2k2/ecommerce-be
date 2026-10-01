@@ -22,6 +22,17 @@ public interface VariantOptionValueRepository extends JpaRepository<VariantOptio
     """)
     List<VariantOptionValue> findByProductVariantProductId(@Param("productId") Long productId);
 
+    @Query("""
+        select vov
+        from VariantOptionValue vov
+        join fetch vov.productVariant pv
+        join fetch vov.productOptionValue pov
+        join fetch pov.productOptionCombination poc
+        join fetch poc.productOption po
+        where pv.id in :variantIds
+    """)
+    List<VariantOptionValue> findByProductVariantIdInWithDetails(@Param("variantIds") Collection<Long> variantIds);
+
     @Modifying
     @Query("""
         delete from VariantOptionValue vov

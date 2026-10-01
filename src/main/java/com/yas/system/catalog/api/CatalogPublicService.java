@@ -26,4 +26,18 @@ public interface CatalogPublicService {
      * @return Map of variantId -> ProductVariantPublicDto
      */
     Map<Long, ProductVariantPublicDto> getProductVariantsByIds(Collection<Long> variantIds);
+
+    /**
+     * Deduct stock for product variants.
+     *
+     * @param variantQuantities Map of variantId -> quantity to deduct
+     */
+    void deductStock(Map<Long, Integer> variantQuantities);
+
+    /**
+     * Restore stock for product variants.
+     *
+     * @param variantQuantities Map of variantId -> quantity to restore
+     */
+    void restoreStock(Map<Long, Integer> variantQuantities);
 }

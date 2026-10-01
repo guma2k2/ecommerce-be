@@ -1,6 +1,7 @@
 package com.yas.system.cart.internal.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record ProductVariantResponse(
         Long variantId,
@@ -10,6 +11,7 @@ public record ProductVariantResponse(
         String thumbnailUrl,
         int stockQuantity,
         String sku,
-        BigDecimal price
+        BigDecimal price,
+        List<ProductOptionResponse> options
 ) {
 }
