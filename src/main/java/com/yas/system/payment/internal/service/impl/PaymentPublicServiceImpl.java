@@ -26,7 +26,7 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
 
     @Override
     @Transactional
-    public String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency) {
+    public String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, java.util.List<com.yas.system.payment.api.dto.CheckoutItemDto> items) {
         Payment payment = Payment.builder()
                 .customerId(customerId)
                 .orderId(orderId)
@@ -37,7 +37,7 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
                 .build();
 
         Payment savedPayment = paymentRepository.save(payment);
-        var sessionResponse = paymentGateway.createCheckoutSession(savedPayment, customerEmail);
+        var sessionResponse = paymentGateway.createCheckoutSession(savedPayment, customerEmail, items);
         savedPayment.setStripeSessionId(sessionResponse.sessionId());
         paymentRepository.save(savedPayment);
 
@@ -47,7 +47,7 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
     @Override
     @Transactional(readOnly = true)
     public Optional<PaymentPublicDto> getPaymentById(Long paymentId) {
-        return paymentRepository.findById(paymentId).map(this::toDto);
+        return paymentRepository.findById(paymentId).map(PaymentPublicDto::from);
     }
 
     @Override
@@ -56,21 +56,6 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
         return paymentRepository.findAll().stream()
                 .filter(p -> orderId.equals(p.getOrderId()))
                 .findFirst()
-                .map(this::toDto);
-    }
-
-    private PaymentPublicDto toDto(Payment payment) {
-        return new PaymentPublicDto(
-                payment.getId(),
-                payment.getCustomerId(),
-                payment.getOrderId(),
-                payment.getAmount(),
-                payment.getCurrency(),
-                payment.getStatus().name(),
-                payment.getMethod().name(),
-                payment.getStripeSessionId(),
-                payment.getStripePaymentIntentId(),
-                payment.getCreatedAt()
-        );
+                .map(PaymentPublicDto::from);
     }
 }

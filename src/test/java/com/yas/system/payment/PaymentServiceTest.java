@@ -6,6 +6,7 @@ import com.stripe.model.checkout.Session;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.payment.internal.constant.PaymentConstant;
 import com.yas.system.payment.internal.dto.request.CreateCheckoutSessionRequest;
 import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
 import com.yas.system.payment.internal.dto.response.PaymentResponse;
@@ -78,7 +79,7 @@ class PaymentServiceTest {
         savedPayment.setId(1L);
 
         when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
-        when(paymentGateway.createCheckoutSession(eq(savedPayment), eq("customer@example.com")))
+        when(paymentGateway.createCheckoutSession(eq(savedPayment), eq("customer@example.com"), any()))
                 .thenReturn(new CheckoutSessionResponse(1L, "cs_test_123", "https://checkout.stripe.com/pay/cs_test_123"));
 
         CheckoutSessionResponse response = paymentService.createCheckoutSession(testUser, request);
@@ -99,7 +100,7 @@ class PaymentServiceTest {
 
         Event event = mock(Event.class);
         when(event.getId()).thenReturn("evt_123");
-        when(event.getType()).thenReturn("checkout.session.completed");
+        when(event.getType()).thenReturn(PaymentConstant.WebhookTopic.CHECKOUT_SESSION_COMPLETED);
 
         Session session = mock(Session.class);
         when(session.getId()).thenReturn("cs_test_123");
@@ -139,7 +140,7 @@ class PaymentServiceTest {
 
         Event event = mock(Event.class);
         when(event.getId()).thenReturn("evt_123");
-        when(event.getType()).thenReturn("checkout.session.completed");
+        when(event.getType()).thenReturn(PaymentConstant.WebhookTopic.CHECKOUT_SESSION_COMPLETED);
 
         Session session = mock(Session.class);
         when(session.getId()).thenReturn("cs_test_123");

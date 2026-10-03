@@ -8,6 +8,7 @@ import com.stripe.model.checkout.Session;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.payment.internal.constant.PaymentConstant;
 import com.yas.system.payment.internal.dto.request.CreateCheckoutSessionRequest;
 import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
 import com.yas.system.payment.internal.dto.response.PaymentResponse;
@@ -53,7 +54,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        CheckoutSessionResponse sessionResponse = paymentGateway.createCheckoutSession(savedPayment, customer.email());
+        CheckoutSessionResponse sessionResponse = paymentGateway.createCheckoutSession(savedPayment, customer.email(), List.of());
 
         savedPayment.setStripeSessionId(sessionResponse.sessionId());
         paymentRepository.save(savedPayment);
@@ -79,21 +80,21 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         switch (eventType) {
-            case "checkout.session.completed" -> {
+            case PaymentConstant.WebhookTopic.CHECKOUT_SESSION_COMPLETED -> {
                 if (stripeObject instanceof Session session) {
                     handleCheckoutSessionCompleted(session);
                 } else {
                     log.warn("Unable to deserialize checkout session for event: {}", event.getId());
                 }
             }
-            case "payment_intent.payment_failed" -> {
+            case PaymentConstant.WebhookTopic.PAYMENT_INTENT_PAYMENT_FAILED -> {
                 if (stripeObject instanceof PaymentIntent paymentIntent) {
                     handlePaymentIntentFailed(paymentIntent);
                 } else {
                     log.warn("Unable to deserialize payment intent for event: {}", event.getId());
                 }
             }
-            case "checkout.session.expired" -> {
+            case PaymentConstant.WebhookTopic.CHECKOUT_SESSION_EXPIRED -> {
                 if (stripeObject instanceof Session session) {
                     handleCheckoutSessionExpired(session);
                 } else {
@@ -153,7 +154,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void handlePaymentIntentFailed(PaymentIntent paymentIntent) {
         Optional<Payment> paymentOpt = paymentRepository.findByStripePaymentIntentId(paymentIntent.getId());
         if (paymentOpt.isEmpty() && paymentIntent.getMetadata() != null) {
-            String paymentIdStr = paymentIntent.getMetadata().get("payment_id");
+            String paymentIdStr = paymentIntent.getMetadata().get(PaymentConstant.MetadataKey.PAYMENT_ID);
             if (paymentIdStr != null) {
                 try {
                     paymentOpt = paymentRepository.findById(Long.parseLong(paymentIdStr));
@@ -189,7 +190,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if (session.getMetadata() != null) {
-            String paymentIdStr = session.getMetadata().get("payment_id");
+            String paymentIdStr = session.getMetadata().get(PaymentConstant.MetadataKey.PAYMENT_ID);
             if (paymentIdStr != null) {
                 try {
                     return paymentRepository.findById(Long.parseLong(paymentIdStr));

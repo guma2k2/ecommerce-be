@@ -1,5 +1,7 @@
 package com.yas.system.payment.api.dto;
 
+import com.yas.system.payment.internal.entity.Payment;
+
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
@@ -15,4 +17,19 @@ public record PaymentPublicDto(
         String stripePaymentIntentId,
         ZonedDateTime createdAt
 ) {
+
+    public static PaymentPublicDto from(Payment payment) {
+        return new PaymentPublicDto(
+                payment.getId(),
+                payment.getCustomerId(),
+                payment.getOrderId(),
+                payment.getAmount(),
+                payment.getCurrency(),
+                payment.getStatus().name(),
+                payment.getMethod().name(),
+                payment.getStripeSessionId(),
+                payment.getStripePaymentIntentId(),
+                payment.getCreatedAt()
+        );
+    }
 }

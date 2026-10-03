@@ -1,5 +1,6 @@
 package com.yas.system.payment.controller;
 
+import com.yas.system.payment.internal.constant.PaymentConstant;
 import com.yas.system.payment.internal.service.PaymentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class StripeWebhookController {
     @PostMapping
     public ResponseEntity<Void> handleWebhook(
             @RequestBody String payload,
-            @RequestHeader(value = "Stripe-Signature", required = false) String signatureHeader
+            @RequestHeader(value = PaymentConstant.STRIPE_SIGNATURE_HEADER, required = false) String signatureHeader
     ) {
         log.info("Received Stripe webhook request (payload size: {} bytes, hasSignature: {})",
                 payload != null ? payload.length() : 0, signatureHeader != null);

@@ -11,7 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "tbl_product_variant")
+@Table(
+        name = "tbl_product_variant",
+        indexes = {
+                @Index(name = "idx_product_variant_stripe_prod", columnList = "stripe_product_id"),
+                @Index(name = "idx_product_variant_stripe_price", columnList = "stripe_price_id")
+        }
+)
 @Setter
 @Getter
 @AllArgsConstructor
@@ -24,6 +30,12 @@ public class ProductVariant extends BaseLongEntity {
     private Integer quantity;
     private String status;
     private String mediaId;
+
+    @Column(name = "stripe_product_id", length = 100)
+    private String stripeProductId;
+
+    @Column(name = "stripe_price_id", length = 100)
+    private String stripePriceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")

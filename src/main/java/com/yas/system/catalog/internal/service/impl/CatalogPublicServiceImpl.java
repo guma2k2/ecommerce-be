@@ -65,7 +65,9 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
                 variant.getSku(),
                 variant.getPrice(),
                 variant.getStatus(),
-                options
+                options,
+                variant.getStripeProductId(),
+                variant.getStripePriceId()
         );
     }
 
@@ -146,7 +148,9 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
                             variant.getSku(),
                             variant.getPrice(),
                             variant.getStatus(),
-                            options
+                            options,
+                            variant.getStripeProductId(),
+                            variant.getStripePriceId()
                     );
                 }
         ));

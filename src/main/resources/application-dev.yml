@@ -64,11 +64,18 @@ app:
     webhookSecret: ${STRIPE_WEBHOOK_SECRET:${stripe.webhook.secret:}}
     successUrl: ${CLIENT_URL:http://localhost:3000}/checkout/success?session_id={CHECKOUT_SESSION_ID}
     cancelUrl: ${CLIENT_URL:http://localhost:3000}/checkout/cancelled
+    syncEnabled: ${STRIPE_SYNC_ENABLED:true}
 openapi:
   service:
     api-docs: api-service
     server: http://localhost:8080
     title: API Service
     version: 1.0.0
+
+logging:
+  level:
+    com.yas.system.payment: DEBUG
+    com.yas.system.catalog.internal.listener: DEBUG
+
 
 
