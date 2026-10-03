@@ -7,6 +7,10 @@ public record StripeProperties(
         String apiKey,
         String webhookSecret,
         String successUrl,
-        String cancelUrl
+        String cancelUrl,
+        Boolean syncEnabled
 ) {
+    public boolean isSyncEnabled() {
+        return Boolean.TRUE.equals(syncEnabled) && apiKey != null && !apiKey.isBlank();
+    }
 }

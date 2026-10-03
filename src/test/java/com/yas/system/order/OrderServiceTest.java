@@ -153,7 +153,7 @@ class OrderServiceTest {
             }
             return o;
         });
-        when(paymentPublicService.createCheckoutSessionUrl(eq(customerId), eq("customer@example.com"), any(), any(), eq("USD")))
+        when(paymentPublicService.createCheckoutSessionUrl(eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any()))
                 .thenReturn("https://checkout.stripe.com/test-session");
 
         OrderCreateResponse response = orderService.createOrder(testUser, request);

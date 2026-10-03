@@ -13,8 +13,25 @@ public record ProductVariantPublicDto(
         String sku,
         BigDecimal price,
         String status,
-        List<ProductOptionPublicDto> options
+        List<ProductOptionPublicDto> options,
+        String stripeProductId,
+        String stripePriceId
 ) {
+    public ProductVariantPublicDto(
+            Long variantId,
+            Long productId,
+            String productName,
+            String productSlug,
+            String thumbnailUrl,
+            Integer stockQuantity,
+            String sku,
+            BigDecimal price,
+            String status,
+            List<ProductOptionPublicDto> options
+    ) {
+        this(variantId, productId, productName, productSlug, thumbnailUrl, stockQuantity, sku, price, status, options, null, null);
+    }
+
     public ProductVariantPublicDto(
             Long variantId,
             Long productId,
@@ -26,6 +43,6 @@ public record ProductVariantPublicDto(
             BigDecimal price,
             String status
     ) {
-        this(variantId, productId, productName, productSlug, thumbnailUrl, stockQuantity, sku, price, status, List.of());
+        this(variantId, productId, productName, productSlug, thumbnailUrl, stockQuantity, sku, price, status, List.of(), null, null);
     }
 }

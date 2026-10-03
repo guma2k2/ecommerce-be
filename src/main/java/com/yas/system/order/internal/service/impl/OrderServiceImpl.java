@@ -143,13 +143,36 @@ public class OrderServiceImpl implements OrderService {
         // 9. Generate payment checkout URL if STRIPE
         String checkoutUrl = null;
         if (request.paymentMethod() == PaymentMethod.STRIPE) {
+            List<com.yas.system.payment.api.dto.CheckoutItemDto> checkoutItems = details.stream()
+                    .map(od -> {
+                        ProductVariantPublicDto variantDto = variantMap.get(od.getProductVariantId());
+                        String stripePriceId = variantDto != null ? variantDto.stripePriceId() : null;
+                        return new com.yas.system.payment.api.dto.CheckoutItemDto(
+                                stripePriceId,
+                                od.getProductName(),
+                                od.getUnitPrice(),
+                                od.getQuantity(),
+                                od.getThumbnailUrl()
+                        );
+                    })
+                    .toList();
+
+            log.info("Initiating Stripe Checkout for order {} (total: {} USD, items count: {})",
+                    orderIdStr, savedOrder.getTotalAmount(), checkoutItems.size());
+            for (com.yas.system.payment.api.dto.CheckoutItemDto item : checkoutItems) {
+                log.debug("Order checkout item: name='{}', stripePriceId='{}', unitPrice={}, qty={}",
+                        item.productName(), item.stripePriceId(), item.unitPrice(), item.quantity());
+            }
+
             checkoutUrl = paymentPublicService.createCheckoutSessionUrl(
                     customerId,
                     customer.email(),
                     orderIdStr,
                     savedOrder.getTotalAmount(),
-                    "USD"
+                    "USD",
+                    checkoutItems
             );
+            log.info("Received Stripe Checkout URL for order {}: {}", orderIdStr, checkoutUrl);
         }
 
         log.info("Order {} created successfully with code {} for customer {}", savedOrder.getId(), orderCode, customerId);

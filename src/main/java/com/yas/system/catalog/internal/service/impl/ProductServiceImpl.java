@@ -40,6 +40,7 @@ import com.yas.system.catalog.internal.helper.ProductOptionCombinationHelper;
 import com.yas.system.catalog.internal.helper.ProductVariantHelper;
 import com.yas.system.catalog.events.ProductSyncEvent;
 import com.yas.system.catalog.events.SyncAction;
+import com.yas.system.catalog.events.VariantStripeInfo;
 import com.yas.system.catalog.internal.dto.internal.VariantCreateResult;
 import com.yas.system.catalog.internal.dto.internal.VariantUpdateContext;
 import com.yas.system.catalog.internal.dto.internal.VariantUpdateResult;
@@ -155,6 +156,8 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         // Step 10: Build and return ProductResponse
+        log.info("Publishing ProductSyncEvent(UPSERT) for newly created product ID: {} with {} variants",
+                savedProduct.getId(), savedVariants.size());
         eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT));
         return ProductResponse.from(savedProduct, savedMedias, mediaUrlMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
     }
@@ -211,7 +214,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductVariant> savedVariants = new ArrayList<>();
         List<VariantOptionValue> savedVariantOptionValues = new ArrayList<>();
         List<ProductVariantAttributeValue> savedVariantAttributeValues = new ArrayList<>();
-        saveUpdatedVariants(
+        List<VariantStripeInfo> removedVariants = saveUpdatedVariants(
                 request,
                 savedProduct,
                 savedOptionValues,
@@ -235,7 +238,9 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
 
         // Step 11: Build and return updated ProductResponse
-        eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT));
+        log.info("Publishing ProductSyncEvent(UPSERT) for updated product ID: {} (active variants: {}, removed variants: {})",
+                savedProduct.getId(), savedVariants.size(), removedVariants.size());
+        eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT, removedVariants));
         return ProductResponse.from(savedProduct, savedMedias, mediaUrlMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
     }
 
@@ -382,6 +387,12 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        List<ProductVariant> currentVariants = productVariantRepository.findByProductId(id);
+        List<VariantStripeInfo> deletedStripeInfos = currentVariants.stream()
+                .filter(v -> v.getStripeProductId() != null || v.getStripePriceId() != null)
+                .map(v -> new VariantStripeInfo(v.getId(), v.getStripeProductId(), v.getStripePriceId()))
+                .toList();
+
         variantOptionValueRepository.deleteByProductId(id);
         productVariantAttributeValueRepository.deleteByProductVariantProductId(id);
         productVariantRepository.deleteByProductId(id);
@@ -390,7 +401,9 @@ public class ProductServiceImpl implements ProductService {
         productAttributeValueRepository.deleteByProductId(id);
         productMediaRepository.deleteByProductId(id);
         productRepository.delete(product);
-        eventPublisher.publishEvent(new ProductSyncEvent(id, SyncAction.DELETE));
+        log.info("Publishing ProductSyncEvent(DELETE) for deleted product ID: {} with {} variants to archive",
+                id, deletedStripeInfos.size());
+        eventPublisher.publishEvent(new ProductSyncEvent(id, SyncAction.DELETE, deletedStripeInfos));
     }
 
     // Helper: Creates and saves ProductMedia entities for product creation
@@ -875,7 +888,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     // Helper: Performs in-place delta update on ProductVariant, VariantOptionValue, and ProductVariantAttributeValue entities
-    private void saveUpdatedVariants(
+    private List<VariantStripeInfo> saveUpdatedVariants(
             ProductUpdateRequest request,
             Product product,
             List<ProductOptionValue> productOptionValues,
@@ -887,7 +900,7 @@ public class ProductServiceImpl implements ProductService {
             List<ProductVariantAttributeValue> savedVariantAttributeValues
     ) {
         if (Objects.isNull(request.variants()) || request.variants().isEmpty()) {
-            return;
+            return List.of();
         }
         log.debug("Updating variants for product ID: {}", product.getId());
 
@@ -900,7 +913,7 @@ public class ProductServiceImpl implements ProductService {
 
         deleteOmittedVariantOptionValues(product, currentOptionValues, result.processedOptionValueIds());
         deleteOmittedVariantAttributeValues(product, currentVariantAttributes, result.processedAttributeValueIds());
-        deleteMissingVariants(request, currentVariants);
+        return deleteMissingVariants(request, currentVariants);
     }
 
     /**
@@ -1148,7 +1161,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     // Helper: Deletes existing variants omitted from update request
-    private void deleteMissingVariants(ProductUpdateRequest request, List<ProductVariant> currentVariants) {
+    private List<VariantStripeInfo> deleteMissingVariants(ProductUpdateRequest request, List<ProductVariant> currentVariants) {
         List<Long> requestIds = request.variants().stream()
                 .map(ProductVariantUpdateRequest::id)
                 .filter(Objects::nonNull)
@@ -1160,7 +1173,12 @@ public class ProductServiceImpl implements ProductService {
             List<Long> deletedVariantIds = deletedVariants.stream().map(ProductVariant::getId).toList();
             log.debug("Deleting {} omitted product variants (IDs: {})", deletedVariants.size(), deletedVariantIds);
             productVariantRepository.deleteAll(deletedVariants);
+            return deletedVariants.stream()
+                    .filter(v -> v.getStripeProductId() != null || v.getStripePriceId() != null)
+                    .map(v -> new VariantStripeInfo(v.getId(), v.getStripeProductId(), v.getStripePriceId()))
+                    .toList();
         }
+        return List.of();
     }
 
     // Helper: Fetches and validates ProductOption entities by IDs
