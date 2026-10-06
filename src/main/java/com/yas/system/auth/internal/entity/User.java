@@ -27,24 +27,27 @@ import java.util.Set;
 @Setter
 public class User extends BaseUuidEntity {
 
-    @Column(unique = true)
+    @Column(unique = true, length = 254)
     private String email;
 
+    @Column(length = 60)
     private String password;
 
 //    private String name;
 
     private boolean isVerified;
 
-    @Column(length = 50)
+    @Column(length = 10)
     private String language;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private OauthProvider provider;
 
     @Column(columnDefinition = "boolean default false")
     private boolean isEnabledMfa = false;
 
+    @Column(length = 64)
     private String mfaSecret;
 
     @ManyToMany(fetch = FetchType.LAZY)

@@ -14,9 +14,10 @@ import lombok.*;
 @Builder
 public class Media extends BaseUuidEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
 
+    @Column(length = 1024)
     private String url;
 
     @Builder.Default
@@ -24,13 +25,16 @@ public class Media extends BaseUuidEntity {
 
     private long size;
 
+    @Column(length = 500)
     private String altText;
 
+    @Column(length = 20)
     private String duration;
 
     @Column(length = 20)
     private String fileType;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 10)
     private MediaType type;
 }

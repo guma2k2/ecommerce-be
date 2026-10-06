@@ -16,14 +16,17 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Permission extends BaseIntegerEntity {
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
+    @Column(length = 255)
     private String api;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 10)
     private ApiMethod method;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private ApiModule module;
 }

@@ -29,13 +29,13 @@ public class OrderDetail extends BaseLongEntity {
     @Column(name = "variant_id", nullable = false)
     private Long productVariantId;
 
-    @Column(name = "product_name", nullable = false)
+    @Column(name = "product_name", nullable = false, length = 150)
     private String productName;
 
-    @Column(name = "sku", length = 100)
+    @Column(name = "sku", length = 64)
     private String sku;
 
-    @Column(name = "thumbnail_url")
+    @Column(name = "thumbnail_url", length = 1024)
     private String thumbnailUrl;
 
     @Column(nullable = false)

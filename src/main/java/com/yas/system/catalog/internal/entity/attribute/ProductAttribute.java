@@ -15,7 +15,7 @@ import lombok.*;
 @Builder
 public class ProductAttribute extends BaseLongEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
 }

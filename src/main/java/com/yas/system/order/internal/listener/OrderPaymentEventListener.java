@@ -1,5 +1,6 @@
 package com.yas.system.order.internal.listener;
 
+import com.yas.system.inventory.api.InventoryPublicService;
 import com.yas.system.order.internal.enumeration.OrderStatus;
 import com.yas.system.order.internal.repository.OrderRepository;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class OrderPaymentEventListener {
 
     OrderRepository orderRepository;
+    InventoryPublicService inventoryPublicService;
 
     @EventListener
     @Transactional
@@ -38,6 +40,7 @@ public class OrderPaymentEventListener {
                     order.setStatus(OrderStatus.CONFIRMED);
                 }
                 orderRepository.save(order);
+                inventoryPublicService.confirmDeductions(event.orderId());
                 log.info("Order {} successfully updated to SUCCEEDED and CONFIRMED via PaymentCompletedEvent", orderId);
             });
         } catch (IllegalArgumentException e) {

@@ -54,7 +54,7 @@ public class Order extends BaseUuidEntity {
     @Column(name = "receiver_phone", nullable = false, length = 20)
     private String receiverPhone;
 
-    @Column(name = "shipping_address", nullable = false, length = 255)
+    @Column(name = "shipping_address", nullable = false, length = 300)
     private String shippingAddress;
 
     @Column(length = 100)

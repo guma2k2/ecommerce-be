@@ -13,6 +13,7 @@ import lombok.*;
 @Builder
 public class ProductOption extends BaseLongEntity {
 
+    @Column(nullable = false, length = 50)
     private String name;
 
 }

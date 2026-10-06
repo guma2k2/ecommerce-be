@@ -15,9 +15,32 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleValidation(MethodArgumentNotValidException ex){
-        String errorMessage = ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage();
-        log.error("Error: {}", errorMessage);
-        return ResponseEntity.ok(ApiResponse.error(ErrorCode.BAD_REQUEST.getCode(), ErrorCode.BAD_REQUEST.getMessage()));
+        String errorMessage = ex.getBindingResult().getAllErrors().stream()
+                .findFirst()
+                .map(this::resolveErrorMessage)
+                .orElse(ErrorCode.BAD_REQUEST.getMessage());
+        log.error("Validation error: {}", errorMessage);
+        return ResponseEntity.ok(ApiResponse.error(ErrorCode.BAD_REQUEST.getCode(), errorMessage));
+    }
+
+    String resolveErrorMessage(org.springframework.validation.ObjectError error) {
+        String message = error.getDefaultMessage();
+        if (message == null || message.isBlank()) {
+            return (error instanceof org.springframework.validation.FieldError fe ? fe.getField() : "Field") + " is invalid";
+        }
+
+        if (error instanceof org.springframework.validation.FieldError fe) {
+            String fieldName = fe.getField();
+            if (message.contains("{fieldName}")) {
+                message = message.replace("{fieldName}", fieldName);
+            }
+            if (message.contains("${validatedValue")) {
+                String nullOrEmpty = (fe.getRejectedValue() == null) ? "null" : "empty";
+                message = message.replaceAll("\\$\\{validatedValue[^}]*\\}", nullOrEmpty);
+            }
+        }
+
+        return message;
     }
 
     @ExceptionHandler(ApplicationException.class)

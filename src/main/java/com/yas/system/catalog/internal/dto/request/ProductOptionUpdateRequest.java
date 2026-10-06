@@ -1,16 +1,12 @@
 package com.yas.system.catalog.internal.dto.request;
 
-import com.yas.system.catalog.internal.entity.option.ProductOption;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import com.yas.system.common.response.ParamError;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-
-import java.util.List;
+import jakarta.validation.constraints.Size;
 
 public record ProductOptionUpdateRequest(
-        Long id,
-        @NotBlank
+        @NotBlank(message = ParamError.FIELD_NAME)
+        @Size(max = 50, message = ParamError.MAX_LENGTH)
         String name
 ) {
 }

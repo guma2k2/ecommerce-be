@@ -32,7 +32,7 @@ public class Payment extends BaseLongEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 3)
     private String currency;
 
     @Enumerated(EnumType.STRING)
@@ -43,10 +43,10 @@ public class Payment extends BaseLongEntity {
     @Column(nullable = false, length = 20)
     private PaymentMethod method;
 
-    @Column(name = "stripe_session_id", length = 255)
+    @Column(name = "stripe_session_id", length = 66)
     private String stripeSessionId;
 
-    @Column(name = "stripe_payment_intent_id", length = 255)
+    @Column(name = "stripe_payment_intent_id", length = 66)
     private String stripePaymentIntentId;
 
     @Column(name = "failure_reason", length = 500)

@@ -8,6 +8,9 @@ import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.inventory.api.InventoryPublicService;
+import com.yas.system.inventory.api.dto.StockReservationItemDto;
+import com.yas.system.inventory.internal.constant.InventoryConstant;
 import com.yas.system.order.internal.dto.request.CreateOrderRequest;
 import com.yas.system.order.internal.dto.request.OrderItemRequest;
 import com.yas.system.order.internal.dto.response.OrderCreateResponse;
@@ -51,6 +54,7 @@ public class OrderServiceImpl implements OrderService {
     CartPublicService cartPublicService;
     PaymentPublicService paymentPublicService;
     ApplicationEventPublisher eventPublisher;
+    InventoryPublicService inventoryPublicService;
 
     @Override
     @Transactional
@@ -124,6 +128,14 @@ public class OrderServiceImpl implements OrderService {
             details.add(detail);
         }
         orderDetailRepository.saveAll(details);
+
+        List<StockReservationItemDto> reservationItems = itemQuantities.entrySet().stream()
+                .map(e -> new StockReservationItemDto(e.getKey(), e.getValue()))
+                .toList();
+        inventoryPublicService.reserveStock(orderIdStr, reservationItems, InventoryConstant.DEFAULT_RESERVATION_TTL);
+        if (request.paymentMethod() == PaymentMethod.COD) {
+            inventoryPublicService.confirmDeductions(orderIdStr);
+        }
 
         // 7. Clear cart if order placed from cart
         if (request.fromCart()) {
@@ -252,6 +264,7 @@ public class OrderServiceImpl implements OrderService {
         Map<Long, Integer> restoreQuantities = details.stream()
                 .collect(Collectors.toMap(OrderDetail::getProductVariantId, OrderDetail::getQuantity));
         catalogPublicService.restoreStock(restoreQuantities);
+        inventoryPublicService.releaseReservations(order.getId().toString());
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);

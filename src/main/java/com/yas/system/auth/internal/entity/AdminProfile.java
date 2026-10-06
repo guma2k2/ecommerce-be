@@ -23,7 +23,9 @@ public class AdminProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(length = 100)
     private String name;
 
+    @Column(length = 1024)
     private String avatar;
 }
