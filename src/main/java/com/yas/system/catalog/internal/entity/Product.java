@@ -29,6 +29,7 @@ public class Product extends BaseLongEntity {
     @Column(length = 60)
     private String metaTitle;
 
+    @Column(length = 200)
     private String metaKeyword;
 
     @Column(length = 160)

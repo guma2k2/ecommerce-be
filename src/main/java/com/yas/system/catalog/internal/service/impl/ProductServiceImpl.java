@@ -61,6 +61,7 @@ import com.yas.system.catalog.internal.specification.ProductSpecification;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
+import com.yas.system.inventory.api.InventoryPublicService;
 import com.yas.system.media.api.MediaPublicService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -110,6 +111,7 @@ public class ProductServiceImpl implements ProductService {
     ProductMediaHelper productMediaHelper;
     ProductOptionCombinationHelper productOptionCombinationHelper;
     ApplicationEventPublisher eventPublisher;
+    InventoryPublicService inventoryPublicService;
 
     @Override
     @Transactional
@@ -147,6 +149,14 @@ public class ProductServiceImpl implements ProductService {
         List<VariantOptionValue> savedVariantOptionValues = variantCreateResult.savedOptionValues();
         List<ProductVariantAttributeValue> savedVariantAttributeValues = variantCreateResult.savedVariantAttributeValues();
         log.info("Created {} variants for product ID: {}", savedVariants.size(), savedProduct.getId());
+
+        for (ProductVariant variant : savedVariants) {
+            inventoryPublicService.initializeInventory(
+                    variant.getId(),
+                    variant.getSku(),
+                    variant.getQuantity() != null ? variant.getQuantity() : 0
+            );
+        }
 
         // Step 8: Build product option combination responses
         List<ProductOptionCombinationResponse> options = productOptionCombinationHelper.buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
@@ -226,6 +236,14 @@ public class ProductServiceImpl implements ProductService {
                 savedVariantAttributeValues
         );
         log.info("Updated {} variants, option values, and attribute values for product ID: {}", savedVariants.size(), productId);
+
+        for (ProductVariant variant : savedVariants) {
+            inventoryPublicService.initializeInventory(
+                    variant.getId(),
+                    variant.getSku(),
+                    variant.getQuantity() != null ? variant.getQuantity() : 0
+            );
+        }
 
         // Step 8: Clean up omitted option values and combinations AFTER variant option values have been cleaned up
         deleteOmittedOptionCombinationsAndValues(request.options(), currentCombinations, currentOptionValues, savedOptionValues);

@@ -21,7 +21,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class Role extends BaseIntegerEntity {
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String name;
 
     private boolean isAllowGetAll;

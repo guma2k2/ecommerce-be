@@ -13,7 +13,7 @@ public record ShippingAddressRequest(
         String receiverPhone,
 
         @NotBlank(message = "Shipping address is required")
-        @Size(max = 255, message = "Shipping address must not exceed 255 characters")
+        @Size(max = 300, message = "Shipping address must not exceed 300 characters")
         String shippingAddress,
 
         @Size(max = 100, message = "City must not exceed 100 characters")

@@ -23,6 +23,6 @@ public class ProductAttributeValue extends BaseLongEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String value;
 }

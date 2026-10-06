@@ -13,7 +13,7 @@ import lombok.*;
 @Builder
 public class ProductOptionValue extends BaseLongEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String value;
 
     private int position;

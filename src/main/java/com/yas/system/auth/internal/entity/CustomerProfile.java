@@ -25,11 +25,13 @@ public class CustomerProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 10)
     private Gender gender;
 
+    @Column(length = 1024)
     private String avatar;
 }

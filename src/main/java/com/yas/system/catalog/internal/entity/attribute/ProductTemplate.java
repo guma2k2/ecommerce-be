@@ -14,6 +14,6 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class ProductTemplate extends BaseIntegerEntity {
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 }

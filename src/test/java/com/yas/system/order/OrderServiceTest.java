@@ -8,6 +8,7 @@ import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.inventory.api.InventoryPublicService;
 import com.yas.system.order.internal.dto.request.CreateOrderRequest;
 import com.yas.system.order.internal.dto.request.OrderItemRequest;
 import com.yas.system.order.internal.dto.request.ShippingAddressRequest;
@@ -64,6 +65,9 @@ class OrderServiceTest {
     @Mock
     ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    InventoryPublicService inventoryPublicService;
+
     OrderHelper orderHelper;
     OrderServiceImpl orderService;
 
@@ -80,7 +84,8 @@ class OrderServiceTest {
                 catalogPublicService,
                 cartPublicService,
                 paymentPublicService,
-                eventPublisher
+                eventPublisher,
+                inventoryPublicService
         );
         testUser = new AuthUser(customerId, "customer@example.com", "CUSTOMER", "password", List.of());
     }

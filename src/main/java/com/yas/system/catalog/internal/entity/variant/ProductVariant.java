@@ -24,11 +24,19 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ProductVariant extends BaseLongEntity {
+    @Column(length = 150)
     private String title;
+
+    @Column(nullable = false, length = 64)
     private String sku;
+
     private BigDecimal price;
     private Integer quantity;
+
+    @Column(length = 20)
     private String status;
+
+    @Column(length = 36)
     private String mediaId;
 
     @Column(name = "stripe_product_id", length = 100)
