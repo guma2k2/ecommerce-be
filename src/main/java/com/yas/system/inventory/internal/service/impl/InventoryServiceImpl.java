@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,12 @@ public class InventoryServiceImpl implements InventoryService {
     InventoryRepository inventoryRepository;
     InventoryHelper inventoryHelper;
     StockMovementService stockMovementService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<InventoryResponse> getInventories(int pageNumber, int pageSize) {
+        return getInventories(PageRequest.of(pageNumber, pageSize));
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -58,6 +65,12 @@ public class InventoryServiceImpl implements InventoryService {
         Inventory inventory = inventoryRepository.findByProductVariantId(variantId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.INVENTORY_NOT_FOUND, variantId));
         return InventoryResponse.from(inventory);
+    }
+
+    @Override
+    @Transactional
+    public InventoryResponse adjustStock(StockAdjustmentRequest request) {
+        return adjustStock(request, null);
     }
 
     @Override
@@ -96,6 +109,12 @@ public class InventoryServiceImpl implements InventoryService {
                 variantId, delta, beforeOnHand, updated.getOnHand(), performedBy);
 
         return InventoryResponse.from(updated);
+    }
+
+    @Override
+    @Transactional
+    public InventoryResponse setPhysicalCount(StockCycleCountRequest request) {
+        return setPhysicalCount(request, null);
     }
 
     @Override

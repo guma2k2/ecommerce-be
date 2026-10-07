@@ -15,6 +15,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.springframework.data.annotation.CreatedBy;
+
 @Entity
 @Table(
         name = "tbl_stock_movement",
@@ -60,6 +62,7 @@ public class StockMovement extends BaseLongEntity {
     @Column(length = 500)
     private String note;
 
-    @Column(name = "performed_by", length = 100)
+    @CreatedBy
+    @Column(name = "performed_by", length = 100, updatable = false)
     private String performedBy;
 }

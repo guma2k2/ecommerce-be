@@ -7,13 +7,11 @@ import com.yas.system.inventory.internal.service.StockMovementService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,11 +23,14 @@ public class StockMovementController {
     StockMovementService stockMovementService;
 
     @GetMapping("/{variantId}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'STAFF', 'INVENTORY_VIEW')")
+    @PreAuthorize("hasAnyAuthority(" +
+            "T(com.yas.system.common.constant.RoleConstant).ROLE_SUPERADMIN, " +
+            "T(com.yas.system.common.constant.RoleConstant).ROLE_ADMIN)")
     public ApiResponse<PageResponse<StockMovementResponse>> getMovements(
             @PathVariable Long variantId,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(name = "page_number", defaultValue = "0") int pageNumber,
+            @RequestParam(name = "page_size", defaultValue = "10") int pageSize
     ) {
-        return ApiResponse.success(stockMovementService.getMovementsByVariantId(variantId, pageable));
+        return ApiResponse.success(stockMovementService.getMovementsByVariantId(variantId, pageNumber, pageSize));
     }
 }

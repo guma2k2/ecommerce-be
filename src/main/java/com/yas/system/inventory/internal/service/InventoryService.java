@@ -8,11 +8,17 @@ import org.springframework.data.domain.Pageable;
 
 public interface InventoryService {
 
+    PageResponse<InventoryResponse> getInventories(int pageNumber, int pageSize);
+
     PageResponse<InventoryResponse> getInventories(Pageable pageable);
 
     InventoryResponse getInventoryByVariantId(Long variantId);
 
+    InventoryResponse adjustStock(StockAdjustmentRequest request);
+
     InventoryResponse adjustStock(StockAdjustmentRequest request, String performedBy);
+
+    InventoryResponse setPhysicalCount(StockCycleCountRequest request);
 
     InventoryResponse setPhysicalCount(StockCycleCountRequest request, String performedBy);
 }

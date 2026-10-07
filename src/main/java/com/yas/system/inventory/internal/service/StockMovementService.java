@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface StockMovementService {
 
+    PageResponse<StockMovementResponse> getMovementsByVariantId(Long variantId, int pageNumber, int pageSize);
+
     PageResponse<StockMovementResponse> getMovementsByVariantId(Long variantId, Pageable pageable);
 
     StockMovement recordMovement(
