@@ -50,7 +50,7 @@ class InventoryApiIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
     @DisplayName("GET /api/v1/inventories/{variantId} should return inventory record")
     void getInventory_success() throws Exception {
         mockMvc.perform(get("/api/v1/inventories/{variantId}", testVariantId))
@@ -64,7 +64,7 @@ class InventoryApiIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
     @DisplayName("POST /api/v1/inventories/adjust should update onHand and record movement")
     void adjustStock_success() throws Exception {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
@@ -91,7 +91,7 @@ class InventoryApiIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
     @DisplayName("POST /api/v1/inventories/set-count should update stock to exact physical count")
     void setPhysicalCount_success() throws Exception {
         StockCycleCountRequest request = new StockCycleCountRequest(
