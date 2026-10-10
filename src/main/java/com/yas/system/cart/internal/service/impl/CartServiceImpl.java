@@ -55,8 +55,8 @@ public class CartServiceImpl implements CartService {
         String customerId = resolveCustomerId(customer);
 
         ProductVariantPublicDto variant = catalogPublicService.getProductVariantById(request.productVariantId());
-        if ("INACTIVE".equalsIgnoreCase(variant.status())) {
-            throw new ApplicationException(ErrorCode.PRODUCT_VARIANT_INACTIVE);
+        if (!variant.isProductActive()) {
+            throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
         }
 
         Optional<Cart> existingCartOpt = cartRepository.findByCustomerIdAndProductVariantId(
@@ -97,8 +97,8 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new ApplicationException(ErrorCode.CART_ITEM_NOT_FOUND));
 
         ProductVariantPublicDto variant = catalogPublicService.getProductVariantById(cart.getProductVariantId());
-        if ("INACTIVE".equalsIgnoreCase(variant.status())) {
-            throw new ApplicationException(ErrorCode.PRODUCT_VARIANT_INACTIVE);
+        if (!variant.isProductActive()) {
+            throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
         }
 
         int availableStock = variant.stockQuantity() != null ? variant.stockQuantity() : 0;

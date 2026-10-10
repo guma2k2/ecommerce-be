@@ -4,6 +4,8 @@ import com.yas.system.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,13 +25,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(ApiResponse.error(ErrorCode.BAD_REQUEST.getCode(), errorMessage));
     }
 
-    String resolveErrorMessage(org.springframework.validation.ObjectError error) {
+    String resolveErrorMessage(ObjectError error) {
         String message = error.getDefaultMessage();
         if (message == null || message.isBlank()) {
-            return (error instanceof org.springframework.validation.FieldError fe ? fe.getField() : "Field") + " is invalid";
+            return (error instanceof FieldError fe ? fe.getField() : "Field") + " is invalid";
         }
 
-        if (error instanceof org.springframework.validation.FieldError fe) {
+        if (error instanceof FieldError fe) {
             String fieldName = fe.getField();
             if (message.contains("{fieldName}")) {
                 message = message.replace("{fieldName}", fieldName);

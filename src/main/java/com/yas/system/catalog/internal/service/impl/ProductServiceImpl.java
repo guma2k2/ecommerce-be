@@ -685,9 +685,6 @@ public class ProductServiceImpl implements ProductService {
 
     // Helper: Resolves Category entity by ID from DB
     private Category resolveCategory(Integer categoryId) {
-        if (Objects.isNull(categoryId)) {
-            return null;
-        }
         log.debug("Resolving category with ID: {}", categoryId);
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -695,9 +692,6 @@ public class ProductServiceImpl implements ProductService {
 
     // Helper: Resolves Brand entity by ID from DB
     private Brand resolveBrand(Integer brandId) {
-        if (Objects.isNull(brandId)) {
-            return null;
-        }
         log.debug("Resolving brand with ID: {}", brandId);
         return brandRepository.findById(brandId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.BRAND_NOT_FOUND));

@@ -1,5 +1,6 @@
 package com.yas.system.media.internal.dto.response;
 
+import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.media.internal.entity.Media;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -12,7 +13,9 @@ public record MediaResponse(
         String altText,
         String fileType,
         boolean active,
-        String duration
+        String duration,
+        String createdAt,
+        String updatedAt
 ) {
     public static MediaResponse fromModel(Media media) {
         String url = media.getUrl();
@@ -32,7 +35,9 @@ public record MediaResponse(
                 media.getAltText(),
                 media.getFileType(),
                 media.isActive(),
-                media.getDuration()
+                media.getDuration(),
+                DateTimeUtils.format(media.getCreatedAt()),
+                DateTimeUtils.format(media.getUpdatedAt())
         );
     }
 }

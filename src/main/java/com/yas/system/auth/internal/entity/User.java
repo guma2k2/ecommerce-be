@@ -12,7 +12,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "tbl_user")
+@Table(
+        name = "tbl_user",
+        uniqueConstraints = @UniqueConstraint(name = "uk_user_email", columnNames = "email")
+)
 @NamedEntityGraph(
         name = "User.roles",
         attributeNodes = @NamedAttributeNode(value = "roles", subgraph = "role.permissions"),
@@ -27,7 +30,7 @@ import java.util.Set;
 @Setter
 public class User extends BaseUuidEntity {
 
-    @Column(unique = true, length = 254)
+    @Column(length = 254)
     private String email;
 
     @Column(length = 60)

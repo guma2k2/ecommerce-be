@@ -50,12 +50,4 @@ public record ProductVariantResponse(
                 mediaUrl
         );
     }
-
-    public static ProductVariantResponse from(
-            ProductVariant variant,
-            List<VariantOptionValue> optionValues,
-            List<ProductVariantAttributeValue> variantAttributeValues
-    ) {
-        return from(variant, optionValues, variantAttributeValues, null);
-    }
 }

@@ -85,8 +85,23 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         );
     }
 
-    private ProductCreateRequest defaultCreateRequest(String name, String slug) {
+    private ProductCreateRequest createRequest(
+            String name, String description, String slug,
+            String metaTitle, String metaKeyword, String metaDescription,
+            Integer categoryId, Integer brandId,
+            List<ProductMediaRequest> medias,
+            List<ProductOptionCombinationCreateRequest> options,
+            List<ProductAttributeValueCreateRequest> attributes,
+            List<ProductVariantCreateRequest> variants
+    ) {
         return new ProductCreateRequest(
+                name, description, slug, metaTitle, metaKeyword, metaDescription,
+                categoryId, brandId, "ACTIVE", medias, options, attributes, variants
+        );
+    }
+
+    private ProductCreateRequest defaultCreateRequest(String name, String slug) {
+        return createRequest(
                 name,
                 "Description for " + name,
                 slug,
@@ -158,7 +173,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("V3 - categoryId not found in DB -> CATEGORY_NOT_FOUND")
         void v3_categoryNotFound() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Invalid Cat Phone", "Desc", "invalid-cat-phone", null, null, null,
                     999999, null, null, null, null,
                     List.of(defaultVariant("SKU-V3"))
@@ -176,7 +191,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("V4 - brandId not found in DB -> BRAND_NOT_FOUND")
         void v4_brandNotFound() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Invalid Brand Phone", "Desc", "invalid-brand-phone", null, null, null,
                     null, 999999, null, null, null,
                     List.of(defaultVariant("SKU-V4"))
@@ -194,7 +209,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("V5 - attributes[].productAttributeId not found in DB -> PRODUCT_ATTRIBUTE_NOT_FOUND")
         void v5_productAttributeNotFound() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Attr Not Found", "Desc", "attr-not-found", null, null, null,
                     null, null, null, null,
                     List.of(new ProductAttributeValueCreateRequest(999999L, "Some Value")),
@@ -213,7 +228,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("V6 - options[].productOptionId not found in DB -> PRODUCT_OPTION_NOT_FOUND")
         void v6_productOptionNotFound() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Opt Not Found", "Desc", "opt-not-found", null, null, null,
                     null, null, null,
                     List.of(new ProductOptionCombinationCreateRequest(999999L, 1, List.of())),
@@ -238,7 +253,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     List.of(new ProductVariantAttributeValueCreateRequest(999999L, "Val"))
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Var Attr Not Found", "Desc", "var-attr-not-found", null, null, null,
                     null, null, null, null, null,
                     List.of(variantWithInvalidAttr)
@@ -257,7 +272,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @DisplayName("V8 - Required fields missing (blank name/slug or empty variants) -> BAD_REQUEST")
         void v8_beanValidationFailure() throws Exception {
             // Missing name and variants
-            ProductCreateRequest invalidRequest = new ProductCreateRequest(
+            ProductCreateRequest invalidRequest = createRequest(
                     "", "Desc", "", null, null, null,
                     null, null, null, null, null,
                     List.of()
@@ -297,7 +312,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("B2 - categoryId valid -> saved with Category entity")
         void b2_categoryValid() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Cat Valid", "Desc", "cat-valid", null, null, null,
                     testCategory.getId(), null, null, null, null,
                     List.of(defaultVariant("SKU-B2"))
@@ -336,7 +351,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("B4 - brandId valid -> saved with Brand entity")
         void b4_brandValid() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Brand Valid", "Desc", "brand-valid", null, null, null,
                     null, testBrand.getId(), null, null, null,
                     List.of(defaultVariant("SKU-B4"))
@@ -358,7 +373,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("B5 - Both categoryId and brandId valid -> both saved")
         void b5_categoryAndBrandValid() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Cat And Brand", "Desc", "cat-and-brand", null, null, null,
                     testCategory.getId(), testBrand.getId(), null, null, null,
                     List.of(defaultVariant("SKU-B5"))
@@ -402,7 +417,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("M2 - 1 media provided -> 1 ProductMedia row and URL resolved")
         void m2_singleMedia() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Single Media", "Desc", "single-media", null, null, null,
                     null, null,
                     List.of(new ProductMediaRequest(testMedia.getId().toString(), 1)),
@@ -428,7 +443,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         void m3_multipleMedias() throws Exception {
             Media media2 = fixture.createMedia("image2", "https://media.example.com/2.jpg");
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Multi Media", "Desc", "multi-media", null, null, null,
                     null, null,
                     List.of(
@@ -474,7 +489,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("O3 - 1 option, 0 values -> 1 combination saved, 0 option values")
         void o3_oneOptionZeroValues() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Opt Zero Val", "Desc", "opt-zero-val", null, null, null,
                     null, null, null,
                     List.of(new ProductOptionCombinationCreateRequest(testOption.getId(), 1, List.of())),
@@ -497,7 +512,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("O4 - 1 option, N values -> 1 combination, N values linked")
         void o4_oneOptionMultipleValues() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Opt Multi Val", "Desc", "opt-multi-val", null, null, null,
                     null, null, null,
                     List.of(new ProductOptionCombinationCreateRequest(
@@ -530,7 +545,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         void o5_multiOptionsMultiValues() throws Exception {
             ProductOption sizeOption = fixture.createProductOption("Size");
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Multi Opt Multi Val", "Desc", "multi-opt-multi-val", null, null, null,
                     null, null, null,
                     List.of(
@@ -592,7 +607,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("A3 - 1 attribute provided -> 1 ProductAttributeValue row")
         void a3_oneAttribute() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "One Attr", "Desc", "one-attr", null, null, null,
                     null, null, null, null,
                     List.of(new ProductAttributeValueCreateRequest(testAttribute.getId(), "100% Wool")),
@@ -616,7 +631,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         void a4_multipleAttributes() throws Exception {
             ProductAttribute brandAttr = fixture.createProductAttribute("Origin");
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Multi Attr", "Desc", "multi-attr", null, null, null,
                     null, null, null, null,
                     List.of(
@@ -669,7 +684,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     null
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Var With Opt", "Desc", "var-with-opt", null, null, null,
                     null, null, null,
                     List.of(new ProductOptionCombinationCreateRequest(
@@ -707,7 +722,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     null
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Multi Var Multi Opt", "Desc", "multi-var-multi-opt", null, null, null,
                     null, null, null,
                     List.of(new ProductOptionCombinationCreateRequest(
@@ -758,7 +773,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     List.of(new ProductVariantAttributeValueCreateRequest(testAttribute.getId(), "Heavyweight"))
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Product VR7", "Desc", "product-vr7", null, null, null,
                     null, null, null, null, null,
                     List.of(variantWithAttr)
@@ -784,7 +799,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     null, "SKU-VR8", new BigDecimal("45.00"), 10, null, null
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Var Default Title", "Desc", "var-default-title", null, null, null,
                     null, null, null, null, null,
                     List.of(variantBlankTitle)
@@ -809,7 +824,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     "Variant Media", "SKU-VR9", new BigDecimal("75.00"), 8, testMedia.getId().toString(), null
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Var Media Prod", "Desc", "var-media-prod", null, null, null,
                     null, null, null, null, null,
                     List.of(variantWithMedia)
@@ -880,7 +895,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
                     null
             );
 
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Multi Option Cartesian", "Desc", "multi-option-cartesian", null, null, null,
                     null, null, null,
                     List.of(colorOptReq, sizeOptReq),
@@ -912,7 +927,7 @@ public class ProductCreateApiIT extends AbstractIntegrationTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("C1 - Full Product: category, brand, medias, options, attributes, variants with attributes")
         void c1_fullProductHappyPath() throws Exception {
-            ProductCreateRequest request = new ProductCreateRequest(
+            ProductCreateRequest request = createRequest(
                     "Full Product Pro",
                     "Complete product specifications",
                     "full-product-pro",

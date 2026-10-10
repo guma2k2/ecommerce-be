@@ -25,6 +25,7 @@ import com.yas.system.order.internal.repository.OrderDetailRepository;
 import com.yas.system.order.internal.repository.OrderRepository;
 import com.yas.system.order.internal.service.OrderService;
 import com.yas.system.payment.api.PaymentPublicService;
+import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -77,8 +78,8 @@ public class OrderServiceImpl implements OrderService {
             if (variant == null) {
                 throw new ApplicationException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND);
             }
-            if ("INACTIVE".equalsIgnoreCase(variant.status())) {
-                throw new ApplicationException(ErrorCode.PRODUCT_VARIANT_INACTIVE);
+            if (!variant.isProductActive()) {
+                throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
             }
             int availableStock = variant.stockQuantity() != null ? variant.stockQuantity() : 0;
             if (requestedQty > availableStock) {
@@ -155,11 +156,11 @@ public class OrderServiceImpl implements OrderService {
         // 9. Generate payment checkout URL if STRIPE
         String checkoutUrl = null;
         if (request.paymentMethod() == PaymentMethod.STRIPE) {
-            List<com.yas.system.payment.api.dto.CheckoutItemDto> checkoutItems = details.stream()
+            List<CheckoutItemDto> checkoutItems = details.stream()
                     .map(od -> {
                         ProductVariantPublicDto variantDto = variantMap.get(od.getProductVariantId());
                         String stripePriceId = variantDto != null ? variantDto.stripePriceId() : null;
-                        return new com.yas.system.payment.api.dto.CheckoutItemDto(
+                        return new CheckoutItemDto(
                                 stripePriceId,
                                 od.getProductName(),
                                 od.getUnitPrice(),
@@ -171,7 +172,7 @@ public class OrderServiceImpl implements OrderService {
 
             log.info("Initiating Stripe Checkout for order {} (total: {} USD, items count: {})",
                     orderIdStr, savedOrder.getTotalAmount(), checkoutItems.size());
-            for (com.yas.system.payment.api.dto.CheckoutItemDto item : checkoutItems) {
+            for (CheckoutItemDto item : checkoutItems) {
                 log.debug("Order checkout item: name='{}', stripePriceId='{}', unitPrice={}, qty={}",
                         item.productName(), item.stripePriceId(), item.unitPrice(), item.quantity());
             }

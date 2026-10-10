@@ -10,6 +10,7 @@ import com.yas.system.cart.internal.service.impl.CartServiceImpl;
 import com.yas.system.catalog.api.CatalogPublicService;
 import com.yas.system.catalog.api.dto.ProductOptionPublicDto;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.security.annotation.AuthUser;
@@ -76,11 +77,8 @@ class CartServiceTest {
                 .build();
         cart.setId(1L);
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
-                100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE",
-                List.of(new ProductOptionPublicDto(1L, "Color", "Black"))
-        );
+        ProductVariantPublicDto variantDto = createVariantDto(100L, 10, "ACTIVE",
+                List.of(new ProductOptionPublicDto(1L, "Color", "Black")));
 
         when(cartRepository.findByCustomerId(customerId)).thenReturn(List.of(cart));
         when(catalogPublicService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
@@ -100,10 +98,7 @@ class CartServiceTest {
     @Test
     @DisplayName("addToCart should create new item when variant not in cart")
     void addToCart_newItem() {
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
-                100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE"
-        );
+        ProductVariantPublicDto variantDto = createVariantDto(100L, 10, "ACTIVE", List.of());
 
         when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
         when(cartRepository.findByCustomerIdAndProductVariantId(customerId, 100L)).thenReturn(Optional.empty());
@@ -126,10 +121,7 @@ class CartServiceTest {
     @Test
     @DisplayName("addToCart should increment quantity when variant already in cart")
     void addToCart_existingItem() {
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
-                100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE"
-        );
+        ProductVariantPublicDto variantDto = createVariantDto(100L, 10, "ACTIVE", List.of());
 
         Cart existingCart = Cart.builder()
                 .customerId(customerId)
@@ -157,10 +149,7 @@ class CartServiceTest {
     @Test
     @DisplayName("addToCart should throw INSUFFICIENT_STOCK when quantity exceeds available stock")
     void addToCart_insufficientStock() {
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
-                100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                3, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE"
-        );
+        ProductVariantPublicDto variantDto = createVariantDto(100L, 3, "ACTIVE", List.of());
 
         when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
         when(cartRepository.findByCustomerIdAndProductVariantId(customerId, 100L)).thenReturn(Optional.empty());
@@ -175,12 +164,9 @@ class CartServiceTest {
     }
 
     @Test
-    @DisplayName("addToCart should throw PRODUCT_VARIANT_INACTIVE when variant status is INACTIVE")
+    @DisplayName("addToCart should throw PRODUCT_INACTIVE when variant product status is INACTIVE")
     void addToCart_inactiveVariant() {
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
-                100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "INACTIVE"
-        );
+        ProductVariantPublicDto variantDto = createVariantDto(100L, 10, "INACTIVE", List.of());
 
         when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
 
@@ -188,7 +174,7 @@ class CartServiceTest {
 
         assertThatThrownBy(() -> cartService.addToCart(testUser, request))
                 .isInstanceOf(ApplicationException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_VARIANT_INACTIVE);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_INACTIVE);
 
         verify(cartRepository, never()).save(any());
     }
@@ -203,10 +189,7 @@ class CartServiceTest {
                 .build();
         cart.setId(5L);
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
-                100L, 10L, "iPhone 16", "iphone-16", "https://img.url",
-                10, "IPHONE-16-BLK", BigDecimal.valueOf(999), "ACTIVE"
-        );
+        ProductVariantPublicDto variantDto = createVariantDto(100L, 10, "ACTIVE", List.of());
 
         when(cartRepository.findByIdAndCustomerId(5L, customerId)).thenReturn(Optional.of(cart));
         when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
@@ -259,5 +242,13 @@ class CartServiceTest {
         cartService.clearCart(testUser);
 
         verify(cartRepository).deleteByCustomerId(customerId);
+    }
+
+    private ProductVariantPublicDto createVariantDto(Long variantId, int stockQuantity, String status, List<ProductOptionPublicDto> options) {
+        return new ProductVariantPublicDto(
+                variantId, 10L, "iPhone 16", "iphone-16", "https://img.url",
+                stockQuantity, "IPHONE-16-BLK", BigDecimal.valueOf(999), status,
+                options, null, null
+        );
     }
 }

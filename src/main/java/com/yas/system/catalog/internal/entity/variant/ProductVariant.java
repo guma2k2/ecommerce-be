@@ -33,9 +33,6 @@ public class ProductVariant extends BaseLongEntity {
     private BigDecimal price;
     private Integer quantity;
 
-    @Column(length = 20)
-    private String status;
-
     @Column(length = 36)
     private String mediaId;
 

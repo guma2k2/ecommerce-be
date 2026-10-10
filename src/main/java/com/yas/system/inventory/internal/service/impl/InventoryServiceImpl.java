@@ -92,6 +92,10 @@ public class InventoryServiceImpl implements InventoryService {
         Inventory updated = inventoryRepository.findByProductVariantId(variantId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.INVENTORY_NOT_FOUND, variantId));
 
+        MovementReason reason = request.reason() != null
+                ? request.reason()
+                : (delta >= 0 ? MovementReason.RESTOCK : MovementReason.CORRECTION);
+
         stockMovementService.recordMovement(
                 updated.getId(),
                 variantId,
@@ -99,7 +103,7 @@ public class InventoryServiceImpl implements InventoryService {
                 beforeOnHand,
                 updated.getOnHand(),
                 MovementType.ADJUSTMENT,
-                request.reason(),
+                reason,
                 request.referenceId(),
                 request.note(),
                 performedBy

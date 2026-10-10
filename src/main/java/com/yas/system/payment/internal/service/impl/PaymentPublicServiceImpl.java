@@ -1,6 +1,7 @@
 package com.yas.system.payment.internal.service.impl;
 
 import com.yas.system.payment.api.PaymentPublicService;
+import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.api.dto.PaymentPublicDto;
 import com.yas.system.payment.internal.entity.Payment;
 import com.yas.system.payment.internal.repository.PaymentRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,7 +28,7 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
 
     @Override
     @Transactional
-    public String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, java.util.List<com.yas.system.payment.api.dto.CheckoutItemDto> items) {
+    public String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items) {
         Payment payment = Payment.builder()
                 .customerId(customerId)
                 .orderId(orderId)

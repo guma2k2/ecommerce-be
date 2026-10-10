@@ -5,6 +5,10 @@ import com.yas.system.catalog.internal.repository.projection.AttributeFacetProje
 import com.yas.system.catalog.internal.repository.projection.BrandFacetProjection;
 import com.yas.system.catalog.internal.repository.projection.PriceRangeProjection;
 import com.yas.system.catalog.internal.repository.projection.ProductSuggestionProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +19,10 @@ import java.util.List;
 
 @Repository
 public interface ProductSearchRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+
+    @Override
+    @EntityGraph(attributePaths = {"brand", "category"})
+    Page<Product> findAll(Specification<Product> spec, Pageable pageable);
 
     @Query(value = """
         SELECT 

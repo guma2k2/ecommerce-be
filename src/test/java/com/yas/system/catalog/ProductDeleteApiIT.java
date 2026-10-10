@@ -86,6 +86,7 @@ public class ProductDeleteApiIT extends AbstractIntegrationTest {
                 "Meta description",
                 testCategory.getId(),
                 testBrand.getId(),
+                "ACTIVE",
                 null,
                 null,
                 null,
@@ -111,6 +112,7 @@ public class ProductDeleteApiIT extends AbstractIntegrationTest {
                 "Complex meta description",
                 testCategory.getId(),
                 testBrand.getId(),
+                "ACTIVE",
                 List.of(new ProductMediaRequest(testMedia.getId().toString(), 0)),
                 List.of(
                         new ProductOptionCombinationCreateRequest(

@@ -1,8 +1,7 @@
 package com.yas.system.inventory.internal.dto.response;
 
+import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.inventory.internal.entity.Inventory;
-
-import java.time.ZonedDateTime;
 
 public record InventoryResponse(
         Long id,
@@ -11,8 +10,8 @@ public record InventoryResponse(
         int onHand,
         int reserved,
         int available,
-        ZonedDateTime createdAt,
-        ZonedDateTime updatedAt
+        String createdAt,
+        String updatedAt
 ) {
     public static InventoryResponse from(Inventory entity) {
         if (entity == null) {
@@ -25,8 +24,8 @@ public record InventoryResponse(
                 entity.getOnHand(),
                 entity.getReserved(),
                 entity.getAvailable(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                DateTimeUtils.format(entity.getCreatedAt()),
+                DateTimeUtils.format(entity.getUpdatedAt())
         );
     }
 }

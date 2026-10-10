@@ -5,7 +5,6 @@ import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +18,8 @@ public record OrderDetailResponse(
         BigDecimal shippingFee,
         ShippingAddressResponse shippingAddress,
         String note,
-        ZonedDateTime createdAt,
+        String createdAt,
+        String updatedAt,
         List<OrderItemResponse> items
 ) {
 }
