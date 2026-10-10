@@ -1,8 +1,7 @@
 package com.yas.system.catalog.internal.dto.response;
 
 import com.yas.system.catalog.internal.entity.option.ProductOption;
-
-import java.time.format.DateTimeFormatter;
+import com.yas.system.common.util.DateTimeUtils;
 
 public record ProductOptionResponse(
         Long id,
@@ -14,8 +13,8 @@ public record ProductOptionResponse(
         return new ProductOptionResponse(
                 option.getId(),
                 option.getName(),
-                option.getCreatedAt() != null ? option.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
-                option.getUpdatedAt() != null ? option.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
+                DateTimeUtils.format(option.getCreatedAt()),
+                DateTimeUtils.format(option.getUpdatedAt())
         );
     }
 }

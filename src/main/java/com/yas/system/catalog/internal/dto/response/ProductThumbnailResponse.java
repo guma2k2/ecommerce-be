@@ -1,8 +1,7 @@
 package com.yas.system.catalog.internal.dto.response;
 
 import com.yas.system.catalog.internal.entity.Product;
-
-import java.time.format.DateTimeFormatter;
+import com.yas.system.common.util.DateTimeUtils;
 
 public record ProductThumbnailResponse (
         Long id,
@@ -15,9 +14,9 @@ public record ProductThumbnailResponse (
         return new ProductThumbnailResponse(
                 product.getId(),
                 product.getName(),
-                null,
-                product.getCreatedAt() != null ? product.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
-                product.getUpdatedAt() != null ? product.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
+                product.getStatus().name(),
+                DateTimeUtils.format(product.getCreatedAt()),
+                DateTimeUtils.format(product.getUpdatedAt())
         );
     }
 }

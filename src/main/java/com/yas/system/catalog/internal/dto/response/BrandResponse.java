@@ -1,7 +1,7 @@
 package com.yas.system.catalog.internal.dto.response;
 
 import com.yas.system.catalog.internal.entity.Brand;
-import java.time.format.DateTimeFormatter;
+import com.yas.system.common.util.DateTimeUtils;
 
 public record BrandResponse(
         Integer id,
@@ -15,8 +15,8 @@ public record BrandResponse(
                 brand.getId(),
                 brand.getName(),
                 brand.getDescription(),
-                brand.getCreatedAt() != null ? brand.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
-                brand.getUpdatedAt() != null ? brand.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
+                DateTimeUtils.format(brand.getCreatedAt()),
+                DateTimeUtils.format(brand.getUpdatedAt())
         );
     }
 }

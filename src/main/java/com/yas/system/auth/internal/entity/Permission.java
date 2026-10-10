@@ -10,13 +10,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "tbl_permission")
+@Table(
+        name = "tbl_permission",
+        uniqueConstraints = @UniqueConstraint(name = "uk_permission_name", columnNames = "name")
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 public class Permission extends BaseIntegerEntity {
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(length = 255)

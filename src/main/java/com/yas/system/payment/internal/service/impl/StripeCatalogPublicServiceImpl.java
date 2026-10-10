@@ -3,6 +3,7 @@ package com.yas.system.payment.internal.service.impl;
 import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Price;
+import com.stripe.model.Product;
 import com.stripe.param.PriceCreateParams;
 import com.stripe.param.PriceUpdateParams;
 import com.stripe.param.ProductCreateParams;
@@ -97,7 +98,7 @@ public class StripeCatalogPublicServiceImpl implements StripeCatalogPublicServic
             paramsBuilder.addImage(command.imageUrl());
         }
 
-        com.stripe.model.Product stripeProduct = client.products().create(paramsBuilder.build());
+        Product stripeProduct = client.products().create(paramsBuilder.build());
         String priceId = stripeProduct.getDefaultPrice();
 
         log.info("Successfully created Stripe Product {} and Default Price {} for variant ID: {}",

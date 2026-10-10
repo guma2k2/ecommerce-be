@@ -4,6 +4,7 @@ import com.yas.system.cart.api.CartPublicService;
 import com.yas.system.cart.api.dto.CartItemPublicDto;
 import com.yas.system.catalog.api.CatalogPublicService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
@@ -104,9 +105,9 @@ class OrderServiceTest {
                 List.of(new OrderItemRequest(10L, 2))
         );
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
+        ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 10, "SKU-001",
-                BigDecimal.valueOf(100.00), "ACTIVE", List.of()
+                BigDecimal.valueOf(100.00), "ACTIVE"
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
@@ -145,9 +146,9 @@ class OrderServiceTest {
                 List.of(new OrderItemRequest(10L, 1))
         );
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
+        ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 10, "SKU-001",
-                BigDecimal.valueOf(150.00), "ACTIVE", List.of()
+                BigDecimal.valueOf(150.00), "ACTIVE"
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
@@ -184,9 +185,9 @@ class OrderServiceTest {
         when(cartPublicService.getCartItemsByCustomerId(customerId))
                 .thenReturn(List.of(new CartItemPublicDto(1L, 20L, 3)));
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
+        ProductVariantPublicDto variantDto = createVariantDto(
                 20L, 2L, "Test Laptop", "test-laptop", "thumb2.jpg", 5, "SKU-002",
-                BigDecimal.valueOf(500.00), "ACTIVE", List.of()
+                BigDecimal.valueOf(500.00), "ACTIVE"
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(20L, variantDto));
@@ -228,9 +229,9 @@ class OrderServiceTest {
                 address, PaymentMethod.COD, null, false, List.of(new OrderItemRequest(10L, 10))
         );
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
+        ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 3, "SKU-001",
-                BigDecimal.valueOf(100.00), "ACTIVE", List.of()
+                BigDecimal.valueOf(100.00), "ACTIVE"
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
@@ -241,7 +242,7 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("createOrder should throw PRODUCT_VARIANT_INACTIVE when variant is inactive")
+    @DisplayName("createOrder should throw PRODUCT_INACTIVE when variant product is inactive")
     void createOrder_inactiveVariant_throwsException() {
         ShippingAddressRequest address = new ShippingAddressRequest(
                 "Jane Doe", "0987654321", "456 Avenue", "HCM", "District 1", "70000"
@@ -250,16 +251,16 @@ class OrderServiceTest {
                 address, PaymentMethod.COD, null, false, List.of(new OrderItemRequest(10L, 1))
         );
 
-        ProductVariantPublicDto variantDto = new ProductVariantPublicDto(
+        ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 10, "SKU-001",
-                BigDecimal.valueOf(100.00), "INACTIVE", List.of()
+                BigDecimal.valueOf(100.00), "INACTIVE"
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
 
         assertThatThrownBy(() -> orderService.createOrder(testUser, request))
                 .isInstanceOf(ApplicationException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_VARIANT_INACTIVE);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRODUCT_INACTIVE);
     }
 
     @Test
@@ -376,5 +377,15 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.cancelOrder(testUser, orderId))
                 .isInstanceOf(ApplicationException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ORDER_CANNOT_BE_CANCELLED);
+    }
+
+    private ProductVariantPublicDto createVariantDto(Long variantId, Long productId, String name, String slug,
+                                                    String thumbnail, int stockQuantity, String sku,
+                                                    BigDecimal price, String status) {
+        return new ProductVariantPublicDto(
+                variantId, productId, name, slug, thumbnail,
+                stockQuantity, sku, price, status,
+                List.of(), null, null
+        );
     }
 }

@@ -7,7 +7,7 @@ import com.yas.system.catalog.internal.entity.attribute.ProductVariantAttributeV
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 
-import java.time.format.DateTimeFormatter;
+import com.yas.system.common.util.DateTimeUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +20,7 @@ public record ProductResponse(
         String metaTitle,
         String metaKeyword,
         String metaDescription,
+        String status,
         BrandResponse brand,
         CategoryResponse category,
         List<ProductMediaResponse> medias,
@@ -47,6 +48,7 @@ public record ProductResponse(
                 product.getMetaTitle(),
                 product.getMetaKeyword(),
                 product.getMetaDescription(),
+                product.getStatus().name(),
                 product.getBrand() != null ? BrandResponse.from(product.getBrand()) : null,
                 product.getCategory() != null ? CategoryResponse.fromWithoutChildren(product.getCategory()) : null,
                 medias != null
@@ -81,21 +83,9 @@ public record ProductResponse(
                                 ))
                                 .toList()
                         : List.of(),
-                product.getCreatedAt() != null ? product.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
-                product.getUpdatedAt() != null ? product.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null
+                DateTimeUtils.format(product.getCreatedAt()),
+                DateTimeUtils.format(product.getUpdatedAt())
         );
-    }
-
-    public static ProductResponse from(
-            Product product,
-            List<ProductMedia> medias,
-            List<ProductAttributeValue> attributes,
-            List<ProductOptionCombinationResponse> options,
-            List<ProductVariant> variants,
-            List<VariantOptionValue> variantOptionValues,
-            List<ProductVariantAttributeValue> variantAttributeValues
-    ) {
-        return from(product, medias, java.util.Map.of(), attributes, options, variants, variantOptionValues, variantAttributeValues);
     }
 }
 

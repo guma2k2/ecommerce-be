@@ -1,5 +1,6 @@
 package com.yas.system.order.internal.helper;
 
+import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.order.internal.dto.request.CreateOrderRequest;
 import com.yas.system.order.internal.dto.request.ShippingAddressRequest;
 import com.yas.system.order.internal.dto.response.*;
@@ -76,7 +77,8 @@ public class OrderHelper {
                 order.getShippingFee(),
                 addressResponse,
                 order.getNote(),
-                order.getCreatedAt(),
+                DateTimeUtils.format(order.getCreatedAt()),
+                DateTimeUtils.format(order.getUpdatedAt()),
                 itemResponses
         );
     }
@@ -90,7 +92,8 @@ public class OrderHelper {
                 order.getPaymentStatus(),
                 order.getTotalAmount(),
                 totalItems,
-                order.getCreatedAt()
+                DateTimeUtils.format(order.getCreatedAt()),
+                DateTimeUtils.format(order.getUpdatedAt())
         );
     }
 

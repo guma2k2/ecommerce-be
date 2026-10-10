@@ -3,6 +3,7 @@ package com.yas.system.catalog.internal.service.impl;
 import com.yas.system.catalog.api.CatalogPublicService;
 import com.yas.system.catalog.api.dto.ProductOptionPublicDto;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.catalog.internal.entity.Product;
 import com.yas.system.catalog.internal.entity.ProductMedia;
 import com.yas.system.catalog.internal.entity.variant.ProductVariant;
@@ -64,7 +65,7 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
                 variant.getQuantity() != null ? variant.getQuantity() : 0,
                 variant.getSku(),
                 variant.getPrice(),
-                variant.getStatus(),
+                product != null ? product.getStatus().name() : ProductStatus.INACTIVE.name(),
                 options,
                 variant.getStripeProductId(),
                 variant.getStripePriceId()
@@ -147,7 +148,7 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
                             variant.getQuantity() != null ? variant.getQuantity() : 0,
                             variant.getSku(),
                             variant.getPrice(),
-                            variant.getStatus(),
+                            product != null ? product.getStatus().name() : ProductStatus.INACTIVE.name(),
                             options,
                             variant.getStripeProductId(),
                             variant.getStripePriceId()

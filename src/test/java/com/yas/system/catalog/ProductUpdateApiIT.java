@@ -102,9 +102,24 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         return optionValueRepository.findByProductId(seededProduct.getId()).getFirst();
     }
 
+    private ProductUpdateRequest updateRequest(
+            String name, String description, String slug,
+            String metaTitle, String metaKeyword, String metaDescription,
+            Integer categoryId, Integer brandId,
+            List<ProductMediaRequest> medias,
+            List<ProductOptionCombinationUpdateRequest> options,
+            List<ProductAttributeValueUpdateRequest> attributes,
+            List<ProductVariantUpdateRequest> variants
+    ) {
+        return new ProductUpdateRequest(
+                name, description, slug, metaTitle, metaKeyword, metaDescription,
+                categoryId, brandId, "ACTIVE", medias, options, attributes, variants
+        );
+    }
+
     private ProductUpdateRequest defaultUpdateRequest(String name, String slug) {
         ProductVariant variant = getSeededVariant();
-        return new ProductUpdateRequest(
+        return updateRequest(
                 name,
                 "Updated description",
                 slug,
@@ -200,7 +215,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("V5 - categoryId not found -> CATEGORY_NOT_FOUND")
         void v5_categoryNotFound() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Updated Name", "Desc", "initial-product", null, null, null,
                     999999, null, null, null, null,
                     List.of(new ProductVariantUpdateRequest(variant.getId(), variant.getTitle(), variant.getSku(), variant.getPrice(), 1, null, null))
@@ -219,7 +234,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("V6 - brandId not found -> BRAND_NOT_FOUND")
         void v6_brandNotFound() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Updated Name", "Desc", "initial-product", null, null, null,
                     null, 999999, null, null, null,
                     List.of(new ProductVariantUpdateRequest(variant.getId(), variant.getTitle(), variant.getSku(), variant.getPrice(), 1, null, null))
@@ -238,7 +253,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("V7 - Attribute ID not found in DB -> PRODUCT_ATTRIBUTE_NOT_FOUND")
         void v7_attributeNotFound() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Updated Name", "Desc", "initial-product", null, null, null,
                     null, null, null, null,
                     List.of(new ProductAttributeValueUpdateRequest(999999L, "1 Year")),
@@ -258,7 +273,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("V8 - Option ID not found in DB -> PRODUCT_OPTION_NOT_FOUND")
         void v8_optionNotFound() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Updated Name", "Desc", "initial-product", null, null, null,
                     null, null, null,
                     List.of(new ProductOptionCombinationUpdateRequest(999999L, 1, List.of())),
@@ -302,7 +317,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("B2 - categoryId = null -> Product category removed")
         void b2_removeCategory() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "No Category Prod", "Desc", "initial-product", null, null, null,
                     null, testBrand.getId(), null, null, null,
                     List.of(new ProductVariantUpdateRequest(variant.getId(), variant.getTitle(), variant.getSku(), variant.getPrice(), 1, null, null))
@@ -325,7 +340,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             Category newCategory = fixture.createCategory("Appliances");
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Changed Cat Prod", "Desc", "initial-product", null, null, null,
                     newCategory.getId(), testBrand.getId(), null, null, null,
                     List.of(new ProductVariantUpdateRequest(variant.getId(), variant.getTitle(), variant.getSku(), variant.getPrice(), 1, null, null))
@@ -346,7 +361,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("B4 - brandId = null -> Product brand removed")
         void b4_removeBrand() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "No Brand Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), null, null, null, null,
                     List.of(new ProductVariantUpdateRequest(variant.getId(), variant.getTitle(), variant.getSku(), variant.getPrice(), 1, null, null))
@@ -387,7 +402,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("MD2 - Same medias re-sent -> preserved, not deleted")
         void md2_preserveSameMedia() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Same Media Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     List.of(new ProductMediaRequest(testMedia.getId().toString(), 1)),
@@ -413,7 +428,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             Media media2 = fixture.createMedia("second-image", "https://media.example.com/2.jpg");
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Add Media Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     List.of(
@@ -441,7 +456,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             productMediaRepository.save(ProductMedia.builder().product(seededProduct).mediaId(media2.getId().toString()).position(2).build());
 
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Remove Media Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     List.of(new ProductMediaRequest(media2.getId().toString(), 1)),
@@ -471,7 +486,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("OD1 - options = null or empty -> combinations and values deleted")
         void od1_deleteAllOptions() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Delete Opt Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -495,7 +510,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductVariant variant = getSeededVariant();
             ProductOptionValue existingVal = getSeededOptionValue();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Same Opt Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -525,7 +540,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductVariant variant = getSeededVariant();
             ProductOptionValue existingVal = getSeededOptionValue();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Add Opt Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -563,7 +578,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductVariant variant = getSeededVariant();
             ProductOptionValue existingVal = getSeededOptionValue();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Remove Opt Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -592,7 +607,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductVariant variant = getSeededVariant();
             ProductOptionValue existingVal = getSeededOptionValue();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Update Val Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -621,7 +636,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductVariant variant = getSeededVariant();
             ProductOptionValue existingVal = getSeededOptionValue();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "New Val Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -654,7 +669,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
 
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Remove Val Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -703,7 +718,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         @DisplayName("AD2/AD5 - Same attributes re-sent -> value updated in-place")
         void ad2_updateAttributeValue() throws Exception {
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Update Attr Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null,
@@ -728,7 +743,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductAttribute newAttr = fixture.createProductAttribute("Battery");
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Add Attr Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null,
@@ -756,7 +771,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             attributeValueRepository.save(ProductAttributeValue.builder().product(seededProduct).productAttribute(newAttr).value("Metal").build());
 
             ProductVariant variant = getSeededVariant();
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Remove Attr Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null,
@@ -787,7 +802,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         void vd2_updateVariantInPlace() throws Exception {
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Update Var Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -822,7 +837,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         void vd3_addNewVariant() throws Exception {
             ProductVariant existing = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Add Var Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -853,7 +868,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
                     .quantity(5)
                     .build());
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Remove Var Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -882,7 +897,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductOptionCombination combo = getSeededCombination();
             ProductOptionValue optVal2 = fixture.createOptionValue(combo, "Blue", 2);
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "VOV Delta Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null,
@@ -921,7 +936,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         void vav2_vav5_variantAttributeUpdated() throws Exception {
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "VAV Update Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -954,7 +969,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductAttribute newAttr = fixture.createProductAttribute("Speed");
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "VAV Add Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -987,7 +1002,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         void vav4_variantAttributeDeleted() throws Exception {
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "VAV Delete Prod", "Desc", "initial-product", null, null, null,
                     testCategory.getId(), testBrand.getId(),
                     null, null, null,
@@ -1025,7 +1040,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductOption newOption = fixture.createProductOption("Storage");
             ProductAttribute newAttr = fixture.createProductAttribute("Water Resistance");
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Fully Updated Name",
                     "New detailed description",
                     "fully-updated-name",
@@ -1078,7 +1093,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
             ProductVariant variant = getSeededVariant();
             ProductOptionValue optVal = getSeededOptionValue();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "Only Base Fields Changed",
                     "New description only",
                     "only-base-fields-changed",
@@ -1127,7 +1142,7 @@ public class ProductUpdateApiIT extends AbstractIntegrationTest {
         void fk1_removeReferencedOption_noFkViolation() throws Exception {
             ProductVariant variant = getSeededVariant();
 
-            ProductUpdateRequest request = new ProductUpdateRequest(
+            ProductUpdateRequest request = updateRequest(
                     "FK Safe Product",
                     "Desc",
                     "fk-safe-product",

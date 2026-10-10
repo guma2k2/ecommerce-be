@@ -134,7 +134,7 @@ public class StripeProductSyncEventListener {
                 name = name + " - " + variant.getTitle();
             }
 
-            boolean active = !"INACTIVE".equalsIgnoreCase(variant.getStatus());
+            boolean active = product != null && product.isActive();
 
             log.debug("Preparing Stripe sync command for variant ID: {} (sku='{}', price={}, active={}, existingStripeProd='{}', existingStripePrice='{}')",
                     variant.getId(), variant.getSku(), variant.getPrice(), active, variant.getStripeProductId(), variant.getStripePriceId());

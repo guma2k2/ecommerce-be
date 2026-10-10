@@ -7,7 +7,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tbl_brand")
+@Table(
+        name = "tbl_brand",
+        uniqueConstraints = @UniqueConstraint(name = "uk_brand_name", columnNames = "name")
+)
 @Setter
 @Getter
 @AllArgsConstructor
@@ -15,7 +18,7 @@ import lombok.*;
 @Builder
 public class Brand extends BaseIntegerEntity {
 
-    @Column(length = 50, unique = true, nullable = false)
+    @Column(length = 50, nullable = false)
     private String name;
 
     @Column(length = 200)

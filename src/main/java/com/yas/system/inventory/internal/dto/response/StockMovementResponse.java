@@ -1,10 +1,9 @@
 package com.yas.system.inventory.internal.dto.response;
 
+import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.inventory.internal.entity.StockMovement;
 import com.yas.system.inventory.internal.enumeration.MovementReason;
 import com.yas.system.inventory.internal.enumeration.MovementType;
-
-import java.time.ZonedDateTime;
 
 public record StockMovementResponse(
         Long id,
@@ -18,7 +17,7 @@ public record StockMovementResponse(
         String referenceId,
         String note,
         String performedBy,
-        ZonedDateTime createdAt
+        String createdAt
 ) {
     public static StockMovementResponse from(StockMovement movement) {
         if (movement == null) {
@@ -36,7 +35,7 @@ public record StockMovementResponse(
                 movement.getReferenceId(),
                 movement.getNote(),
                 movement.getPerformedBy(),
-                movement.getCreatedAt()
+                DateTimeUtils.format(movement.getCreatedAt())
         );
     }
 }

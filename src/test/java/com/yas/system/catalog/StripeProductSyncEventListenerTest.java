@@ -1,5 +1,6 @@
 package com.yas.system.catalog;
 
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.catalog.events.ProductSyncEvent;
 import com.yas.system.catalog.events.SyncAction;
 import com.yas.system.catalog.events.VariantStripeInfo;
@@ -83,6 +84,7 @@ class StripeProductSyncEventListenerTest {
         Product product = Product.builder()
                 .name("MacBook Pro")
                 .description("Apple laptop")
+                .status(ProductStatus.ACTIVE)
                 .build();
         product.setId(1L);
 
@@ -90,8 +92,8 @@ class StripeProductSyncEventListenerTest {
                 .title("16-inch 1TB")
                 .sku("MBP-16-1TB")
                 .price(BigDecimal.valueOf(2499.00))
-                .status("ACTIVE")
                 .mediaId("media-1")
+                .product(product)
                 .build();
         variant.setId(101L);
 

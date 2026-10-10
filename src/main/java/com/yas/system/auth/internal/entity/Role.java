@@ -11,7 +11,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "tbl_role")
+@Table(
+        name = "tbl_role",
+        uniqueConstraints = @UniqueConstraint(name = "uk_role_name", columnNames = "name")
+)
 @NamedEntityGraph(
         name = "Role.permissions",
         attributeNodes = @NamedAttributeNode("permissions")
@@ -21,7 +24,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class Role extends BaseIntegerEntity {
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String name;
 
     private boolean isAllowGetAll;

@@ -37,7 +37,7 @@ build/
 .vscode/
 
 ### AI AGENTS ###
-AGENTS.md
+.agents/
 Tasks/
 
 docs/

@@ -9,7 +9,10 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@Table(name = "tbl_customer_profile")
+@Table(
+        name = "tbl_customer_profile",
+        uniqueConstraints = @UniqueConstraint(name = "uk_customer_profile_name", columnNames = "name")
+)
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,7 +28,7 @@ public class CustomerProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)

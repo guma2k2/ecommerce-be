@@ -1,5 +1,6 @@
 package com.yas.system.catalog.internal.helper;
 
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.entity.Brand;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class ProductHelper {
 
     public Product createProduct(ProductCreateRequest request, Category category, Brand brand) {
+        ProductStatus status = ProductStatus.valueOf(request.status().toUpperCase());
         return Product.builder()
                 .name(request.name())
                 .description(request.description())
@@ -20,6 +22,7 @@ public class ProductHelper {
                 .metaDescription(request.metaDescription())
                 .category(category)
                 .brand(brand)
+                .status(status)
                 .build();
     }
 
@@ -32,6 +35,7 @@ public class ProductHelper {
         product.setMetaDescription(request.metaDescription());
         product.setCategory(category);
         product.setBrand(brand);
+        product.setStatus(ProductStatus.valueOf(request.status().toUpperCase()));
     }
 }
 

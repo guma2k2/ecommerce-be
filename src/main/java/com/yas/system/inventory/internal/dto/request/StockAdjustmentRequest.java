@@ -12,7 +12,6 @@ public record StockAdjustmentRequest(
         @NotNull(message = ParamError.FIELD_NAME)
         Integer quantityChange,
 
-        @NotNull(message = ParamError.FIELD_NAME)
         MovementReason reason,
 
         @Size(max = 100, message = ParamError.MAX_LENGTH)

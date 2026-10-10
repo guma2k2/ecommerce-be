@@ -9,6 +9,7 @@ import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
+import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.internal.config.StripeProperties;
 import com.yas.system.payment.internal.constant.PaymentConstant;
 import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
@@ -20,6 +21,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -29,7 +32,7 @@ public class StripePaymentGateway implements PaymentGateway {
     StripeProperties stripeProperties;
 
     @Override
-    public CheckoutSessionResponse createCheckoutSession(Payment payment, String customerEmail, java.util.List<com.yas.system.payment.api.dto.CheckoutItemDto> items) {
+    public CheckoutSessionResponse createCheckoutSession(Payment payment, String customerEmail, List<CheckoutItemDto> items) {
         SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(stripeProperties.successUrl())
@@ -49,7 +52,7 @@ public class StripePaymentGateway implements PaymentGateway {
             log.info("Creating Stripe Checkout session for payment ID: {} (orderId: {}) with {} itemized line items",
                     payment.getId(), payment.getOrderId(), items.size());
 
-            for (com.yas.system.payment.api.dto.CheckoutItemDto item : items) {
+            for (CheckoutItemDto item : items) {
                 SessionCreateParams.LineItem.Builder lineItemBuilder = SessionCreateParams.LineItem.builder()
                         .setQuantity((long) Math.max(PaymentConstant.LineItem.MIN_QUANTITY, item.quantity()));
 

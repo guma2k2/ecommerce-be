@@ -1,6 +1,8 @@
 package com.yas.system.catalog.internal.dto.request;
 
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.common.response.ParamError;
+import com.yas.system.common.validation.annotation.ValidateEnum;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -28,8 +30,15 @@ public record ProductCreateRequest(
         @Size(max = 160, message = ParamError.MAX_LENGTH)
         String metaDescription,
 
+        @NotBlank(message = ParamError.FIELD_NAME)
         Integer categoryId,
+
+        @NotBlank(message = ParamError.FIELD_NAME)
         Integer brandId,
+
+        @NotBlank(message = ParamError.FIELD_NAME)
+        @ValidateEnum(enumClass = ProductStatus.class, message = "Invalid product status")
+        String status,
 
         @Valid
         List<ProductMediaRequest> medias,
