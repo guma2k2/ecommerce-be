@@ -1,7 +1,9 @@
 package com.yas.system.payment.internal.dto.response;
 
+import java.util.UUID;
+
 public record CheckoutSessionResponse(
-        Long paymentId,
+        UUID paymentId,
         String sessionId,
         String checkoutUrl
 ) {

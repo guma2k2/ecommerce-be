@@ -4,10 +4,13 @@ import com.yas.system.payment.api.PaymentPublicService;
 import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.api.dto.PaymentPublicDto;
 import com.yas.system.payment.internal.entity.Payment;
-import com.yas.system.payment.internal.repository.PaymentRepository;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
 import com.yas.system.payment.internal.gateway.PaymentGateway;
+import com.yas.system.payment.internal.gateway.PaymentGatewayResolver;
+import com.yas.system.payment.internal.gateway.dto.PaymentCheckoutContext;
+import com.yas.system.payment.internal.repository.PaymentRepository;
+import com.yas.system.payment.internal.service.PaymentLedgerService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,40 +28,54 @@ import java.util.Optional;
 public class PaymentPublicServiceImpl implements PaymentPublicService {
 
     PaymentRepository paymentRepository;
-    PaymentGateway paymentGateway;
+    PaymentGatewayResolver paymentGatewayResolver;
+    PaymentLedgerService paymentLedgerService;
 
     @Override
     @Transactional
     public String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items) {
+        return createCheckoutSessionUrl(PaymentMethod.STRIPE, customerId, customerEmail, orderId, amount, currency, items);
+    }
+
+    @Override
+    @Transactional
+    public String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items) {
+        PaymentMethod method = paymentMethod != null ? paymentMethod : PaymentMethod.STRIPE;
+
         Payment payment = Payment.builder()
                 .customerId(customerId)
                 .orderId(orderId)
                 .amount(amount)
+                .refundedAmount(BigDecimal.ZERO)
                 .currency(currency.toUpperCase())
                 .status(PaymentStatus.PENDING)
-                .method(PaymentMethod.STRIPE)
+                .method(method)
+                .idempotencyKey(UUID.randomUUID().toString())
                 .build();
 
         Payment savedPayment = paymentRepository.save(payment);
-        var sessionResponse = paymentGateway.createCheckoutSession(savedPayment, customerEmail, items);
-        savedPayment.setStripeSessionId(sessionResponse.sessionId());
+
+        PaymentGateway gateway = paymentGatewayResolver.resolve(method);
+        PaymentCheckoutContext context = new PaymentCheckoutContext(customerEmail, items, null, null);
+        var sessionResponse = gateway.createCheckoutSession(savedPayment, context);
+
+        savedPayment.setGatewaySessionId(sessionResponse.sessionId());
         paymentRepository.save(savedPayment);
+
+        paymentLedgerService.recordInitialization(savedPayment);
 
         return sessionResponse.checkoutUrl();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PaymentPublicDto> getPaymentById(Long paymentId) {
+    public Optional<PaymentPublicDto> getPaymentById(UUID paymentId) {
         return paymentRepository.findById(paymentId).map(PaymentPublicDto::from);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<PaymentPublicDto> getPaymentByOrderId(String orderId) {
-        return paymentRepository.findAll().stream()
-                .filter(p -> orderId.equals(p.getOrderId()))
-                .findFirst()
-                .map(PaymentPublicDto::from);
+        return paymentRepository.findByOrderId(orderId).map(PaymentPublicDto::from);
     }
 }

@@ -107,7 +107,7 @@ class OrderServiceTest {
 
         ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 10, "SKU-001",
-                BigDecimal.valueOf(100.00), "ACTIVE"
+                BigDecimal.valueOf(100.00)
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
@@ -148,7 +148,7 @@ class OrderServiceTest {
 
         ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 10, "SKU-001",
-                BigDecimal.valueOf(150.00), "ACTIVE"
+                BigDecimal.valueOf(150.00)
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
@@ -159,7 +159,7 @@ class OrderServiceTest {
             }
             return o;
         });
-        when(paymentPublicService.createCheckoutSessionUrl(eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any()))
+        when(paymentPublicService.createCheckoutSessionUrl(eq(PaymentMethod.STRIPE), eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any()))
                 .thenReturn("https://checkout.stripe.com/test-session");
 
         OrderCreateResponse response = orderService.createOrder(testUser, request);
@@ -187,7 +187,7 @@ class OrderServiceTest {
 
         ProductVariantPublicDto variantDto = createVariantDto(
                 20L, 2L, "Test Laptop", "test-laptop", "thumb2.jpg", 5, "SKU-002",
-                BigDecimal.valueOf(500.00), "ACTIVE"
+                BigDecimal.valueOf(500.00)
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(20L, variantDto));
@@ -231,7 +231,7 @@ class OrderServiceTest {
 
         ProductVariantPublicDto variantDto = createVariantDto(
                 10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 3, "SKU-001",
-                BigDecimal.valueOf(100.00), "ACTIVE"
+                BigDecimal.valueOf(100.00)
         );
 
         when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
@@ -251,12 +251,8 @@ class OrderServiceTest {
                 address, PaymentMethod.COD, null, false, List.of(new OrderItemRequest(10L, 1))
         );
 
-        ProductVariantPublicDto variantDto = createVariantDto(
-                10L, 1L, "Test Phone", "test-phone", "thumb.jpg", 10, "SKU-001",
-                BigDecimal.valueOf(100.00), "INACTIVE"
-        );
-
-        when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
+        when(catalogPublicService.getProductVariantsByIds(any()))
+                .thenThrow(new ApplicationException(ErrorCode.PRODUCT_INACTIVE));
 
         assertThatThrownBy(() -> orderService.createOrder(testUser, request))
                 .isInstanceOf(ApplicationException.class)
@@ -381,10 +377,10 @@ class OrderServiceTest {
 
     private ProductVariantPublicDto createVariantDto(Long variantId, Long productId, String name, String slug,
                                                     String thumbnail, int stockQuantity, String sku,
-                                                    BigDecimal price, String status) {
+                                                    BigDecimal price) {
         return new ProductVariantPublicDto(
                 variantId, productId, name, slug, thumbnail,
-                stockQuantity, sku, price, status,
+                stockQuantity, sku, price,
                 List.of(), null, null
         );
     }

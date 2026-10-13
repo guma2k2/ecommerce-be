@@ -1,13 +1,14 @@
 package com.yas.system.payment.internal.event;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record PaymentCompletedEvent(
-        Long paymentId,
+        UUID paymentId,
         String customerId,
         String orderId,
         BigDecimal amount,
         String currency,
-        String stripePaymentIntentId
+        String gatewayTransactionId
 ) {
 }

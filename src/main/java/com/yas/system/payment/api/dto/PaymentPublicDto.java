@@ -1,21 +1,23 @@
 package com.yas.system.payment.api.dto;
 
+import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.payment.internal.entity.Payment;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.util.UUID;
 
 public record PaymentPublicDto(
-        Long paymentId,
+        UUID paymentId,
         String customerId,
         String orderId,
         BigDecimal amount,
+        BigDecimal refundedAmount,
         String currency,
         String status,
         String method,
-        String stripeSessionId,
-        String stripePaymentIntentId,
-        ZonedDateTime createdAt
+        String gatewaySessionId,
+        String gatewayTransactionId,
+        String createdAt
 ) {
 
     public static PaymentPublicDto from(Payment payment) {
@@ -24,12 +26,13 @@ public record PaymentPublicDto(
                 payment.getCustomerId(),
                 payment.getOrderId(),
                 payment.getAmount(),
+                payment.getRefundedAmount(),
                 payment.getCurrency(),
                 payment.getStatus().name(),
                 payment.getMethod().name(),
-                payment.getStripeSessionId(),
-                payment.getStripePaymentIntentId(),
-                payment.getCreatedAt()
+                payment.getGatewaySessionId(),
+                payment.getGatewayTransactionId(),
+                DateTimeUtils.format(payment.getCreatedAt())
         );
     }
 }

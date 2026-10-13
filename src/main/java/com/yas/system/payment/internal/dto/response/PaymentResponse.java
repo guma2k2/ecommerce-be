@@ -1,24 +1,27 @@
 package com.yas.system.payment.internal.dto.response;
 
+import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.payment.internal.entity.Payment;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.util.UUID;
 
 public record PaymentResponse(
-        Long id,
+        UUID id,
         String customerId,
         String orderId,
         BigDecimal amount,
+        BigDecimal refundedAmount,
         String currency,
         PaymentStatus status,
         PaymentMethod method,
-        String stripeSessionId,
-        String stripePaymentIntentId,
+        String gatewaySessionId,
+        String gatewayTransactionId,
         String failureReason,
-        ZonedDateTime createdAt
+        String createdAt,
+        String updatedAt
 ) {
     public static PaymentResponse from(Payment payment) {
         return new PaymentResponse(
@@ -26,13 +29,15 @@ public record PaymentResponse(
                 payment.getCustomerId(),
                 payment.getOrderId(),
                 payment.getAmount(),
+                payment.getRefundedAmount(),
                 payment.getCurrency(),
                 payment.getStatus(),
                 payment.getMethod(),
-                payment.getStripeSessionId(),
-                payment.getStripePaymentIntentId(),
+                payment.getGatewaySessionId(),
+                payment.getGatewayTransactionId(),
                 payment.getFailureReason(),
-                payment.getCreatedAt()
+                DateTimeUtils.format(payment.getCreatedAt()),
+                DateTimeUtils.format(payment.getUpdatedAt())
         );
     }
 }
