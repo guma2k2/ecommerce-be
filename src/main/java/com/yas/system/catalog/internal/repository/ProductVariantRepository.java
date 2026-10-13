@@ -7,10 +7,28 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Long> {
+
+    @Query("""
+        select pv
+        from ProductVariant pv
+        left join fetch pv.product p
+        where pv.id = :id
+    """)
+    Optional<ProductVariant> findByIdWithProduct(@Param("id") Long id);
+
+    @Query("""
+        select pv
+        from ProductVariant pv
+        left join fetch pv.product p
+        where pv.id in :variantIds
+    """)
+    List<ProductVariant> findByIdInWithProduct(@Param("variantIds") Collection<Long> variantIds);
 
     List<ProductVariant> findByProductId(Long productId);
 

@@ -36,19 +36,23 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
     @Override
     @Transactional(readOnly = true)
     public ProductVariantPublicDto getProductVariantById(Long variantId) {
-        ProductVariant variant = productVariantRepository.findById(variantId)
+        ProductVariant variant = productVariantRepository.findByIdWithProduct(variantId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
+        Product product = variant.getProduct();
+        if (product == null || product.getStatus() != ProductStatus.ACTIVE) {
+            throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
+        }
+
         String mediaId = variant.getMediaId();
-        if (mediaId == null && variant.getProduct() != null) {
-            List<ProductMedia> medias = productMediaRepository.findByProductIdOrderByPositionAsc(variant.getProduct().getId());
+        if (mediaId == null) {
+            List<ProductMedia> medias = productMediaRepository.findByProductIdOrderByPositionAsc(product.getId());
             if (!medias.isEmpty()) {
                 mediaId = medias.getFirst().getMediaId();
             }
         }
 
         String thumbnailUrl = mediaId != null ? mediaPublicService.getMediaUrl(mediaId) : null;
-        Product product = variant.getProduct();
 
         List<VariantOptionValue> optionValues = variantOptionValueRepository.findByProductVariantIdInWithDetails(List.of(variantId));
         List<ProductOptionPublicDto> options = optionValues.stream()
@@ -58,14 +62,13 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
 
         return new ProductVariantPublicDto(
                 variant.getId(),
-                product != null ? product.getId() : null,
-                product != null ? product.getName() : null,
-                product != null ? product.getSlug() : null,
+                product.getId(),
+                product.getName(),
+                product.getSlug(),
                 thumbnailUrl,
                 variant.getQuantity() != null ? variant.getQuantity() : 0,
                 variant.getSku(),
                 variant.getPrice(),
-                product != null ? product.getStatus().name() : ProductStatus.INACTIVE.name(),
                 options,
                 variant.getStripeProductId(),
                 variant.getStripePriceId()
@@ -79,9 +82,16 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
             return Map.of();
         }
 
-        List<ProductVariant> variants = productVariantRepository.findAllById(variantIds);
+        List<ProductVariant> variants = productVariantRepository.findByIdInWithProduct(variantIds);
         if (variants.isEmpty()) {
             return Map.of();
+        }
+
+        for (ProductVariant variant : variants) {
+            Product product = variant.getProduct();
+            if (product == null || product.getStatus() != ProductStatus.ACTIVE) {
+                throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
+            }
         }
 
         // Collect product IDs that might need fallback media
@@ -148,7 +158,6 @@ public class CatalogPublicServiceImpl implements CatalogPublicService {
                             variant.getQuantity() != null ? variant.getQuantity() : 0,
                             variant.getSku(),
                             variant.getPrice(),
-                            product != null ? product.getStatus().name() : ProductStatus.INACTIVE.name(),
                             options,
                             variant.getStripeProductId(),
                             variant.getStripePriceId()

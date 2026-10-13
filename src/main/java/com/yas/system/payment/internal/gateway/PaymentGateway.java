@@ -1,15 +1,25 @@
 package com.yas.system.payment.internal.gateway;
 
-import com.stripe.model.Event;
-import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
 import com.yas.system.payment.internal.entity.Payment;
+import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.internal.gateway.dto.PaymentCheckoutContext;
+import com.yas.system.payment.internal.gateway.dto.PaymentStatusResult;
+import com.yas.system.payment.internal.gateway.dto.RefundResult;
+import com.yas.system.payment.internal.gateway.dto.WebhookResult;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.util.Map;
 
 public interface PaymentGateway {
 
-    CheckoutSessionResponse createCheckoutSession(Payment payment, String customerEmail, List<CheckoutItemDto> items);
+    PaymentMethod getPaymentMethod();
 
-    Event constructWebhookEvent(String payload, String signatureHeader);
+    CheckoutSessionResponse createCheckoutSession(Payment payment, PaymentCheckoutContext context);
+
+    WebhookResult processWebhook(Map<String, String> headers, String payload);
+
+    PaymentStatusResult queryTransactionStatus(Payment payment);
+
+    RefundResult refund(Payment payment, BigDecimal amount, String reason, String idempotencyKey);
 }

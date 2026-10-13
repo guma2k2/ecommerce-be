@@ -78,9 +78,6 @@ public class OrderServiceImpl implements OrderService {
             if (variant == null) {
                 throw new ApplicationException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND);
             }
-            if (!variant.isProductActive()) {
-                throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
-            }
             int availableStock = variant.stockQuantity() != null ? variant.stockQuantity() : 0;
             if (requestedQty > availableStock) {
                 throw new ApplicationException(ErrorCode.INSUFFICIENT_STOCK, requestedQty, availableStock);
@@ -153,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
                 variantIds
         ));
 
-        // 9. Generate payment checkout URL if STRIPE
+        // 9. Generate payment checkout URL if online payment gateway (STRIPE)
         String checkoutUrl = null;
         if (request.paymentMethod() == PaymentMethod.STRIPE) {
             List<CheckoutItemDto> checkoutItems = details.stream()
@@ -170,14 +167,11 @@ public class OrderServiceImpl implements OrderService {
                     })
                     .toList();
 
-            log.info("Initiating Stripe Checkout for order {} (total: {} USD, items count: {})",
-                    orderIdStr, savedOrder.getTotalAmount(), checkoutItems.size());
-            for (CheckoutItemDto item : checkoutItems) {
-                log.debug("Order checkout item: name='{}', stripePriceId='{}', unitPrice={}, qty={}",
-                        item.productName(), item.stripePriceId(), item.unitPrice(), item.quantity());
-            }
+            log.info("Initiating {} Checkout for order {} (total: {} USD, items count: {})",
+                    request.paymentMethod(), orderIdStr, savedOrder.getTotalAmount(), checkoutItems.size());
 
             checkoutUrl = paymentPublicService.createCheckoutSessionUrl(
+                    request.paymentMethod(),
                     customerId,
                     customer.email(),
                     orderIdStr,
@@ -185,7 +179,7 @@ public class OrderServiceImpl implements OrderService {
                     "USD",
                     checkoutItems
             );
-            log.info("Received Stripe Checkout URL for order {}: {}", orderIdStr, checkoutUrl);
+            log.info("Received {} Checkout URL for order {}: {}", request.paymentMethod(), orderIdStr, checkoutUrl);
         }
 
         log.info("Order {} created successfully with code {} for customer {}", savedOrder.getId(), orderCode, customerId);
