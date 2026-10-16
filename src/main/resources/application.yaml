@@ -3,6 +3,9 @@ spring:
     active: dev
   application:
     name: system
+  devtools:
+    restart:
+      enabled: false
   # Jackson data config
   jackson:
     property-naming-strategy: SNAKE_CASE

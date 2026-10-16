@@ -8,6 +8,7 @@ import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.entity.variant.VariantOptionValue;
 
 import com.yas.system.common.util.DateTimeUtils;
+import com.yas.system.media.api.dto.MediaPublicDto;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,7 +34,7 @@ public record ProductResponse(
     public static ProductResponse from(
             Product product,
             List<ProductMedia> medias,
-            Map<String, String> mediaUrlMap,
+            Map<String, MediaPublicDto> mediaMap,
             List<ProductAttributeValue> attributes,
             List<ProductOptionCombinationResponse> options,
             List<ProductVariant> variants,
@@ -63,7 +64,7 @@ public record ProductResponse(
                                             : List.of();
                                     return ProductMediaResponse.from(
                                             pm,
-                                            mediaUrlMap != null ? mediaUrlMap.get(pm.getMediaId()) : null,
+                                            mediaMap != null ? mediaMap.get(pm.getMediaId()) : null,
                                             linkedVariantIds
                                     );
                                 })
@@ -79,7 +80,9 @@ public record ProductResponse(
                                         variant,
                                         variantOptionValues,
                                         variantAttributeValues,
-                                        mediaUrlMap != null && variant.getMediaId() != null ? mediaUrlMap.get(variant.getMediaId()) : null
+                                        mediaMap != null && variant.getMediaId() != null && mediaMap.get(variant.getMediaId()) != null
+                                                ? mediaMap.get(variant.getMediaId()).url()
+                                                : null
                                 ))
                                 .toList()
                         : List.of(),
@@ -88,4 +91,5 @@ public record ProductResponse(
         );
     }
 }
+
 
