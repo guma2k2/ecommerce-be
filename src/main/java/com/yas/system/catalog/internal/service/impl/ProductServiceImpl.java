@@ -63,6 +63,7 @@ import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.inventory.api.InventoryPublicService;
 import com.yas.system.media.api.MediaPublicService;
+import com.yas.system.media.api.dto.MediaPublicDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -161,15 +162,15 @@ public class ProductServiceImpl implements ProductService {
         // Step 8: Build product option combination responses
         List<ProductOptionCombinationResponse> options = productOptionCombinationHelper.buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
 
-        // Step 9: Fetch media URLs via public Media service
+        // Step 9: Fetch media details via public Media service
         List<String> mediaIds = productMediaHelper.extractAllMediaIds(savedMedias, savedVariants);
-        Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
+        Map<String, MediaPublicDto> mediaMap = mediaPublicService.getMediaDetails(mediaIds);
 
         // Step 10: Build and return ProductResponse
         log.info("Publishing ProductSyncEvent(UPSERT) for newly created product ID: {} with {} variants",
                 savedProduct.getId(), savedVariants.size());
         eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT));
-        return ProductResponse.from(savedProduct, savedMedias, mediaUrlMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
+        return ProductResponse.from(savedProduct, savedMedias, mediaMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
     }
 
     @Override
@@ -251,15 +252,15 @@ public class ProductServiceImpl implements ProductService {
         // Step 9: Build product option combination responses
         List<ProductOptionCombinationResponse> options = productOptionCombinationHelper.buildOptionCombinationResponses(savedOptionCombinations, savedOptionValues);
 
-        // Step 10: Fetch media URLs via public Media service
+        // Step 10: Fetch media details via public Media service
         List<String> mediaIds = productMediaHelper.extractAllMediaIds(savedMedias, savedVariants);
-        Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
+        Map<String, MediaPublicDto> mediaMap = mediaPublicService.getMediaDetails(mediaIds);
 
         // Step 11: Build and return updated ProductResponse
         log.info("Publishing ProductSyncEvent(UPSERT) for updated product ID: {} (active variants: {}, removed variants: {})",
                 savedProduct.getId(), savedVariants.size(), removedVariants.size());
         eventPublisher.publishEvent(new ProductSyncEvent(savedProduct.getId(), SyncAction.UPSERT, removedVariants));
-        return ProductResponse.from(savedProduct, savedMedias, mediaUrlMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
+        return ProductResponse.from(savedProduct, savedMedias, mediaMap, savedAttributes, options, savedVariants, savedVariantOptionValues, savedVariantAttributeValues);
     }
 
     @Override
@@ -365,9 +366,9 @@ public class ProductServiceImpl implements ProductService {
         List<ProductOptionCombinationResponse> options = productOptionCombinationHelper.buildOptionCombinationResponses(combinations, optionValues);
 
         List<String> mediaIds = productMediaHelper.extractAllMediaIds(medias, variants);
-        Map<String, String> mediaUrlMap = mediaPublicService.getMediaUrls(mediaIds);
+        Map<String, MediaPublicDto> mediaMap = mediaPublicService.getMediaDetails(mediaIds);
 
-        return ProductResponse.from(product, medias, mediaUrlMap, attributes, options, variants, variantOptionValues, variantAttributeValues);
+        return ProductResponse.from(product, medias, mediaMap, attributes, options, variants, variantOptionValues, variantAttributeValues);
     }
 
     @Override

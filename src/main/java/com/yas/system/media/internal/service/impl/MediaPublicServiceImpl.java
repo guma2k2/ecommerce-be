@@ -1,6 +1,7 @@
 package com.yas.system.media.internal.service.impl;
 
 import com.yas.system.media.api.MediaPublicService;
+import com.yas.system.media.api.dto.MediaPublicDto;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.repository.MediaRepository;
 import lombok.AccessLevel;
@@ -9,7 +10,11 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,18 +44,7 @@ public class MediaPublicServiceImpl implements MediaPublicService {
         if (mediaIds == null || mediaIds.isEmpty()) {
             return Map.of();
         }
-        List<UUID> uuids = mediaIds.stream()
-                .filter(id -> id != null && !id.isBlank())
-                .map(id -> {
-                    try {
-                        return UUID.fromString(id);
-                    } catch (IllegalArgumentException e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .toList();
-
+        List<UUID> uuids = parseUuids(mediaIds);
         if (uuids.isEmpty()) {
             return Map.of();
         }
@@ -61,6 +55,44 @@ public class MediaPublicServiceImpl implements MediaPublicService {
             urlMap.put(media.getId().toString(), formatUrl(media));
         }
         return urlMap;
+    }
+
+    @Override
+    public Map<String, MediaPublicDto> getMediaDetails(List<String> mediaIds) {
+        if (mediaIds == null || mediaIds.isEmpty()) {
+            return Map.of();
+        }
+        List<UUID> uuids = parseUuids(mediaIds);
+        if (uuids.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Media> medias = mediaRepository.findAllById(uuids);
+        Map<String, MediaPublicDto> detailMap = new HashMap<>();
+        for (Media media : medias) {
+            detailMap.put(media.getId().toString(), new MediaPublicDto(
+                    media.getId().toString(),
+                    formatUrl(media),
+                    media.getType() != null ? media.getType().name() : null,
+                    media.getAltText(),
+                    media.getDuration()
+            ));
+        }
+        return detailMap;
+    }
+
+    private List<UUID> parseUuids(List<String> mediaIds) {
+        return mediaIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .map(id -> {
+                    try {
+                        return UUID.fromString(id);
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private String formatUrl(Media media) {
@@ -75,3 +107,4 @@ public class MediaPublicServiceImpl implements MediaPublicService {
         return url;
     }
 }
+

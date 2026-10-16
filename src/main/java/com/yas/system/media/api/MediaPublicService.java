@@ -1,5 +1,7 @@
 package com.yas.system.media.api;
 
+import com.yas.system.media.api.dto.MediaPublicDto;
+
 import java.util.List;
 import java.util.Map;
 
@@ -24,4 +26,13 @@ public interface MediaPublicService {
      * @return Map of mediaId -> mediaUrl
      */
     Map<String, String> getMediaUrls(List<String> mediaIds);
+
+    /**
+     * Bulk get media details (url, type, altText, duration) by a list of mediaIds.
+     *
+     * @param mediaIds List of UUID strings
+     * @return Map of mediaId -> MediaPublicDto
+     */
+    Map<String, MediaPublicDto> getMediaDetails(List<String> mediaIds);
 }
+

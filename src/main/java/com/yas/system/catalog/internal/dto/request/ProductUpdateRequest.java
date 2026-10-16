@@ -6,6 +6,7 @@ import com.yas.system.common.validation.annotation.ValidateEnum;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -30,10 +31,10 @@ public record ProductUpdateRequest(
         @Size(max = 160, message = ParamError.MAX_LENGTH)
         String metaDescription,
 
-        @NotBlank(message = ParamError.FIELD_NAME)
+        @NotNull(message = ParamError.FIELD_NAME)
         Integer categoryId,
 
-        @NotBlank(message = ParamError.FIELD_NAME)
+        @NotNull(message = ParamError.FIELD_NAME)
         Integer brandId,
 
         @NotBlank(message = ParamError.FIELD_NAME)
