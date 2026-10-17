@@ -11,11 +11,5 @@ import java.util.UUID;
 
 public interface PaymentPublicService {
 
-    Optional<PaymentPublicDto> getPaymentById(UUID paymentId);
-
-    Optional<PaymentPublicDto> getPaymentByOrderId(String orderId);
-
-    String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items);
-
     String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items);
 }

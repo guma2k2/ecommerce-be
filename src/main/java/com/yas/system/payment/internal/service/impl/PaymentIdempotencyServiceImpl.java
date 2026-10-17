@@ -15,9 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -27,9 +25,6 @@ public class PaymentIdempotencyServiceImpl implements PaymentIdempotencyService 
 
     RedisTemplate<String, Object> redisTemplate;
     ObjectMapper objectMapper;
-
-    // In-memory fallback if Redis is unavailable or in test environments
-    Map<String, String> localFallbackMap = new ConcurrentHashMap<>();
 
     private static final Duration LOCK_TTL = Duration.ofMinutes(2);
     private static final Duration COMPLETED_TTL = Duration.ofHours(24);
@@ -63,8 +58,8 @@ public class PaymentIdempotencyServiceImpl implements PaymentIdempotencyService 
         } catch (ApplicationException ae) {
             throw ae;
         } catch (Exception e) {
-            log.warn("Redis idempotency check encountered error (falling back to memory): {}", e.getMessage());
-            return checkFallback(cacheKey, idempotencyKey);
+            log.error("Redis error while checking idempotency lock for key {}: {}", idempotencyKey, e.getMessage(), e);
+            throw new ApplicationException(ErrorCode.PAYMENT_GATEWAY_ERROR, "Idempotency service temporarily unavailable");
         }
     }
 
@@ -79,13 +74,8 @@ public class PaymentIdempotencyServiceImpl implements PaymentIdempotencyService 
         try {
             String json = objectMapper.writeValueAsString(response);
             redisTemplate.opsForValue().set(cacheKey, json, COMPLETED_TTL);
-            localFallbackMap.put(cacheKey, json);
         } catch (Exception e) {
-            log.warn("Failed to save completed payment response to Redis for key {}: {}", idempotencyKey, e.getMessage());
-            try {
-                localFallbackMap.put(cacheKey, objectMapper.writeValueAsString(response));
-            } catch (Exception ignored) {
-            }
+            log.error("Failed to save completed payment response to Redis for key {}: {}", idempotencyKey, e.getMessage(), e);
         }
     }
 
@@ -97,21 +87,9 @@ public class PaymentIdempotencyServiceImpl implements PaymentIdempotencyService 
         String cacheKey = PaymentConstant.IDEMPOTENCY_CACHE_PREFIX + idempotencyKey;
         try {
             redisTemplate.delete(cacheKey);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Failed to delete idempotency lock from Redis for key {}: {}", idempotencyKey, e.getMessage());
         }
-        localFallbackMap.remove(cacheKey);
-    }
-
-    private Optional<CheckoutSessionResponse> checkFallback(String cacheKey, String idempotencyKey) {
-        String existing = localFallbackMap.get(cacheKey);
-        if (existing != null) {
-            if (PaymentConstant.IDEMPOTENCY_IN_PROGRESS.equalsIgnoreCase(existing)) {
-                throw new ApplicationException(ErrorCode.CONCURRENT_PAYMENT_REQUEST);
-            }
-            return deserializeResponse(existing);
-        }
-        localFallbackMap.put(cacheKey, PaymentConstant.IDEMPOTENCY_IN_PROGRESS);
-        return Optional.empty();
     }
 
     private Optional<CheckoutSessionResponse> deserializeResponse(String json) {
