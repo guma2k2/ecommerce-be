@@ -95,11 +95,6 @@ public class PaymentLedgerServiceImpl implements PaymentLedgerService {
         return paymentLedgerRepository.findByPaymentIdOrderByCreatedAtAsc(paymentId);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PaymentLedger> getLedgerByOrderId(String orderId) {
-        return paymentLedgerRepository.findByOrderIdOrderByCreatedAtAsc(orderId);
-    }
 
     private PaymentLedger saveLedgerEntry(
             Payment payment,

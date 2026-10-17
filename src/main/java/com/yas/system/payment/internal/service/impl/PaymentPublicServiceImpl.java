@@ -2,7 +2,6 @@ package com.yas.system.payment.internal.service.impl;
 
 import com.yas.system.payment.api.PaymentPublicService;
 import com.yas.system.payment.api.dto.CheckoutItemDto;
-import com.yas.system.payment.api.dto.PaymentPublicDto;
 import com.yas.system.payment.internal.entity.Payment;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,12 +28,6 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
     PaymentRepository paymentRepository;
     PaymentGatewayResolver paymentGatewayResolver;
     PaymentLedgerService paymentLedgerService;
-
-    @Override
-    @Transactional
-    public String createCheckoutSessionUrl(String customerId, String customerEmail, String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items) {
-        return createCheckoutSessionUrl(PaymentMethod.STRIPE, customerId, customerEmail, orderId, amount, currency, items);
-    }
 
     @Override
     @Transactional
@@ -67,15 +59,4 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
         return sessionResponse.checkoutUrl();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<PaymentPublicDto> getPaymentById(UUID paymentId) {
-        return paymentRepository.findById(paymentId).map(PaymentPublicDto::from);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<PaymentPublicDto> getPaymentByOrderId(String orderId) {
-        return paymentRepository.findByOrderId(orderId).map(PaymentPublicDto::from);
-    }
 }

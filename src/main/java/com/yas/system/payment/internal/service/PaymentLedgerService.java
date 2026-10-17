@@ -20,5 +20,4 @@ public interface PaymentLedgerService {
 
     List<PaymentLedger> getLedgerByPaymentId(UUID paymentId);
 
-    List<PaymentLedger> getLedgerByOrderId(String orderId);
 }
