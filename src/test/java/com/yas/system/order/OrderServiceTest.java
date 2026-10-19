@@ -5,6 +5,7 @@ import com.yas.system.cart.api.dto.CartItemPublicDto;
 import com.yas.system.catalog.api.CatalogPublicService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.catalog.api.enumeration.ProductStatus;
+import com.yas.system.common.config.AppProperties;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
@@ -69,6 +70,9 @@ class OrderServiceTest {
     @Mock
     InventoryPublicService inventoryPublicService;
 
+    @Mock
+    AppProperties appProperties;
+
     OrderHelper orderHelper;
     OrderServiceImpl orderService;
 
@@ -86,7 +90,8 @@ class OrderServiceTest {
                 cartPublicService,
                 paymentPublicService,
                 eventPublisher,
-                inventoryPublicService
+                inventoryPublicService,
+                appProperties
         );
         testUser = new AuthUser(customerId, "customer@example.com", "CUSTOMER", "password", List.of());
     }

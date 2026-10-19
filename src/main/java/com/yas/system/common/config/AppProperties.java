@@ -11,13 +11,18 @@ public record AppProperties(
         Jwt jwt,
         OAuth2 oauth2,
         String frontendErrorUrl,
-        ClientUrl clientUrl
+        ClientUrl clientUrl,
+        Order order
 ) {
 
     public record ClientUrl(
       String backoffice,
       String storefront
     ){}
+
+    public record Order(
+            long cancellationWindowMinutes
+    ) {}
 
     public record Jwt(
             String secret,

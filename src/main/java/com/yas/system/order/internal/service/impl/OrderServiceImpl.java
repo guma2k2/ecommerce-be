@@ -4,6 +4,7 @@ import com.yas.system.cart.api.CartPublicService;
 import com.yas.system.cart.api.dto.CartItemPublicDto;
 import com.yas.system.catalog.api.CatalogPublicService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
+import com.yas.system.common.config.AppProperties;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
@@ -19,6 +20,7 @@ import com.yas.system.order.internal.dto.response.OrderSummaryResponse;
 import com.yas.system.order.internal.entity.Order;
 import com.yas.system.order.internal.entity.OrderDetail;
 import com.yas.system.order.internal.enumeration.OrderStatus;
+import com.yas.system.order.internal.event.OrderCancelledEvent;
 import com.yas.system.order.internal.event.OrderCreatedEvent;
 import com.yas.system.order.internal.helper.OrderHelper;
 import com.yas.system.order.internal.repository.OrderDetailRepository;
@@ -27,6 +29,7 @@ import com.yas.system.order.internal.service.OrderService;
 import com.yas.system.payment.api.PaymentPublicService;
 import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.internal.enumeration.PaymentStatus;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,6 +42,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,6 +60,7 @@ public class OrderServiceImpl implements OrderService {
     PaymentPublicService paymentPublicService;
     ApplicationEventPublisher eventPublisher;
     InventoryPublicService inventoryPublicService;
+    AppProperties appProperties;
 
     @Override
     @Transactional
@@ -254,6 +259,17 @@ public class OrderServiceImpl implements OrderService {
             throw new ApplicationException(ErrorCode.ORDER_CANNOT_BE_CANCELLED, orderId, order.getStatus());
         }
 
+        // Time window guard
+        if (order.getCreatedAt() != null && appProperties != null && appProperties.order() != null) {
+            long windowMinutes = appProperties.order().cancellationWindowMinutes();
+            if (windowMinutes > 0) {
+                ZonedDateTime cutoff = order.getCreatedAt().plusMinutes(windowMinutes);
+                if (ZonedDateTime.now().isAfter(cutoff)) {
+                    throw new ApplicationException(ErrorCode.ORDER_CANCELLATION_WINDOW_EXPIRED, orderId, windowMinutes);
+                }
+            }
+        }
+
         // Restore stock
         List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId().toString());
         Map<Long, Integer> restoreQuantities = details.stream()
@@ -264,7 +280,30 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
-        log.info("Order {} cancelled by customer {}", orderId, customerId);
+        // Auto-refund if Stripe payment was already captured
+        boolean wasRefunded = false;
+        if (order.getPaymentMethod() == PaymentMethod.STRIPE
+                && order.getPaymentStatus() == PaymentStatus.SUCCEEDED) {
+            paymentPublicService.refundByOrderId(
+                    order.getId().toString(),
+                    customer.email(),
+                    "Order cancelled by customer"
+            );
+            wasRefunded = true;
+        }
+
+        eventPublisher.publishEvent(new OrderCancelledEvent(
+                order.getId(),
+                order.getOrderCode(),
+                customerId,
+                customer.email(),
+                order.getTotalAmount(),
+                "USD",
+                order.getPaymentMethod(),
+                order.getPaymentStatus()
+        ));
+
+        log.info("Order {} cancelled by customer {}. Auto-refund triggered: {}", orderId, customerId, wasRefunded);
     }
 
     private Map<Long, Integer> resolveItemQuantities(String customerId, CreateOrderRequest request) {

@@ -9,6 +9,7 @@ import com.yas.system.payment.internal.dto.request.RefundPaymentRequest;
 import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
 import com.yas.system.payment.internal.dto.response.PaymentLedgerResponse;
 import com.yas.system.payment.internal.dto.response.PaymentResponse;
+import com.yas.system.payment.internal.dto.response.RefundPaymentResponse;
 import com.yas.system.payment.internal.gateway.dto.RefundResult;
 import com.yas.system.payment.internal.service.PaymentService;
 import jakarta.validation.Valid;
@@ -44,13 +45,22 @@ public class PaymentController {
     }
 
     @PostMapping("/{paymentId}/refund")
-    public ApiResponse<RefundResult> refundPayment(
+    public ApiResponse<RefundPaymentResponse> refundPayment(
             @ActiveUser AuthUser customer,
             @PathVariable UUID paymentId,
             @RequestHeader(value = PaymentConstant.IDEMPOTENCY_KEY_HEADER, required = false) String idempotencyKey,
             @Valid @RequestBody RefundPaymentRequest request
     ) {
-        return ApiResponse.success(paymentService.refundPayment(customer, paymentId, request, idempotencyKey));
+        RefundResult result = paymentService.refundPayment(customer, paymentId, request, idempotencyKey);
+        PaymentResponse updated = paymentService.getPaymentById(customer, paymentId);
+        return ApiResponse.success(RefundPaymentResponse.from(
+                paymentId,
+                updated.orderId(),
+                result,
+                updated.refundedAmount(),
+                updated.amount().subtract(updated.refundedAmount()),
+                updated.status()
+        ));
     }
 
     @GetMapping("/{paymentId}")

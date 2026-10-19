@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Refund Processed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .refund-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #059669;
+            margin: 20px 0 8px;
+        }
+
+        .info-box {
+            background-color: #ecfdf5;
+            border-radius: 8px;
+            padding: 16px 20px;
+            text-align: left;
+            margin: 24px 0;
+        }
+
+        .info-box p {
+            margin: 6px 0;
+            font-size: 14px;
+            color: #065f46;
+        }
+
+        .partial-note {
+            background-color: #eff6ff;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="icon">✅</div>
+    <h2>Your Refund Has Been Processed</h2>
+
+    <p>Hi <span th:text="${customerName}">Customer</span>,</p>
+
+    <p>Great news! Your refund has been successfully initiated.</p>
+
+    <div class="refund-amount" th:text="${currency} + ' ' + ${refundedAmount}">USD 50.00</div>
+
+    <div class="info-box">
+        <p>💳 Refund will appear on your original payment method within <strong>5–10 business days</strong>.</p>
+        <p th:if="${reason != null and !reason.isEmpty()}">📝 Reason: <span th:text="${reason}">N/A</span></p>
+        <p>🔖 Reference: <span th:text="${gatewayRefundId}">ref_xxx</span></p>
+    </div>
+
+    <div class="partial-note" th:if="${isPartial}">
+        Note: This is a <strong>partial refund</strong>. The remaining balance of
+        <strong th:text="${currency} + ' ' + ${remainingAmount}">USD 49.00</strong> is not refunded.
+    </div>
+
+    <p>If you have any questions about your refund, please contact our support team with your order details.</p>
+
+    <div class="footer">
+        This is an automated notification. Please do not reply to this email.
+    </div>
+
+</div>
+</body>
+</html>
