@@ -5,6 +5,7 @@ import com.yas.system.order.internal.enumeration.OrderStatus;
 import com.yas.system.order.internal.repository.OrderRepository;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
 import com.yas.system.payment.internal.event.PaymentCompletedEvent;
+import com.yas.system.payment.internal.event.RefundCompletedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -45,6 +46,27 @@ public class OrderPaymentEventListener {
             });
         } catch (IllegalArgumentException e) {
             log.warn("Invalid order UUID in PaymentCompletedEvent: {}", event.orderId());
+        }
+    }
+
+    @EventListener
+    @Async
+    @Transactional
+    public void onRefundCompleted(RefundCompletedEvent event) {
+        if (event == null || event.orderId() == null) {
+            return;
+        }
+
+        try {
+            UUID orderId = UUID.fromString(event.orderId());
+            orderRepository.findById(orderId).ifPresent(order -> {
+                order.setPaymentStatus(event.newPaymentStatus());
+                orderRepository.save(order);
+                log.info("Order {} payment status updated to {} via RefundCompletedEvent",
+                        orderId, event.newPaymentStatus());
+            });
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid order UUID in RefundCompletedEvent: {}", event.orderId());
         }
     }
 }

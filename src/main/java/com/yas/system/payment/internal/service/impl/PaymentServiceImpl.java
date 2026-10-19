@@ -22,6 +22,7 @@ import com.yas.system.payment.internal.repository.PaymentRepository;
 import com.yas.system.payment.internal.service.PaymentIdempotencyService;
 import com.yas.system.payment.internal.service.PaymentLedgerService;
 import com.yas.system.payment.internal.service.PaymentService;
+import com.yas.system.payment.internal.event.RefundCompletedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -180,6 +181,10 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByIdAndCustomerId(paymentId, customer.id())
                 .orElseThrow(() -> new ApplicationException(ErrorCode.PAYMENT_NOT_FOUND, paymentId));
 
+        if (payment.getStatus() == PaymentStatus.REFUNDED) {
+            throw new ApplicationException(ErrorCode.PAYMENT_ALREADY_REFUNDED, paymentId);
+        }
+
         if (payment.getStatus() != PaymentStatus.SUCCEEDED && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
             throw new ApplicationException(ErrorCode.PAYMENT_GATEWAY_ERROR, "Cannot refund payment in status: " + payment.getStatus());
         }
@@ -217,6 +222,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         log.info("Successfully processed refund for payment ID {}: amount={}, remainingRefundable={}",
                 paymentId, request.amount(), payment.getRefundableAmount());
+
+        eventPublisher.publishEvent(new RefundCompletedEvent(
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getCustomerId(),
+                customer.email(),
+                request.amount(),
+                payment.getAmount(),
+                payment.getCurrency(),
+                payment.getStatus(),
+                request.reason()
+        ));
 
         return refundResult;
     }

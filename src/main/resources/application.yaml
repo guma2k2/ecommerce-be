@@ -47,6 +47,8 @@ app:
     max-video-size: 50MB
   stripe:
     sync-enabled: ${STRIPE_SYNC_ENABLED:false}
+  order:
+    cancellation-window-minutes: 30
 
 
 

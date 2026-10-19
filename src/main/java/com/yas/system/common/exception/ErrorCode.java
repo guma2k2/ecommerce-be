@@ -60,10 +60,12 @@ public enum ErrorCode {
     ORDER_NOT_FOUND("order_not_found", "Order with ID %s not found"),
     ORDER_ITEMS_EMPTY("order_items_empty", "Order must contain at least one item"),
     ORDER_CANNOT_BE_CANCELLED("order_cannot_be_cancelled", "Order %s cannot be cancelled in status: %s"),
+    ORDER_CANCELLATION_WINDOW_EXPIRED("order_cancellation_window_expired", "Order %s can no longer be cancelled. Cancellation is only allowed within %s minutes of placing the order."),
     INVENTORY_NOT_FOUND("inventory_not_found", "Inventory for product variant %s not found"),
     INVALID_STOCK_ADJUSTMENT("invalid_stock_adjustment", "Stock adjustment failed: %s"),
     RESERVATION_NOT_FOUND("reservation_not_found", "Stock reservation for order %s not found"),
     RESERVATION_ALREADY_PROCESSED("reservation_already_processed", "Reservation for order %s has already been processed"),
+    PAYMENT_ALREADY_REFUNDED("payment_already_refunded", "Payment %s has already been fully refunded"),
     ;
 
     ErrorCode(String code, String message) {
