@@ -60,7 +60,8 @@ public class WebSecurityConfig {
                                 "/api/v1/categories/public/**",
                                 "/api/v1/products/public/**",
                                 "/api/v1/payments/webhook",
-                                "/api/v1/payments/webhook/**"
+                                "/api/v1/payments/webhook/**",
+                                "/api/v1/promotions/verify"
                                 ).permitAll()
                         .anyRequest().authenticated())
 

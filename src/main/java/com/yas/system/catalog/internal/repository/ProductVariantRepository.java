@@ -18,6 +18,8 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         select pv
         from ProductVariant pv
         left join fetch pv.product p
+        left join fetch p.category
+        left join fetch p.brand
         where pv.id = :id
     """)
     Optional<ProductVariant> findByIdWithProduct(@Param("id") Long id);
@@ -26,6 +28,8 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         select pv
         from ProductVariant pv
         left join fetch pv.product p
+        left join fetch p.category
+        left join fetch p.brand
         where pv.id in :variantIds
     """)
     List<ProductVariant> findByIdInWithProduct(@Param("variantIds") Collection<Long> variantIds);

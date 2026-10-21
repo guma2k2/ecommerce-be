@@ -66,6 +66,15 @@ public enum ErrorCode {
     RESERVATION_NOT_FOUND("reservation_not_found", "Stock reservation for order %s not found"),
     RESERVATION_ALREADY_PROCESSED("reservation_already_processed", "Reservation for order %s has already been processed"),
     PAYMENT_ALREADY_REFUNDED("payment_already_refunded", "Payment %s has already been fully refunded"),
+    PROMOTION_NOT_FOUND("promotion_not_found", "Promotion not found"),
+    COUPON_CODE_ALREADY_EXISTS("coupon_code_already_exists", "Coupon code '%s' already exists"),
+    PROMOTION_SLUG_ALREADY_EXISTS("promotion_slug_already_exists", "Promotion slug '%s' already exists"),
+    PROMOTION_EXPIRED("promotion_expired", "This promotion has expired or is not yet active"),
+    PROMOTION_USAGE_EXHAUSTED("promotion_usage_exhausted", "Promotion usage limit has been reached"),
+    CUSTOMER_USAGE_LIMIT_EXCEEDED("customer_usage_limit_exceeded", "You have already reached the redemption limit for this promotion"),
+    MINIMUM_PURCHASE_NOT_MET("minimum_purchase_not_met", "Order subtotal does not meet the minimum requirement of %s"),
+    PROMOTION_NOT_APPLICABLE("promotion_not_applicable", "This coupon is not applicable to any items in your cart"),
+    PROMOTION_IN_USE("promotion_in_use", "Promotion has been redeemed and cannot be deleted"),
     ;
 
     ErrorCode(String code, String message) {

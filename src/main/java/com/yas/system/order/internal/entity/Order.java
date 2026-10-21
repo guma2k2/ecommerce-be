@@ -48,6 +48,12 @@ public class Order extends BaseUuidEntity {
     @Column(name = "shipping_fee", precision = 12, scale = 2)
     private BigDecimal shippingFee;
 
+    @Column(name = "coupon_code", length = 50)
+    private String couponCode;
+
+    @Column(name = "discount_amount", precision = 12, scale = 2)
+    private BigDecimal discountAmount;
+
     @Column(name = "receiver_name", nullable = false, length = 100)
     private String receiverName;
 
