@@ -28,6 +28,7 @@ import com.yas.system.order.internal.service.impl.OrderServiceImpl;
 import com.yas.system.payment.api.PaymentPublicService;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.promotion.api.PromotionPublicService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,6 +74,9 @@ class OrderServiceTest {
     @Mock
     AppProperties appProperties;
 
+    @Mock
+    PromotionPublicService promotionPublicService;
+
     OrderHelper orderHelper;
     OrderServiceImpl orderService;
 
@@ -91,7 +95,8 @@ class OrderServiceTest {
                 paymentPublicService,
                 eventPublisher,
                 inventoryPublicService,
-                appProperties
+                appProperties,
+                promotionPublicService
         );
         testUser = new AuthUser(customerId, "customer@example.com", "CUSTOMER", "password", List.of());
     }

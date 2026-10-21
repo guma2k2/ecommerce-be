@@ -20,11 +20,23 @@ public record CreateOrderRequest(
 
         boolean fromCart,
 
+        String couponCode,
+
         List<@Valid OrderItemRequest> items
 ) {
         public CreateOrderRequest {
                 if (items == null) {
                         items = List.of();
                 }
+        }
+
+        public CreateOrderRequest(
+                ShippingAddressRequest shippingAddress,
+                PaymentMethod paymentMethod,
+                String note,
+                boolean fromCart,
+                List<OrderItemRequest> items
+        ) {
+                this(shippingAddress, paymentMethod, note, fromCart, null, items);
         }
 }

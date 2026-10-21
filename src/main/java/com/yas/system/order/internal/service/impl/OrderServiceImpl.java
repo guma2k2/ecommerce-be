@@ -30,6 +30,10 @@ import com.yas.system.payment.api.PaymentPublicService;
 import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.promotion.api.PromotionPublicService;
+import com.yas.system.promotion.api.dto.PromotionApplyResultDto;
+import com.yas.system.promotion.api.dto.PromotionOrderItemDto;
+import org.springframework.util.StringUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -61,6 +65,7 @@ public class OrderServiceImpl implements OrderService {
     ApplicationEventPublisher eventPublisher;
     InventoryPublicService inventoryPublicService;
     AppProperties appProperties;
+    PromotionPublicService promotionPublicService;
 
     @Override
     @Transactional
@@ -95,6 +100,7 @@ public class OrderServiceImpl implements OrderService {
         // 4. Calculate total amount
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderDetail> details = new ArrayList<>();
+        List<PromotionOrderItemDto> promoItems = new ArrayList<>();
 
         for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
             ProductVariantPublicDto variant = variantMap.get(entry.getKey());
@@ -102,6 +108,7 @@ public class OrderServiceImpl implements OrderService {
             BigDecimal unitPrice = variant.price() != null ? variant.price() : BigDecimal.ZERO;
             BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));
             totalAmount = totalAmount.add(lineTotal);
+            promoItems.add(new PromotionOrderItemDto(entry.getKey(), qty, unitPrice));
         }
 
         // 5. Build and save Order entity
@@ -109,6 +116,24 @@ public class OrderServiceImpl implements OrderService {
         String orderCode = orderHelper.generateOrderCode();
         Order order = orderHelper.buildOrder(customerId, orderCode, request, totalAmount.add(shippingFee), shippingFee);
         Order savedOrder = orderRepository.save(order);
+
+        // Apply promotion if coupon code is present
+        if (StringUtils.hasText(request.couponCode())) {
+            PromotionApplyResultDto promoResult = promotionPublicService.applyPromotion(
+                    savedOrder.getId(),
+                    customerId,
+                    request.couponCode(),
+                    totalAmount,
+                    promoItems
+            );
+            if (promoResult != null && promoResult.discountAmount() != null) {
+                savedOrder.setDiscountAmount(promoResult.discountAmount());
+                savedOrder.setCouponCode(promoResult.couponCode());
+                BigDecimal finalTotal = totalAmount.add(shippingFee).subtract(promoResult.discountAmount()).max(BigDecimal.ZERO);
+                savedOrder.setTotalAmount(finalTotal);
+                savedOrder = orderRepository.save(savedOrder);
+            }
+        }
 
         // 6. Build and save OrderDetail entities
         String orderIdStr = savedOrder.getId().toString();
