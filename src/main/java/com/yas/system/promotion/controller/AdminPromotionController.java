@@ -2,6 +2,7 @@ package com.yas.system.promotion.controller;
 
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
+import com.yas.system.promotion.internal.constant.PromotionConstant;
 import com.yas.system.promotion.internal.dto.request.CreatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.UpdatePromotionRequest;
 import com.yas.system.promotion.internal.dto.response.PromotionDetailResponse;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,20 +30,20 @@ import java.time.ZonedDateTime;
 @RequestMapping("/api/v1/backoffice/promotions")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyAuthority(T(com.yas.system.common.constant.RoleConstant).ROLE_ADMIN)")
 public class AdminPromotionController {
 
     PromotionService promotionService;
 
     @GetMapping
     public ApiResponse<PageResponse<PromotionResponse>> getPromotions(
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(name = "page_number", defaultValue = PromotionConstant.DEFAULT_PAGE_NUMBER) int pageNumber,
+            @RequestParam(name = "page_size", defaultValue = PromotionConstant.DEFAULT_PAGE_SIZE) int pageSize,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String couponCode,
-            @RequestParam(required = false) Boolean isActive,
-            @RequestParam(required = false) ZonedDateTime startDate,
-            @RequestParam(required = false) ZonedDateTime endDate
+            @RequestParam(name = "coupon_code", required = false) String couponCode,
+            @RequestParam(name = "is_active", required = false) Boolean isActive,
+            @RequestParam(name = "start_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
+            @RequestParam(name = "end_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate
     ) {
         return ApiResponse.success(promotionService.getPromotions(
                 pageNumber,

@@ -1,6 +1,8 @@
 package com.yas.system.promotion.internal.listener;
 
-import com.yas.system.order.internal.event.OrderCancelledEvent;
+import com.yas.system.common.exception.ApplicationException;
+import com.yas.system.common.exception.ErrorCode;
+import com.yas.system.order.event.OrderCancelledEvent;
 import com.yas.system.promotion.internal.service.PromotionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +26,12 @@ public class PromotionOrderEventListener {
         log.info("Received OrderCancelledEvent for orderId: {}, reverting promotion usage if applicable", event.orderId());
         try {
             promotionService.revertPromotionUsage(event.orderId());
-        } catch (Exception e) {
+        } catch (ApplicationException e) {
             log.error("Failed to revert promotion usage for orderId: {}", event.orderId(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error while reverting promotion usage for orderId: {}", event.orderId(), e);
+            throw new ApplicationException(ErrorCode.UNCATEGORIZED);
         }
     }
 }

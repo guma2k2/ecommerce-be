@@ -20,7 +20,7 @@ import com.yas.system.order.internal.dto.response.OrderSummaryResponse;
 import com.yas.system.order.internal.entity.Order;
 import com.yas.system.order.internal.entity.OrderDetail;
 import com.yas.system.order.internal.enumeration.OrderStatus;
-import com.yas.system.order.internal.event.OrderCancelledEvent;
+import com.yas.system.order.event.OrderCancelledEvent;
 import com.yas.system.order.internal.event.OrderCreatedEvent;
 import com.yas.system.order.internal.helper.OrderHelper;
 import com.yas.system.order.internal.repository.OrderDetailRepository;

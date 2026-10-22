@@ -2,6 +2,7 @@ package com.yas.system.promotion.internal.validator;
 
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
+import com.yas.system.promotion.internal.constant.PromotionConstant;
 import com.yas.system.promotion.internal.dto.request.CreatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.UpdatePromotionRequest;
 import com.yas.system.promotion.internal.entity.Promotion;
@@ -91,37 +92,37 @@ public class PromotionValidator {
 
     private void validateDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
         if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
-            throw new ApplicationException(ErrorCode.BAD_REQUEST);
+            throw new ApplicationException(ErrorCode.INVALID_PROMOTION_DATE_RANGE);
         }
     }
 
     private void validateDiscountValues(DiscountType type, BigDecimal percentage, BigDecimal amount) {
         if (type == DiscountType.PERCENTAGE) {
-            if (percentage == null || percentage.compareTo(BigDecimal.ZERO) <= 0 || percentage.compareTo(BigDecimal.valueOf(100)) > 0) {
-                throw new ApplicationException(ErrorCode.BAD_REQUEST);
+            if (percentage == null || percentage.compareTo(BigDecimal.ZERO) <= 0 || percentage.compareTo(PromotionConstant.MAX_PERCENTAGE) > 0) {
+                throw new ApplicationException(ErrorCode.INVALID_PROMOTION_DISCOUNT);
             }
         } else if (type == DiscountType.FIXED) {
             if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new ApplicationException(ErrorCode.BAD_REQUEST);
+                throw new ApplicationException(ErrorCode.INVALID_PROMOTION_DISCOUNT);
             }
         }
     }
 
     private void validateUsageLimit(UsageType usageType, Integer usageLimit) {
         if (usageType == UsageType.LIMITED && (usageLimit == null || usageLimit <= 0)) {
-            throw new ApplicationException(ErrorCode.BAD_REQUEST);
+            throw new ApplicationException(ErrorCode.INVALID_PROMOTION_USAGE_LIMIT);
         }
     }
 
     private void validateTargets(ApplyTo applyTo, List<Long> products, List<Long> categories, List<Long> brands) {
         if (applyTo == ApplyTo.PRODUCT && (products == null || products.isEmpty())) {
-            throw new ApplicationException(ErrorCode.BAD_REQUEST);
+            throw new ApplicationException(ErrorCode.INVALID_PROMOTION_TARGET, "products", applyTo.name());
         }
         if (applyTo == ApplyTo.CATEGORY && (categories == null || categories.isEmpty())) {
-            throw new ApplicationException(ErrorCode.BAD_REQUEST);
+            throw new ApplicationException(ErrorCode.INVALID_PROMOTION_TARGET, "categories", applyTo.name());
         }
         if (applyTo == ApplyTo.BRAND && (brands == null || brands.isEmpty())) {
-            throw new ApplicationException(ErrorCode.BAD_REQUEST);
+            throw new ApplicationException(ErrorCode.INVALID_PROMOTION_TARGET, "brands", applyTo.name());
         }
     }
 }

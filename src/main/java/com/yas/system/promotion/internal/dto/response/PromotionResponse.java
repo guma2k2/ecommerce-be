@@ -5,7 +5,6 @@ import com.yas.system.promotion.internal.enumeration.DiscountType;
 import com.yas.system.promotion.internal.enumeration.UsageType;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 
 public record PromotionResponse(
         Long id,
@@ -24,9 +23,9 @@ public record PromotionResponse(
         BigDecimal maxDiscountAmount,
         BigDecimal minimumOrderPurchaseAmount,
         boolean isActive,
-        ZonedDateTime startDate,
-        ZonedDateTime endDate,
-        ZonedDateTime createdAt,
-        ZonedDateTime updatedAt
+        String startDate,
+        String endDate,
+        String createdAt,
+        String updatedAt
 ) {
 }

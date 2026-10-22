@@ -3,6 +3,8 @@ package com.yas.system.promotion.internal.helper;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
+import com.yas.system.common.util.DateTimeUtils;
+import com.yas.system.promotion.internal.constant.PromotionConstant;
 import com.yas.system.promotion.internal.dto.request.CreatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.UpdatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.VerifyPromotionItemRequest;
@@ -92,10 +94,10 @@ public class PromotionHelper {
                 promotion.getMaxDiscountAmount(),
                 promotion.getMinimumOrderPurchaseAmount(),
                 promotion.isActive(),
-                promotion.getStartDate(),
-                promotion.getEndDate(),
-                promotion.getCreatedAt(),
-                promotion.getUpdatedAt()
+                DateTimeUtils.format(promotion.getStartDate()),
+                DateTimeUtils.format(promotion.getEndDate()),
+                DateTimeUtils.format(promotion.getCreatedAt()),
+                DateTimeUtils.format(promotion.getUpdatedAt())
         );
     }
 
@@ -129,13 +131,13 @@ public class PromotionHelper {
                 promotion.getMaxDiscountAmount(),
                 promotion.getMinimumOrderPurchaseAmount(),
                 promotion.isActive(),
-                promotion.getStartDate(),
-                promotion.getEndDate(),
+                DateTimeUtils.format(promotion.getStartDate()),
+                DateTimeUtils.format(promotion.getEndDate()),
                 productIds,
                 categoryIds,
                 brandIds,
-                promotion.getCreatedAt(),
-                promotion.getUpdatedAt()
+                DateTimeUtils.format(promotion.getCreatedAt()),
+                DateTimeUtils.format(promotion.getUpdatedAt())
         );
     }
 
@@ -197,7 +199,7 @@ public class PromotionHelper {
         if (promotion.getDiscountType() == DiscountType.PERCENTAGE) {
             discountValue = promotion.getDiscountPercentage();
             calculatedDiscount = eligibleSubtotal.multiply(discountValue)
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                    .divide(PromotionConstant.PERCENTAGE_DIVISOR, PromotionConstant.CURRENCY_SCALE, RoundingMode.HALF_UP);
 
             if (promotion.getMaxDiscountAmount() != null && promotion.getMaxDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
                 calculatedDiscount = calculatedDiscount.min(promotion.getMaxDiscountAmount());
