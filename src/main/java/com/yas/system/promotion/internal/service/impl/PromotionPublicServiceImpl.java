@@ -13,6 +13,7 @@ import com.yas.system.promotion.internal.entity.Promotion;
 import com.yas.system.promotion.internal.entity.PromotionUsage;
 import com.yas.system.promotion.internal.enumeration.ApplyTo;
 import com.yas.system.promotion.internal.enumeration.PromotionUsageStatus;
+import com.yas.system.promotion.internal.enumeration.UsageType;
 import com.yas.system.promotion.internal.helper.PromotionHelper;
 import com.yas.system.promotion.internal.repository.PromotionRepository;
 import com.yas.system.promotion.internal.repository.PromotionUsageRepository;
@@ -51,7 +52,7 @@ public class PromotionPublicServiceImpl implements PromotionPublicService {
             List<PromotionOrderItemDto> items
     ) {
         if (couponCode == null || couponCode.isBlank()) {
-            return null;
+            throw new ApplicationException(ErrorCode.PROMOTION_NOT_FOUND);
         }
 
         String normalizedCode = couponCode.trim();
@@ -76,7 +77,7 @@ public class PromotionPublicServiceImpl implements PromotionPublicService {
         PromotionVerifyResponse verifyResponse = promotionHelper.calculateDiscount(promotion, orderAmount, verifyItems, variantMap);
 
         // Atomic quota increment to prevent overselling under high concurrency
-        int rowsUpdated = promotionRepository.incrementUsageCountAtomic(promotion.getId());
+        int rowsUpdated = promotionRepository.incrementUsageCountAtomic(promotion.getId(), UsageType.UNLIMITED);
         if (rowsUpdated == 0) {
             throw new ApplicationException(ErrorCode.PROMOTION_USAGE_EXHAUSTED);
         }

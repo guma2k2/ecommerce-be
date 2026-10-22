@@ -6,6 +6,7 @@ import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.promotion.internal.constant.PromotionConstant;
 import com.yas.system.promotion.internal.dto.request.CreatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.UpdatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.VerifyPromotionItemRequest;
@@ -84,7 +85,7 @@ public class PromotionServiceImpl implements PromotionService {
             ZonedDateTime startDate,
             ZonedDateTime endDate
     ) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, PromotionConstant.DEFAULT_SORT_BY));
         Page<Promotion> page = promotionRepository.findAll(
                 PromotionSpecification.filter(name, couponCode, isActive, startDate, endDate),
                 pageable

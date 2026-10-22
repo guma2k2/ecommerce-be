@@ -1,4 +1,4 @@
-package com.yas.system.order.internal.event;
+package com.yas.system.order.event;
 
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
 import com.yas.system.payment.internal.enumeration.PaymentStatus;

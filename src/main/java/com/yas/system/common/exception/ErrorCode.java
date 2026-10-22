@@ -75,6 +75,10 @@ public enum ErrorCode {
     MINIMUM_PURCHASE_NOT_MET("minimum_purchase_not_met", "Order subtotal does not meet the minimum requirement of %s"),
     PROMOTION_NOT_APPLICABLE("promotion_not_applicable", "This coupon is not applicable to any items in your cart"),
     PROMOTION_IN_USE("promotion_in_use", "Promotion has been redeemed and cannot be deleted"),
+    INVALID_PROMOTION_DATE_RANGE("invalid_promotion_date_range", "Promotion end date must be after start date"),
+    INVALID_PROMOTION_DISCOUNT("invalid_promotion_discount", "Invalid promotion discount configuration"),
+    INVALID_PROMOTION_USAGE_LIMIT("invalid_promotion_usage_limit", "Promotion usage limit must be greater than zero"),
+    INVALID_PROMOTION_TARGET("invalid_promotion_target", "Target %s list cannot be empty for apply_to %s"),
     ;
 
     ErrorCode(String code, String message) {

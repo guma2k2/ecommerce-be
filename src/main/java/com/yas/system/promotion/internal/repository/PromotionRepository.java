@@ -1,6 +1,7 @@
 package com.yas.system.promotion.internal.repository;
 
 import com.yas.system.promotion.internal.entity.Promotion;
+import com.yas.system.promotion.internal.enumeration.UsageType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -44,10 +45,10 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long>, Jpa
         update Promotion p
         set p.usageCount = p.usageCount + 1
         where p.id = :id
-          and (p.usageType = com.yas.system.promotion.internal.enumeration.UsageType.UNLIMITED
+          and (p.usageType = :unlimited
                or p.usageCount < p.usageLimit)
     """)
-    int incrementUsageCountAtomic(@Param("id") Long id);
+    int incrementUsageCountAtomic(@Param("id") Long id, @Param("unlimited") UsageType unlimited);
 
     @Modifying
     @Query("""
