@@ -34,7 +34,9 @@ import java.util.List;
         },
         indexes = {
                 @Index(name = "idx_promotion_coupon_code", columnList = "coupon_code"),
-                @Index(name = "idx_promotion_active_dates", columnList = "is_active, start_date, end_date")
+                @Index(name = "idx_promotion_active_dates", columnList = "is_active, start_date, end_date"),
+                @Index(name = "idx_promotion_stripe_coupon", columnList = "stripe_coupon_id"),
+                @Index(name = "idx_promotion_stripe_promo_code", columnList = "stripe_promotion_code_id")
         }
 )
 @Getter
@@ -103,6 +105,12 @@ public class Promotion extends BaseLongEntity {
 
     @Column(name = "end_date", nullable = false)
     private ZonedDateTime endDate;
+
+    @Column(name = "stripe_coupon_id", length = 100)
+    private String stripeCouponId;
+
+    @Column(name = "stripe_promotion_code_id", length = 100)
+    private String stripePromotionCodeId;
 
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

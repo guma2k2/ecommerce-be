@@ -23,7 +23,10 @@ import com.yas.system.promotion.internal.repository.PromotionRepository;
 import com.yas.system.promotion.internal.repository.PromotionUsageRepository;
 import com.yas.system.promotion.internal.service.PromotionService;
 import com.yas.system.promotion.internal.specification.PromotionSpecification;
+import com.yas.system.promotion.events.PromotionSyncEvent;
+import com.yas.system.promotion.events.SyncAction;
 import com.yas.system.promotion.internal.validator.PromotionValidator;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -51,6 +54,7 @@ public class PromotionServiceImpl implements PromotionService {
     PromotionValidator promotionValidator;
     PromotionHelper promotionHelper;
     CatalogPublicService catalogPublicService;
+    ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -119,6 +123,7 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion promotion = promotionHelper.toPromotion(request);
         Promotion savedPromotion = promotionRepository.save(promotion);
         log.info("Created promotion id: {}, couponCode: {}", savedPromotion.getId(), savedPromotion.getCouponCode());
+        eventPublisher.publishEvent(new PromotionSyncEvent(savedPromotion.getId(), SyncAction.UPSERT));
         return promotionHelper.toPromotionDetailResponse(savedPromotion);
     }
 
@@ -132,6 +137,7 @@ public class PromotionServiceImpl implements PromotionService {
         promotionHelper.updatePromotion(promotion, request);
         Promotion updatedPromotion = promotionRepository.save(promotion);
         log.info("Updated promotion id: {}, couponCode: {}", updatedPromotion.getId(), updatedPromotion.getCouponCode());
+        eventPublisher.publishEvent(new PromotionSyncEvent(updatedPromotion.getId(), SyncAction.UPSERT));
         return promotionHelper.toPromotionDetailResponse(updatedPromotion);
     }
 
@@ -145,8 +151,11 @@ public class PromotionServiceImpl implements PromotionService {
             throw new ApplicationException(ErrorCode.PROMOTION_IN_USE);
         }
 
+        String stripeCouponId = promotion.getStripeCouponId();
+        String stripePromotionCodeId = promotion.getStripePromotionCodeId();
         promotionRepository.delete(promotion);
         log.info("Deleted promotion id: {}", id);
+        eventPublisher.publishEvent(new PromotionSyncEvent(id, SyncAction.DELETE, stripeCouponId, stripePromotionCodeId));
     }
 
     @Override

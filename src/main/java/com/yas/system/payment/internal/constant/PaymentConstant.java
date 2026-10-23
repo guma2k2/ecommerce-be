@@ -53,6 +53,9 @@ public final class PaymentConstant {
         public static final String PRODUCT_ID = "product_id";
         public static final String VARIANT_ID = "variant_id";
         public static final String SKU = "sku";
+        public static final String PROMOTION_ID = "promotion_id";
+        public static final String COUPON_CODE = "coupon_code";
+        public static final String SLUG = "slug";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
