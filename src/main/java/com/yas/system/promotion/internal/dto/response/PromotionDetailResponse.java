@@ -29,6 +29,8 @@ public record PromotionDetailResponse(
         List<Long> targetProductIds,
         List<Long> targetCategoryIds,
         List<Long> targetBrandIds,
+        String stripeCouponId,
+        String stripePromotionCodeId,
         String createdAt,
         String updatedAt
 ) {

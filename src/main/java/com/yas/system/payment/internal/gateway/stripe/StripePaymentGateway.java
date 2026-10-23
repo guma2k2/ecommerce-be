@@ -75,6 +75,14 @@ public class StripePaymentGateway implements PaymentGateway {
             paramsBuilder.setCustomerEmail(context.customerEmail());
         }
 
+        if (context != null && context.stripePromotionCodeId() != null && !context.stripePromotionCodeId().isBlank()) {
+            paramsBuilder.addDiscount(SessionCreateParams.Discount.builder().setPromotionCode(context.stripePromotionCodeId()).build());
+        } else if (context != null && context.stripeCouponId() != null && !context.stripeCouponId().isBlank()) {
+            paramsBuilder.addDiscount(SessionCreateParams.Discount.builder().setCoupon(context.stripeCouponId()).build());
+        } else {
+            paramsBuilder.setAllowPromotionCodes(true);
+        }
+
         List<CheckoutItemDto> items = context != null ? context.items() : null;
         if (items != null && !items.isEmpty()) {
             log.info("Creating Stripe Checkout session for payment ID: {} (orderId: {}) with {} itemized line items",

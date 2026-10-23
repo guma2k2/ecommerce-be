@@ -40,7 +40,8 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
     @Transactional
     public String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail,
                                            String orderId, BigDecimal amount, String currency,
-                                           List<CheckoutItemDto> items) {
+                                           List<CheckoutItemDto> items,
+                                           String stripePromotionCodeId, String stripeCouponId) {
         PaymentMethod method = paymentMethod != null ? paymentMethod : PaymentMethod.STRIPE;
 
         Payment payment = Payment.builder()
@@ -58,7 +59,9 @@ public class PaymentPublicServiceImpl implements PaymentPublicService {
 
         PaymentGateway gateway = paymentGatewayResolver.resolve(method);
         // Todo: returnUrl and cancelUrl should dynamic on request ?
-        PaymentCheckoutContext context = new PaymentCheckoutContext(customerEmail, items, null, null);
+        PaymentCheckoutContext context = new PaymentCheckoutContext(
+                customerEmail, items, null, null, stripePromotionCodeId, stripeCouponId
+        );
         var sessionResponse = gateway.createCheckoutSession(savedPayment, context);
 
         savedPayment.setGatewaySessionId(sessionResponse.sessionId());

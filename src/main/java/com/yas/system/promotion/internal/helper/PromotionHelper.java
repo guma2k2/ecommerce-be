@@ -136,6 +136,8 @@ public class PromotionHelper {
                 productIds,
                 categoryIds,
                 brandIds,
+                promotion.getStripeCouponId(),
+                promotion.getStripePromotionCodeId(),
                 DateTimeUtils.format(promotion.getCreatedAt()),
                 DateTimeUtils.format(promotion.getUpdatedAt())
         );

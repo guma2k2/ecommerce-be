@@ -97,7 +97,9 @@ public class PromotionPublicServiceImpl implements PromotionPublicService {
         return new PromotionApplyResultDto(
                 promotion.getId(),
                 promotion.getCouponCode(),
-                verifyResponse.discountAmount()
+                verifyResponse.discountAmount(),
+                promotion.getStripeCouponId(),
+                promotion.getStripePromotionCodeId()
         );
     }
 }

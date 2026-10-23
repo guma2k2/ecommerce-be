@@ -8,6 +8,11 @@ public record PaymentCheckoutContext(
         String customerEmail,
         List<CheckoutItemDto> items,
         String returnUrl,
-        String cancelUrl
+        String cancelUrl,
+        String stripePromotionCodeId,
+        String stripeCouponId
 ) {
+    public PaymentCheckoutContext(String customerEmail, List<CheckoutItemDto> items, String returnUrl, String cancelUrl) {
+        this(customerEmail, items, returnUrl, cancelUrl, null, null);
+    }
 }

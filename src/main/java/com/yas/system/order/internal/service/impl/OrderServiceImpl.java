@@ -118,18 +118,19 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // Apply promotion if coupon code is present
+        PromotionApplyResultDto appliedPromoResult = null;
         if (StringUtils.hasText(request.couponCode())) {
-            PromotionApplyResultDto promoResult = promotionPublicService.applyPromotion(
+            appliedPromoResult = promotionPublicService.applyPromotion(
                     savedOrder.getId(),
                     customerId,
                     request.couponCode(),
                     totalAmount,
                     promoItems
             );
-            if (promoResult != null && promoResult.discountAmount() != null) {
-                savedOrder.setDiscountAmount(promoResult.discountAmount());
-                savedOrder.setCouponCode(promoResult.couponCode());
-                BigDecimal finalTotal = totalAmount.add(shippingFee).subtract(promoResult.discountAmount()).max(BigDecimal.ZERO);
+            if (appliedPromoResult != null && appliedPromoResult.discountAmount() != null) {
+                savedOrder.setDiscountAmount(appliedPromoResult.discountAmount());
+                savedOrder.setCouponCode(appliedPromoResult.couponCode());
+                BigDecimal finalTotal = totalAmount.add(shippingFee).subtract(appliedPromoResult.discountAmount()).max(BigDecimal.ZERO);
                 savedOrder.setTotalAmount(finalTotal);
                 savedOrder = orderRepository.save(savedOrder);
             }
@@ -200,6 +201,8 @@ public class OrderServiceImpl implements OrderService {
             log.info("Initiating {} Checkout for order {} (total: {} USD, items count: {})",
                     request.paymentMethod(), orderIdStr, savedOrder.getTotalAmount(), checkoutItems.size());
 
+            String stripePromoId = appliedPromoResult != null ? appliedPromoResult.stripePromotionCodeId() : null;
+            String stripeCouponId = appliedPromoResult != null ? appliedPromoResult.stripeCouponId() : null;
             checkoutUrl = paymentPublicService.createCheckoutSessionUrl(
                     request.paymentMethod(),
                     customerId,
@@ -207,7 +210,9 @@ public class OrderServiceImpl implements OrderService {
                     orderIdStr,
                     savedOrder.getTotalAmount(),
                     "USD",
-                    checkoutItems
+                    checkoutItems,
+                    stripePromoId,
+                    stripeCouponId
             );
             log.info("Received {} Checkout URL for order {}: {}", request.paymentMethod(), orderIdStr, checkoutUrl);
         }

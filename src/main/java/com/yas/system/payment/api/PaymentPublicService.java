@@ -8,8 +8,14 @@ import java.util.List;
 
 public interface PaymentPublicService {
 
+    default String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail,
+                                            String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items) {
+        return createCheckoutSessionUrl(paymentMethod, customerId, customerEmail, orderId, amount, currency, items, null, null);
+    }
+
     String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail,
-                                    String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items);
+                                    String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items,
+                                    String stripePromotionCodeId, String stripeCouponId);
 
     /**
      * Triggers a full refund for the payment associated with the given order.
