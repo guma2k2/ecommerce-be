@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.ZonedDateTime;
 
 @RestController
-@RequestMapping("/api/v1/backoffice/promotions")
+@RequestMapping("/api/v1/promotions/backoffice")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @PreAuthorize("hasAnyAuthority(T(com.yas.system.common.constant.RoleConstant).ROLE_ADMIN)")
