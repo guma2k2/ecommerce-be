@@ -7,6 +7,7 @@ import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.helper.BrandHelper;
 import com.yas.system.catalog.internal.repository.BrandRepository;
 import com.yas.system.catalog.internal.service.BrandService;
+import com.yas.system.catalog.internal.validator.BrandValidator;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
@@ -19,10 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.yas.system.common.util.StringUtils.isBlank;
 import java.util.List;
-import java.util.Objects;
-
 
 @Service
 @RequiredArgsConstructor
@@ -31,11 +29,12 @@ public class BrandServiceImpl implements BrandService {
 
     BrandRepository brandRepository;
     BrandHelper brandHelper;
+    BrandValidator brandValidator;
 
     @Override
     @Transactional
     public BrandResponse createBrand(BrandCreateRequest request) {
-        validateCreateBrandRequest(request);
+        brandValidator.validateCreate(request);
         Brand brand = brandRepository.save(brandHelper.createBrand(request));
         return BrandResponse.from(brand);
     }
@@ -43,7 +42,7 @@ public class BrandServiceImpl implements BrandService {
     @Override
     @Transactional
     public BrandResponse updateBrand(BrandUpdateRequest request, Integer brandId) {
-        validateUpdateBrandRequest(request, brandId);
+        brandValidator.validateUpdate(request, brandId);
 
         Brand brand = findBrandById(brandId);
         brandHelper.updateBrand(request, brand);
@@ -54,9 +53,7 @@ public class BrandServiceImpl implements BrandService {
     @Override
     @Transactional
     public void deleteBrandById(Integer brandId) {
-        if (Objects.isNull(brandId)) {
-            throw new ApplicationException(ErrorCode.INVALID_BRAND);
-        }
+        brandValidator.validateId(brandId);
         Brand brand = findBrandById(brandId);
 
         brandRepository.delete(brand);
@@ -65,9 +62,7 @@ public class BrandServiceImpl implements BrandService {
     @Override
     @Transactional(readOnly = true)
     public BrandResponse getById(Integer brandId) {
-        if (Objects.isNull(brandId)) {
-            throw new ApplicationException(ErrorCode.INVALID_BRAND);
-        }
+        brandValidator.validateId(brandId);
         return BrandResponse.from(findBrandById(brandId));
     }
 
@@ -90,29 +85,8 @@ public class BrandServiceImpl implements BrandService {
         );
     }
 
-
-    private void validateCreateBrandRequest(BrandCreateRequest request) {
-        if (Objects.isNull(request) || isBlank(request.name())) {
-            throw new ApplicationException(ErrorCode.INVALID_BRAND);
-        }
-        if (brandRepository.checkExited(request.name(), null).isPresent()) {
-            throw new ApplicationException(ErrorCode.BRAND_ALREADY_EXISTS);
-        }
-    }
-
-    private void validateUpdateBrandRequest(BrandUpdateRequest request, Integer brandId) {
-        if (Objects.isNull(brandId) || Objects.isNull(request) || isBlank(request.name())) {
-            throw new ApplicationException(ErrorCode.INVALID_BRAND);
-        }
-        if (brandRepository.checkExited(request.name(), brandId).isPresent()) {
-            throw new ApplicationException(ErrorCode.BRAND_ALREADY_EXISTS);
-        }
-    }
-
     private Brand findBrandById(Integer brandId) {
         return brandRepository.findById(brandId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.BRAND_NOT_FOUND));
     }
-
-
 }

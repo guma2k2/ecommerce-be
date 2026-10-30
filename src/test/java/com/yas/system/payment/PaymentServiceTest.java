@@ -18,6 +18,7 @@ import com.yas.system.payment.internal.repository.PaymentRepository;
 import com.yas.system.payment.internal.service.PaymentIdempotencyService;
 import com.yas.system.payment.internal.service.PaymentLedgerService;
 import com.yas.system.payment.internal.service.impl.PaymentServiceImpl;
+import com.yas.system.payment.internal.validator.PaymentValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,7 +72,8 @@ class PaymentServiceTest {
                 paymentGatewayResolver,
                 paymentIdempotencyService,
                 paymentLedgerService,
-                eventPublisher
+                eventPublisher,
+                new PaymentValidator()
         );
         testUser = new AuthUser(customerId, "customer@example.com", "ROLE_USER", "password", List.of());
     }

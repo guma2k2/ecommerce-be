@@ -30,7 +30,7 @@ import java.time.ZonedDateTime;
 @RequestMapping("/api/v1/promotions/backoffice")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@PreAuthorize("hasAnyAuthority(T(com.yas.system.common.constant.RoleConstant).ROLE_ADMIN)")
+//@PreAuthorize("hasAnyAuthority(T(com.yas.system.common.constant.RoleConstant).ROLE_ADMIN)")
 public class AdminPromotionController {
 
     PromotionService promotionService;

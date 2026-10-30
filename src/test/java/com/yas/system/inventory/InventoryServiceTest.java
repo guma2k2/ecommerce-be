@@ -10,6 +10,7 @@ import com.yas.system.inventory.internal.entity.Inventory;
 import com.yas.system.inventory.internal.enumeration.MovementReason;
 import com.yas.system.inventory.internal.enumeration.MovementType;
 import com.yas.system.inventory.internal.helper.InventoryHelper;
+import com.yas.system.inventory.internal.validator.InventoryValidator;
 import com.yas.system.inventory.internal.repository.InventoryRepository;
 import com.yas.system.inventory.internal.service.StockMovementService;
 import com.yas.system.inventory.internal.service.impl.InventoryServiceImpl;
@@ -47,7 +48,7 @@ class InventoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        inventoryHelper = new InventoryHelper();
+        inventoryHelper = new InventoryHelper(new InventoryValidator());
         inventoryService = new InventoryServiceImpl(inventoryRepository, inventoryHelper, stockMovementService);
     }
 

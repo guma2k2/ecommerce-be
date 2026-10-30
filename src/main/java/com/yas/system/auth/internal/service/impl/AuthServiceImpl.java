@@ -17,6 +17,7 @@ import com.yas.system.auth.internal.redis.service.VerifyEmailService;
 import com.yas.system.auth.internal.repository.CustomerProfileRepository;
 import com.yas.system.auth.internal.repository.UserRepository;
 import com.yas.system.auth.internal.service.AuthService;
+import com.yas.system.auth.internal.validator.AuthValidator;
 import com.yas.system.auth.internal.service.FacebookOauthService;
 import com.yas.system.auth.internal.service.GithubOauthService;
 import com.yas.system.auth.internal.service.GoogleOauthService;
@@ -75,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
     PasswordEncoder passwordEncoder;
     CustomerProfileRepository customerProfileRepository;
     CustomerProfileHelper customerProfileHelper;
+    AuthValidator authValidator;
 
     @Override
     @Transactional

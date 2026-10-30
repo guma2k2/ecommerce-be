@@ -7,6 +7,7 @@ import com.yas.system.cart.internal.entity.Cart;
 import com.yas.system.cart.internal.helper.CartHelper;
 import com.yas.system.cart.internal.repository.CartRepository;
 import com.yas.system.cart.internal.service.CartService;
+import com.yas.system.cart.internal.validator.CartValidator;
 import com.yas.system.catalog.api.CatalogPublicService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.common.exception.ApplicationException;
@@ -30,6 +31,7 @@ public class CartServiceImpl implements CartService {
     CartRepository cartRepository;
     CartHelper cartHelper;
     CatalogPublicService catalogPublicService;
+    CartValidator cartValidator;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,10 +66,7 @@ public class CartServiceImpl implements CartService {
         int currentQuantity = existingCartOpt.map(Cart::getQuantity).orElse(0);
         int targetQuantity = currentQuantity + request.quantity();
 
-        int availableStock = variant.stockQuantity() != null ? variant.stockQuantity() : 0;
-        if (targetQuantity > availableStock) {
-            throw new ApplicationException(ErrorCode.INSUFFICIENT_STOCK, targetQuantity, availableStock);
-        }
+        cartValidator.validateStockAvailability(targetQuantity, variant);
 
         if (existingCartOpt.isPresent()) {
             Cart existingCart = existingCartOpt.get();
@@ -95,10 +94,7 @@ public class CartServiceImpl implements CartService {
 
         ProductVariantPublicDto variant = catalogPublicService.getProductVariantById(cart.getProductVariantId());
 
-        int availableStock = variant.stockQuantity() != null ? variant.stockQuantity() : 0;
-        if (request.quantity() > availableStock) {
-            throw new ApplicationException(ErrorCode.INSUFFICIENT_STOCK, request.quantity(), availableStock);
-        }
+        cartValidator.validateStockAvailability(request.quantity(), variant);
 
         cart.setQuantity(request.quantity());
         cartRepository.save(cart);
@@ -123,9 +119,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private String resolveCustomerId(AuthUser customer) {
-        if (customer == null || customer.id() == null) {
-            throw new ApplicationException(ErrorCode.UNAUTHENTICATED);
-        }
+        cartValidator.validateCustomer(customer);
         return customer.id();
     }
 }

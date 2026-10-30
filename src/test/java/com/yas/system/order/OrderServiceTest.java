@@ -22,6 +22,7 @@ import com.yas.system.order.internal.entity.OrderDetail;
 import com.yas.system.order.internal.enumeration.OrderStatus;
 import com.yas.system.order.internal.event.OrderCreatedEvent;
 import com.yas.system.order.internal.helper.OrderHelper;
+import com.yas.system.order.internal.validator.OrderValidator;
 import com.yas.system.order.internal.repository.OrderDetailRepository;
 import com.yas.system.order.internal.repository.OrderRepository;
 import com.yas.system.order.internal.service.impl.OrderServiceImpl;
@@ -78,6 +79,7 @@ class OrderServiceTest {
     PromotionPublicService promotionPublicService;
 
     OrderHelper orderHelper;
+    OrderValidator orderValidator;
     OrderServiceImpl orderService;
 
     AuthUser testUser;
@@ -86,6 +88,7 @@ class OrderServiceTest {
     @BeforeEach
     void setUp() {
         orderHelper = new OrderHelper();
+        orderValidator = new OrderValidator();
         orderService = new OrderServiceImpl(
                 orderRepository,
                 orderDetailRepository,
@@ -96,7 +99,8 @@ class OrderServiceTest {
                 eventPublisher,
                 inventoryPublicService,
                 appProperties,
-                promotionPublicService
+                promotionPublicService,
+        orderValidator
         );
         testUser = new AuthUser(customerId, "customer@example.com", "CUSTOMER", "password", List.of());
     }
@@ -169,7 +173,7 @@ class OrderServiceTest {
             }
             return o;
         });
-        when(paymentPublicService.createCheckoutSessionUrl(eq(PaymentMethod.STRIPE), eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any()))
+        when(paymentPublicService.createCheckoutSessionUrl(eq(PaymentMethod.STRIPE), eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any(), any(), any()))
                 .thenReturn("https://checkout.stripe.com/test-session");
 
         OrderCreateResponse response = orderService.createOrder(testUser, request);

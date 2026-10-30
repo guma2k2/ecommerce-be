@@ -6,6 +6,7 @@ import com.yas.system.catalog.internal.dto.response.CategoryResponse;
 import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.repository.CategoryRepository;
 import com.yas.system.catalog.internal.service.CategoryService;
+import com.yas.system.catalog.internal.validator.CategoryValidator;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;
@@ -18,9 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.yas.system.common.util.StringUtils.isBlank;
 import java.util.List;
 import java.util.Objects;
+
+import static com.yas.system.common.util.StringUtils.isBlank;
 
 @Service
 @RequiredArgsConstructor
@@ -28,11 +30,12 @@ import java.util.Objects;
 public class CategoryServiceImpl implements CategoryService {
 
     CategoryRepository categoryRepository;
+    CategoryValidator categoryValidator;
 
     @Override
     @Transactional
     public CategoryResponse createCategory(CategoryCreateRequest categoryRequest) {
-        validateCreateCategoryRequest(categoryRequest);
+        categoryValidator.validateCreate(categoryRequest);
 
         Category parent = resolveParent(categoryRequest.parentId());
         Category savedCategory = categoryRepository.save(createCategory(categoryRequest, parent));
@@ -42,11 +45,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse updateCategory(CategoryUpdateRequest categoryRequest, Integer categoryId) {
-        validateUpdateCategoryRequest(categoryRequest, categoryId);
+        categoryValidator.validateUpdate(categoryRequest, categoryId);
 
         Category category = findCategoryById(categoryId);
         Category parent = resolveParent(categoryRequest.parentId());
-        validateParent(categoryId, parent);
+        categoryValidator.validateParentHierarchy(categoryId, parent);
 
         updateCategory(categoryRequest, category, parent);
         Category savedCategory = categoryRepository.save(category);
@@ -56,9 +59,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Integer categoryId) {
-        if (Objects.isNull(categoryId)) {
-            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
-        }
+        categoryValidator.validateId(categoryId);
         Category category = categoryRepository.findByIdCustom(categoryId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -87,9 +88,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void deleteCategory(Integer categoryId) {
-        if (Objects.isNull(categoryId)) {
-            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
-        }
+        categoryValidator.validateId(categoryId);
         Category category = findCategoryById(categoryId);
 
         categoryRepository.delete(category);
@@ -115,24 +114,6 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryResponse.from(category);
     }
 
-    private void validateCreateCategoryRequest(CategoryCreateRequest categoryRequest) {
-        if (Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
-            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
-        }
-        if (categoryRepository.checkExited(categoryRequest.name(), null).isPresent()) {
-            throw new ApplicationException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-        }
-    }
-
-    private void validateUpdateCategoryRequest(CategoryUpdateRequest categoryRequest, Integer categoryId) {
-        if (Objects.isNull(categoryId) || Objects.isNull(categoryRequest) || isBlank(categoryRequest.name())) {
-            throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
-        }
-        if (categoryRepository.checkExited(categoryRequest.name(), categoryId).isPresent()) {
-            throw new ApplicationException(ErrorCode.CATEGORY_ALREADY_EXISTS);
-        }
-    }
-
     private Category findCategoryById(Integer categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -156,15 +137,4 @@ public class CategoryServiceImpl implements CategoryService {
         category.setName(request.name());
         category.setParent(parent);
     }
-
-    private void validateParent(Integer categoryId, Category parent) {
-        Category currentParent = parent;
-        while (Objects.nonNull(currentParent)) {
-            if (categoryId.equals(currentParent.getId())) {
-                throw new ApplicationException(ErrorCode.INVALID_CATEGORY);
-            }
-            currentParent = currentParent.getParent();
-        }
-    }
-
 }

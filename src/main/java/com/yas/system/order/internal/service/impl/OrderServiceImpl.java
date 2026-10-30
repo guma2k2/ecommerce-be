@@ -26,6 +26,7 @@ import com.yas.system.order.internal.helper.OrderHelper;
 import com.yas.system.order.internal.repository.OrderDetailRepository;
 import com.yas.system.order.internal.repository.OrderRepository;
 import com.yas.system.order.internal.service.OrderService;
+import com.yas.system.order.internal.validator.OrderValidator;
 import com.yas.system.payment.api.PaymentPublicService;
 import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.payment.internal.enumeration.PaymentMethod;
@@ -66,6 +67,7 @@ public class OrderServiceImpl implements OrderService {
     InventoryPublicService inventoryPublicService;
     AppProperties appProperties;
     PromotionPublicService promotionPublicService;
+    OrderValidator orderValidator;
 
     @Override
     @Transactional

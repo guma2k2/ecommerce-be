@@ -5,6 +5,7 @@ import com.yas.system.cart.internal.dto.request.UpdateCartQuantityRequest;
 import com.yas.system.cart.internal.dto.response.CartResponse;
 import com.yas.system.cart.internal.entity.Cart;
 import com.yas.system.cart.internal.helper.CartHelper;
+import com.yas.system.cart.internal.validator.CartValidator;
 import com.yas.system.cart.internal.repository.CartRepository;
 import com.yas.system.cart.internal.service.impl.CartServiceImpl;
 import com.yas.system.catalog.api.CatalogPublicService;
@@ -42,6 +43,7 @@ class CartServiceTest {
     CatalogPublicService catalogPublicService;
 
     CartHelper cartHelper;
+    CartValidator cartValidator;
     CartServiceImpl cartService;
 
     AuthUser testUser;
@@ -50,7 +52,8 @@ class CartServiceTest {
     @BeforeEach
     void setUp() {
         cartHelper = new CartHelper();
-        cartService = new CartServiceImpl(cartRepository, cartHelper, catalogPublicService);
+        cartValidator = new CartValidator();
+        cartService = new CartServiceImpl(cartRepository, cartHelper, catalogPublicService, cartValidator);
         testUser = new AuthUser(customerId, "test@example.com", "CUSTOMER", "password", List.of());
     }
 

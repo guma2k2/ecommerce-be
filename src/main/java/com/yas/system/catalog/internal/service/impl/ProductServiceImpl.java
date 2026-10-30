@@ -57,6 +57,7 @@ import com.yas.system.catalog.internal.repository.ProductVariantAttributeValueRe
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
 import com.yas.system.catalog.internal.repository.VariantOptionValueRepository;
 import com.yas.system.catalog.internal.service.ProductService;
+import com.yas.system.catalog.internal.validator.ProductValidator;
 import com.yas.system.catalog.internal.specification.ProductSpecification;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
@@ -113,6 +114,7 @@ public class ProductServiceImpl implements ProductService {
     ProductOptionCombinationHelper productOptionCombinationHelper;
     ApplicationEventPublisher eventPublisher;
     InventoryPublicService inventoryPublicService;
+    ProductValidator productValidator;
 
     @Override
     @Transactional
@@ -120,7 +122,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Creating new product with name: {}, slug: {}", request.name(), request.slug());
 
         // Step 1: Validate product request (DB name/slug uniqueness check)
-        validateProductRequest(request);
+        productValidator.validateCreate(request);
 
         // Step 2: Resolve optional category and brand entities
         Category category = resolveCategory(request.categoryId());
@@ -179,7 +181,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Updating product with ID: {}", productId);
 
         // Step 1: Validate product update request (DB name/slug uniqueness check)
-        validateProductRequest(request, productId);
+        productValidator.validateUpdate(request, productId);
 
         // Step 2: Resolve updated category and brand entities
         Category category = resolveCategory(request.categoryId());
@@ -805,7 +807,7 @@ public class ProductServiceImpl implements ProductService {
     /**
      * Creates and persists all variant entities for a product creation operation.
      * All {@link ProductVariant} entities are resolved first, then batch-saved via {@code saveAll}.
-     * Returns a {@link VariantCreateResult} — no mutable out-parameters.
+     * Returns a {@link VariantCreateResult} â€” no mutable out-parameters.
      */
     private VariantCreateResult saveVariants(
             ProductCreateRequest request,
@@ -827,7 +829,7 @@ public class ProductServiceImpl implements ProductService {
                 ? Map.of()
                 : findProductAttributes(allVariantAttributeIds);
 
-        // Resolve all variants, then batch-save — avoids N individual INSERT statements
+        // Resolve all variants, then batch-save â€” avoids N individual INSERT statements
         List<ProductVariant> resolvedVariants = request.variants().stream()
                 .map(variantRequest -> productVariantHelper.createVariant(variantRequest, product))
                 .toList();
@@ -933,7 +935,7 @@ public class ProductServiceImpl implements ProductService {
      * Resolves, creates, and persists all variant entities for an update operation.
      * Lookup maps are built once via {@link ProductVariantHelper#buildVariantUpdateContext} before the loop.
      * All {@link ProductVariant} entities are batch-saved after resolution.
-     * Returns a {@link VariantUpdateResult} with the saved entities and processed ID sets — no mutable out-parameters.
+     * Returns a {@link VariantUpdateResult} with the saved entities and processed ID sets â€” no mutable out-parameters.
      */
     private VariantUpdateResult processUpdatedVariantRelations(
             ProductUpdateRequest request,
@@ -956,13 +958,13 @@ public class ProductServiceImpl implements ProductService {
                 ? Map.of()
                 : findProductAttributes(allVariantAttributeIds);
 
-        // Build all lookup maps in one place via helper — keeps this method free of data-preparation noise
+        // Build all lookup maps in one place via helper â€” keeps this method free of data-preparation noise
         VariantUpdateContext ctx = productVariantHelper.buildVariantUpdateContext(
                 productOptionValues, povByOptionAndValue, currentVariants,
                 currentOptionValues, currentVariantAttributes, productAttributeById
         );
 
-        // Resolve all variants first, then batch-save — avoids N individual INSERT/UPDATE statements
+        // Resolve all variants first, then batch-save â€” avoids N individual INSERT/UPDATE statements
         List<ProductVariant> resolvedVariants = request.variants().stream()
                 .map(variantRequest -> resolveVariant(variantRequest, product, ctx.currentVariantById()))
                 .toList();
@@ -1129,28 +1131,6 @@ public class ProductServiceImpl implements ProductService {
             List<Long> deletedVovIds = deletedOptionValues.stream().map(VariantOptionValue::getId).toList();
             log.debug("Deleting {} omitted variant option values (IDs: {}) for product ID: {}", deletedOptionValues.size(), deletedVovIds, product.getId());
             variantOptionValueRepository.deleteAll(deletedOptionValues);
-        }
-    }
-
-    // Helper: Validates product name and slug uniqueness for product creation
-    private void validateProductRequest(ProductCreateRequest request) {
-        log.debug("Validating uniqueness of name: '{}' and slug: '{}' for product creation", request.name(), request.slug());
-        if (productRepository.existsByName(request.name())) {
-            throw new ApplicationException(ErrorCode.PRODUCT_NAME_ALREADY_EXISTS);
-        }
-        if (productRepository.existsBySlug(request.slug())) {
-            throw new ApplicationException(ErrorCode.PRODUCT_SLUG_ALREADY_EXISTS);
-        }
-    }
-
-    // Helper: Validates product name and slug uniqueness for product update
-    private void validateProductRequest(ProductUpdateRequest request, Long productId) {
-        log.debug("Validating uniqueness of name: '{}' and slug: '{}' for product update ID: {}", request.name(), request.slug(), productId);
-        if (productRepository.existsByNameAndIdNot(request.name(), productId)) {
-            throw new ApplicationException(ErrorCode.PRODUCT_NAME_ALREADY_EXISTS);
-        }
-        if (productRepository.existsBySlugAndIdNot(request.slug(), productId)) {
-            throw new ApplicationException(ErrorCode.PRODUCT_SLUG_ALREADY_EXISTS);
         }
     }
 
