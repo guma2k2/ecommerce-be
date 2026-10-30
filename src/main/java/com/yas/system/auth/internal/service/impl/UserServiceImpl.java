@@ -2,14 +2,14 @@ package com.yas.system.auth.internal.service.impl;
 
 import com.yas.system.auth.internal.dto.request.UserRequest;
 import com.yas.system.auth.internal.dto.response.UserResponse;
-import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.entity.Role;
+import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.enumeration.OauthProvider;
 import com.yas.system.auth.internal.repository.UserRepository;
-import com.yas.system.auth.internal.repository.RoleRepository;
 import com.yas.system.auth.internal.service.UserService;
-import com.yas.system.common.exception.ErrorCode;
+import com.yas.system.auth.internal.validator.UserValidator;
 import com.yas.system.common.exception.ApplicationException;
+import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,25 +31,18 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
-    RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
+    UserValidator userValidator;
 
     @Override
     @Transactional
     public UserResponse createUser(UserRequest userRequest) {
-        if (userRepository.findByEmail(userRequest.email()).isPresent()) {
-            throw new ApplicationException(ErrorCode.INVALID_EMAIL);
-        }
-
-        List<Role> roles = roleRepository.findAllById(userRequest.roleIds());
-        if (roles.size() != userRequest.roleIds().size()) {
-            throw new ApplicationException(ErrorCode.ROLE_NOT_FOUND);
-        }
+        userValidator.validateCreate(userRequest);
+        List<Role> roles = userValidator.validateAndResolveRoles(userRequest.roleIds());
 
         User user = new User();
         user.setEmail(userRequest.email());
         user.setPassword(passwordEncoder.encode(userRequest.password()));
-//        user.setName(userRequest.name());
         user.setVerified(true);
         user.setProvider(OauthProvider.LOCAL);
         user.setRoles(new HashSet<>(roles));
@@ -72,23 +65,14 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
 
-        if (!user.getEmail().equalsIgnoreCase(userRequest.email())) {
-            if (userRepository.findByEmail(userRequest.email()).isPresent()) {
-                throw new ApplicationException(ErrorCode.INVALID_EMAIL);
-            }
-            user.setEmail(userRequest.email());
-        }
+        userValidator.validateEmailUpdate(user, userRequest.email());
+        user.setEmail(userRequest.email());
 
         if (userRequest.password() != null && !userRequest.password().isBlank()) {
             user.setPassword(passwordEncoder.encode(userRequest.password()));
         }
 
-        List<Role> roles = roleRepository.findAllById(userRequest.roleIds());
-        if (roles.size() != userRequest.roleIds().size()) {
-            throw new ApplicationException(ErrorCode.ROLE_NOT_FOUND);
-        }
-
-//        user.setName(userRequest.name());
+        List<Role> roles = userValidator.validateAndResolveRoles(userRequest.roleIds());
         user.setRoles(new HashSet<>(roles));
 
         User savedUser = userRepository.save(user);

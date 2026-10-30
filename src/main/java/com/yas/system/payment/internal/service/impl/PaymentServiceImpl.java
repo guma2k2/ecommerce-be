@@ -22,6 +22,7 @@ import com.yas.system.payment.internal.repository.PaymentRepository;
 import com.yas.system.payment.internal.service.PaymentIdempotencyService;
 import com.yas.system.payment.internal.service.PaymentLedgerService;
 import com.yas.system.payment.internal.service.PaymentService;
+import com.yas.system.payment.internal.validator.PaymentValidator;
 import com.yas.system.payment.internal.event.RefundCompletedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
     PaymentIdempotencyService paymentIdempotencyService;
     PaymentLedgerService paymentLedgerService;
     ApplicationEventPublisher eventPublisher;
+    PaymentValidator paymentValidator;
 
     @Override
     @Transactional
@@ -181,29 +183,13 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByIdAndCustomerId(paymentId, customer.id())
                 .orElseThrow(() -> new ApplicationException(ErrorCode.PAYMENT_NOT_FOUND, paymentId));
 
-        if (payment.getStatus() == PaymentStatus.REFUNDED) {
-            throw new ApplicationException(ErrorCode.PAYMENT_ALREADY_REFUNDED, paymentId);
-        }
-
-        if (payment.getStatus() != PaymentStatus.SUCCEEDED && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
-            throw new ApplicationException(ErrorCode.PAYMENT_GATEWAY_ERROR, "Cannot refund payment in status: " + payment.getStatus());
-        }
-
+        paymentValidator.validateRefund(payment, request.amount(), paymentId);
         BigDecimal newTotalRefunded = payment.getRefundedAmount().add(request.amount());
-        if (newTotalRefunded.compareTo(payment.getAmount()) > 0) {
-            throw new ApplicationException(
-                    ErrorCode.REFUND_AMOUNT_EXCEEDS_PAYMENT,
-                    request.amount(),
-                    payment.getRefundableAmount()
-            );
-        }
 
         PaymentGateway gateway = paymentGatewayResolver.resolve(payment.getMethod());
         RefundResult refundResult = gateway.refund(payment, request.amount(), request.reason(), idempotencyKey);
 
-        if (!refundResult.successful()) {
-            throw new ApplicationException(ErrorCode.PAYMENT_GATEWAY_ERROR, refundResult.failureReason());
-        }
+        paymentValidator.validateRefundResult(refundResult);
 
         payment.setRefundedAmount(newTotalRefunded);
         if (newTotalRefunded.compareTo(payment.getAmount()) == 0) {
