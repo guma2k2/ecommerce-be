@@ -1,17 +1,17 @@
 package com.yas.system.order.internal.service.impl;
 
-import com.yas.system.cart.api.CartPublicService;
+import com.yas.system.cart.service.CartService;
 import com.yas.system.cart.api.dto.CartItemPublicDto;
-import com.yas.system.catalog.api.CatalogPublicService;
+import com.yas.system.catalog.service.ProductService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.common.config.AppProperties;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.common.security.annotation.AuthUser;
-import com.yas.system.inventory.api.InventoryPublicService;
+import com.yas.system.inventory.service.InventoryService;
 import com.yas.system.inventory.api.dto.StockReservationItemDto;
-import com.yas.system.inventory.internal.constant.InventoryConstant;
+
 import com.yas.system.order.internal.dto.request.CreateOrderRequest;
 import com.yas.system.order.internal.dto.request.OrderItemRequest;
 import com.yas.system.order.internal.dto.response.OrderCreateResponse;
@@ -25,13 +25,13 @@ import com.yas.system.order.internal.event.OrderCreatedEvent;
 import com.yas.system.order.internal.helper.OrderHelper;
 import com.yas.system.order.internal.repository.OrderDetailRepository;
 import com.yas.system.order.internal.repository.OrderRepository;
-import com.yas.system.order.internal.service.OrderService;
+import com.yas.system.order.service.OrderService;
 import com.yas.system.order.internal.validator.OrderValidator;
-import com.yas.system.payment.api.PaymentPublicService;
+import com.yas.system.payment.service.PaymentService;
 import com.yas.system.payment.api.dto.CheckoutItemDto;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
-import com.yas.system.promotion.api.PromotionPublicService;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
+import com.yas.system.promotion.service.PromotionService;
 import com.yas.system.promotion.api.dto.PromotionApplyResultDto;
 import com.yas.system.promotion.api.dto.PromotionOrderItemDto;
 import org.springframework.util.StringUtils;
@@ -60,13 +60,13 @@ public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
     OrderDetailRepository orderDetailRepository;
     OrderHelper orderHelper;
-    CatalogPublicService catalogPublicService;
-    CartPublicService cartPublicService;
-    PaymentPublicService paymentPublicService;
+    ProductService productService;
+    CartService cartService;
+    PaymentService paymentService;
     ApplicationEventPublisher eventPublisher;
-    InventoryPublicService inventoryPublicService;
+    InventoryService inventoryService;
     AppProperties appProperties;
-    PromotionPublicService promotionPublicService;
+    PromotionService promotionService;
     OrderValidator orderValidator;
 
     @Override
@@ -81,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 2. Fetch variants and validate status & stock
-        Map<Long, ProductVariantPublicDto> variantMap = catalogPublicService.getProductVariantsByIds(itemQuantities.keySet());
+        Map<Long, ProductVariantPublicDto> variantMap = productService.getProductVariantsByIds(itemQuantities.keySet());
         for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
             Long variantId = entry.getKey();
             int requestedQty = entry.getValue();
@@ -97,7 +97,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 3. Deduct stock atomically
-        catalogPublicService.deductStock(itemQuantities);
+        productService.deductStock(itemQuantities);
 
         // 4. Calculate total amount
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -122,7 +122,7 @@ public class OrderServiceImpl implements OrderService {
         // Apply promotion if coupon code is present
         PromotionApplyResultDto appliedPromoResult = null;
         if (StringUtils.hasText(request.couponCode())) {
-            appliedPromoResult = promotionPublicService.applyPromotion(
+            appliedPromoResult = promotionService.applyPromotion(
                     savedOrder.getId(),
                     customerId,
                     request.couponCode(),
@@ -163,14 +163,14 @@ public class OrderServiceImpl implements OrderService {
         List<StockReservationItemDto> reservationItems = itemQuantities.entrySet().stream()
                 .map(e -> new StockReservationItemDto(e.getKey(), e.getValue()))
                 .toList();
-        inventoryPublicService.reserveStock(orderIdStr, reservationItems, InventoryConstant.DEFAULT_RESERVATION_TTL);
+        inventoryService.reserveStock(orderIdStr, reservationItems);
         if (request.paymentMethod() == PaymentMethod.COD) {
-            inventoryPublicService.confirmDeductions(orderIdStr);
+            inventoryService.confirmDeductions(orderIdStr);
         }
 
         // 7. Clear cart if order placed from cart
         if (request.fromCart()) {
-            cartPublicService.clearCart(customerId);
+            cartService.clearCart(customerId);
         }
 
         // 8. Publish domain event
@@ -205,7 +205,7 @@ public class OrderServiceImpl implements OrderService {
 
             String stripePromoId = appliedPromoResult != null ? appliedPromoResult.stripePromotionCodeId() : null;
             String stripeCouponId = appliedPromoResult != null ? appliedPromoResult.stripeCouponId() : null;
-            checkoutUrl = paymentPublicService.createCheckoutSessionUrl(
+            checkoutUrl = paymentService.createCheckoutSessionUrl(
                     request.paymentMethod(),
                     customerId,
                     customer.email(),
@@ -306,8 +306,9 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId().toString());
         Map<Long, Integer> restoreQuantities = details.stream()
                 .collect(Collectors.toMap(OrderDetail::getProductVariantId, OrderDetail::getQuantity));
-        catalogPublicService.restoreStock(restoreQuantities);
-        inventoryPublicService.releaseReservations(order.getId().toString());
+        productService.restoreStock(restoreQuantities);
+        inventoryService.releaseReservations(order.getId().toString());
+        promotionService.revertPromotionUsage(order.getId());
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
@@ -316,7 +317,7 @@ public class OrderServiceImpl implements OrderService {
         boolean wasRefunded = false;
         if (order.getPaymentMethod() == PaymentMethod.STRIPE
                 && order.getPaymentStatus() == PaymentStatus.SUCCEEDED) {
-            paymentPublicService.refundByOrderId(
+            paymentService.refundByOrderId(
                     order.getId().toString(),
                     customer.email(),
                     "Order cancelled by customer"
@@ -342,7 +343,7 @@ public class OrderServiceImpl implements OrderService {
         Map<Long, Integer> itemQuantities = new HashMap<>();
 
         if (request.fromCart()) {
-            List<CartItemPublicDto> cartItems = cartPublicService.getCartItemsByCustomerId(customerId);
+            List<CartItemPublicDto> cartItems = cartService.getCartItemsByCustomerId(customerId);
             for (CartItemPublicDto item : cartItems) {
                 itemQuantities.merge(item.productVariantId(), item.quantity(), Integer::sum);
             }

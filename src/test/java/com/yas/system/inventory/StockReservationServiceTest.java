@@ -10,7 +10,7 @@ import com.yas.system.inventory.internal.enumeration.MovementType;
 import com.yas.system.inventory.internal.enumeration.ReservationStatus;
 import com.yas.system.inventory.internal.repository.InventoryRepository;
 import com.yas.system.inventory.internal.repository.StockReservationRepository;
-import com.yas.system.inventory.internal.service.StockMovementService;
+import com.yas.system.inventory.service.StockMovementService;
 import com.yas.system.inventory.internal.service.impl.StockReservationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

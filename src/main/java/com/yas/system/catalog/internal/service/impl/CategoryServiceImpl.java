@@ -1,11 +1,11 @@
-package com.yas.system.catalog.internal.service.impl;
+package com.yas.system.catalog.service.impl;
 
 import com.yas.system.catalog.internal.dto.request.CategoryCreateRequest;
 import com.yas.system.catalog.internal.dto.request.CategoryUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.CategoryResponse;
 import com.yas.system.catalog.internal.entity.Category;
 import com.yas.system.catalog.internal.repository.CategoryRepository;
-import com.yas.system.catalog.internal.service.CategoryService;
+import com.yas.system.catalog.service.CategoryService;
 import com.yas.system.catalog.internal.validator.CategoryValidator;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;

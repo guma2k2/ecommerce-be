@@ -11,7 +11,7 @@ import com.yas.system.payment.internal.dto.response.PaymentLedgerResponse;
 import com.yas.system.payment.internal.dto.response.PaymentResponse;
 import com.yas.system.payment.internal.dto.response.RefundPaymentResponse;
 import com.yas.system.payment.internal.gateway.dto.RefundResult;
-import com.yas.system.payment.internal.service.PaymentService;
+import com.yas.system.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

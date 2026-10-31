@@ -7,7 +7,7 @@ import com.yas.system.promotion.internal.dto.request.CreatePromotionRequest;
 import com.yas.system.promotion.internal.dto.request.UpdatePromotionRequest;
 import com.yas.system.promotion.internal.dto.response.PromotionDetailResponse;
 import com.yas.system.promotion.internal.dto.response.PromotionResponse;
-import com.yas.system.promotion.internal.service.PromotionService;
+import com.yas.system.promotion.service.PromotionService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

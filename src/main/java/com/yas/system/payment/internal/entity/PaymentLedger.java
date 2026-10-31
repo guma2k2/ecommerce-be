@@ -1,9 +1,9 @@
 package com.yas.system.payment.internal.entity;
 
 import com.yas.system.common.entity.BaseUuidEntity;
-import com.yas.system.payment.internal.enumeration.BalanceType;
-import com.yas.system.payment.internal.enumeration.LedgerEntryType;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.BalanceType;
+import com.yas.system.payment.enumeration.LedgerEntryType;
+import com.yas.system.payment.enumeration.PaymentMethod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

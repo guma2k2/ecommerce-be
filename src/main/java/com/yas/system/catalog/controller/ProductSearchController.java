@@ -5,7 +5,7 @@ import com.yas.system.catalog.internal.dto.request.ProductSortOption;
 import com.yas.system.catalog.internal.dto.response.ProductSearchResultResponse;
 import com.yas.system.catalog.internal.dto.response.ProductSuggestionResponse;
 import com.yas.system.catalog.internal.dto.response.SearchFacetsResponse;
-import com.yas.system.catalog.internal.service.search.ProductSearchService;
+import com.yas.system.catalog.service.search.ProductSearchService;
 import com.yas.system.common.response.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

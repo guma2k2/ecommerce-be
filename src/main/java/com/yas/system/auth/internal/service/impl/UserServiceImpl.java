@@ -1,4 +1,4 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.request.UserRequest;
 import com.yas.system.auth.internal.dto.response.UserResponse;
@@ -6,7 +6,7 @@ import com.yas.system.auth.internal.entity.Role;
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.enumeration.OauthProvider;
 import com.yas.system.auth.internal.repository.UserRepository;
-import com.yas.system.auth.internal.service.UserService;
+import com.yas.system.auth.service.UserService;
 import com.yas.system.auth.internal.validator.UserValidator;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;

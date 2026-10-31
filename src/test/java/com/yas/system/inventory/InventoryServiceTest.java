@@ -12,7 +12,8 @@ import com.yas.system.inventory.internal.enumeration.MovementType;
 import com.yas.system.inventory.internal.helper.InventoryHelper;
 import com.yas.system.inventory.internal.validator.InventoryValidator;
 import com.yas.system.inventory.internal.repository.InventoryRepository;
-import com.yas.system.inventory.internal.service.StockMovementService;
+import com.yas.system.inventory.service.StockMovementService;
+import com.yas.system.inventory.service.StockReservationService;
 import com.yas.system.inventory.internal.service.impl.InventoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,13 +44,16 @@ class InventoryServiceTest {
     @Mock
     StockMovementService stockMovementService;
 
+    @Mock
+    StockReservationService stockReservationService;
+
     InventoryHelper inventoryHelper;
     InventoryServiceImpl inventoryService;
 
     @BeforeEach
     void setUp() {
         inventoryHelper = new InventoryHelper(new InventoryValidator());
-        inventoryService = new InventoryServiceImpl(inventoryRepository, inventoryHelper, stockMovementService);
+        inventoryService = new InventoryServiceImpl(inventoryRepository, inventoryHelper, stockMovementService, stockReservationService);
     }
 
     @Test

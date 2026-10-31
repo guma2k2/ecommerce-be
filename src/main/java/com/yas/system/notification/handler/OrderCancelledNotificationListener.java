@@ -2,7 +2,7 @@ package com.yas.system.notification.handler;
 
 import com.yas.system.notification.mail.service.MailService;
 import com.yas.system.order.event.OrderCancelledEvent;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentStatus;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

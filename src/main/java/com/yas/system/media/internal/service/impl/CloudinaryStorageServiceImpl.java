@@ -6,7 +6,7 @@ import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
 import com.yas.system.media.internal.helper.MediaHelper;
 import com.yas.system.media.internal.repository.MediaRepository;
-import com.yas.system.media.internal.service.UploadService;
+import com.yas.system.media.service.UploadService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

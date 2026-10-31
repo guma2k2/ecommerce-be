@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.service.impl;
+package com.yas.system.catalog.service.impl;
 
 import com.yas.system.catalog.internal.dto.request.ProductOptionCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductOptionUpdateRequest;
@@ -6,7 +6,7 @@ import com.yas.system.catalog.internal.dto.response.ProductOptionResponse;
 import com.yas.system.catalog.internal.entity.option.ProductOption;
 import com.yas.system.catalog.internal.helper.ProductOptionHelper;
 import com.yas.system.catalog.internal.repository.ProductOptionRepository;
-import com.yas.system.catalog.internal.service.ProductOptionService;
+import com.yas.system.catalog.service.ProductOptionService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;

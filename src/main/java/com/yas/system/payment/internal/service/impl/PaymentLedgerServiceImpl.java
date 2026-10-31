@@ -2,10 +2,10 @@ package com.yas.system.payment.internal.service.impl;
 
 import com.yas.system.payment.internal.entity.Payment;
 import com.yas.system.payment.internal.entity.PaymentLedger;
-import com.yas.system.payment.internal.enumeration.BalanceType;
-import com.yas.system.payment.internal.enumeration.LedgerEntryType;
+import com.yas.system.payment.enumeration.BalanceType;
+import com.yas.system.payment.enumeration.LedgerEntryType;
 import com.yas.system.payment.internal.repository.PaymentLedgerRepository;
-import com.yas.system.payment.internal.service.PaymentLedgerService;
+import com.yas.system.payment.service.PaymentLedgerService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

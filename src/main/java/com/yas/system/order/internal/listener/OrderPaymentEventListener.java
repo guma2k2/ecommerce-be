@@ -1,11 +1,11 @@
 package com.yas.system.order.internal.listener;
 
-import com.yas.system.inventory.api.InventoryPublicService;
+import com.yas.system.inventory.service.InventoryService;
 import com.yas.system.order.internal.enumeration.OrderStatus;
 import com.yas.system.order.internal.repository.OrderRepository;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
-import com.yas.system.payment.internal.event.PaymentCompletedEvent;
-import com.yas.system.payment.internal.event.RefundCompletedEvent;
+import com.yas.system.payment.enumeration.PaymentStatus;
+import com.yas.system.payment.event.PaymentCompletedEvent;
+import com.yas.system.payment.event.RefundCompletedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,7 +24,7 @@ import java.util.UUID;
 public class OrderPaymentEventListener {
 
     OrderRepository orderRepository;
-    InventoryPublicService inventoryPublicService;
+    InventoryService inventoryService;
 
     @EventListener
     @Transactional
@@ -41,7 +41,7 @@ public class OrderPaymentEventListener {
                     order.setStatus(OrderStatus.CONFIRMED);
                 }
                 orderRepository.save(order);
-                inventoryPublicService.confirmDeductions(event.orderId());
+                inventoryService.confirmDeductions(event.orderId());
                 log.info("Order {} successfully updated to SUCCEEDED and CONFIRMED via PaymentCompletedEvent", orderId);
             });
         } catch (IllegalArgumentException e) {

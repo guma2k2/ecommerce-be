@@ -2,7 +2,7 @@ package com.yas.system.payment.internal.gateway;
 
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentMethod;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

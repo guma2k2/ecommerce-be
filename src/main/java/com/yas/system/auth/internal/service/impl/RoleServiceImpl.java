@@ -1,11 +1,11 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.request.AssignPermissionRequest;
 import com.yas.system.auth.internal.dto.request.RoleRequest;
 import com.yas.system.auth.internal.dto.response.RoleResponse;
 import com.yas.system.auth.internal.entity.Role;
 import com.yas.system.auth.internal.repository.RoleRepository;
-import com.yas.system.auth.internal.service.RoleService;
+import com.yas.system.auth.service.RoleService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;

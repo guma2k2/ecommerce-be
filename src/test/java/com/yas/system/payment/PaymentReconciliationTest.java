@@ -1,16 +1,16 @@
 package com.yas.system.payment;
 
 import com.yas.system.payment.internal.entity.Payment;
-import com.yas.system.payment.internal.enumeration.BalanceType;
-import com.yas.system.payment.internal.enumeration.LedgerEntryType;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
-import com.yas.system.payment.internal.event.PaymentCompletedEvent;
+import com.yas.system.payment.enumeration.BalanceType;
+import com.yas.system.payment.enumeration.LedgerEntryType;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
+import com.yas.system.payment.event.PaymentCompletedEvent;
 import com.yas.system.payment.internal.gateway.PaymentGateway;
 import com.yas.system.payment.internal.gateway.PaymentGatewayResolver;
 import com.yas.system.payment.internal.gateway.dto.PaymentStatusResult;
 import com.yas.system.payment.internal.repository.PaymentRepository;
-import com.yas.system.payment.internal.service.PaymentLedgerService;
+import com.yas.system.payment.service.PaymentLedgerService;
 import com.yas.system.payment.internal.service.impl.PaymentReconciliationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

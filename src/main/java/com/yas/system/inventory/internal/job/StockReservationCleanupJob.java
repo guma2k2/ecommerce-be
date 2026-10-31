@@ -1,6 +1,6 @@
 package com.yas.system.inventory.internal.job;
 
-import com.yas.system.inventory.internal.service.StockReservationService;
+import com.yas.system.inventory.service.StockReservationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

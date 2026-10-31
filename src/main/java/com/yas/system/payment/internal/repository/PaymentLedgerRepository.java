@@ -1,7 +1,7 @@
 package com.yas.system.payment.internal.repository;
 
 import com.yas.system.payment.internal.entity.PaymentLedger;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentMethod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

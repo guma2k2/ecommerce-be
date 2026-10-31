@@ -1,7 +1,7 @@
 package com.yas.system.payment.controller;
 
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.service.PaymentService;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.service.PaymentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

@@ -4,7 +4,7 @@ import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.payment.internal.entity.Payment;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentStatus;
 import com.yas.system.payment.internal.gateway.dto.RefundResult;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

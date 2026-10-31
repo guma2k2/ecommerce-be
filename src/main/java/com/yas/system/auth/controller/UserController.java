@@ -2,7 +2,7 @@ package com.yas.system.auth.controller;
 
 import com.yas.system.auth.internal.dto.request.UserRequest;
 import com.yas.system.auth.internal.dto.response.UserResponse;
-import com.yas.system.auth.internal.service.UserService;
+import com.yas.system.auth.service.UserService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;

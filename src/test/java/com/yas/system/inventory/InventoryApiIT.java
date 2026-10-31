@@ -1,7 +1,7 @@
 package com.yas.system.inventory;
 
 import com.yas.system.catalog.AbstractIntegrationTest;
-import com.yas.system.inventory.api.InventoryPublicService;
+import com.yas.system.inventory.service.InventoryService;
 import com.yas.system.inventory.internal.dto.request.StockAdjustmentRequest;
 import com.yas.system.inventory.internal.dto.request.StockCycleCountRequest;
 import com.yas.system.inventory.internal.entity.Inventory;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class InventoryApiIT extends AbstractIntegrationTest {
 
     @Autowired
-    InventoryPublicService inventoryPublicService;
+    InventoryService inventoryService;
 
     @Autowired
     InventoryRepository inventoryRepository;
@@ -46,7 +46,7 @@ class InventoryApiIT extends AbstractIntegrationTest {
         stockReservationRepository.deleteAll();
         inventoryRepository.deleteAll();
 
-        inventoryPublicService.initializeInventory(testVariantId, "TEST-SKU-9999", 50);
+        inventoryService.initializeInventory(testVariantId, "TEST-SKU-9999", 50);
     }
 
     @Test

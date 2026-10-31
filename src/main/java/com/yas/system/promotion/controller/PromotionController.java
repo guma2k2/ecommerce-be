@@ -5,7 +5,7 @@ import com.yas.system.common.security.annotation.ActiveUser;
 import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.promotion.internal.dto.request.VerifyPromotionRequest;
 import com.yas.system.promotion.internal.dto.response.PromotionVerifyResponse;
-import com.yas.system.promotion.internal.service.PromotionService;
+import com.yas.system.promotion.service.PromotionService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

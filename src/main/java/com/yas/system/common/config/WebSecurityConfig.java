@@ -2,7 +2,6 @@ package com.yas.system.common.config;
 
 import com.yas.system.common.exception.AccessDeniedException;
 import com.yas.system.common.exception.AuthEntryPointException;
-import com.yas.system.common.security.custom.CustomUserDetailService;
 import com.yas.system.common.security.jwt.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +16,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -38,7 +37,8 @@ public class WebSecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final AuthEntryPointException authEntryPointException;
     private final AccessDeniedException accessDeniedException;
-    private final CustomUserDetailService userDetailService;
+    private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
 
     @Bean
@@ -105,10 +105,9 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(
-    ) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailService);
-        provider.setPasswordEncoder(passwordEncoder());
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
@@ -118,10 +117,4 @@ public class WebSecurityConfig {
     ) {
         return config.getAuthenticationManager();
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
-

@@ -2,7 +2,7 @@ package com.yas.system.payment;
 
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentMethod;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

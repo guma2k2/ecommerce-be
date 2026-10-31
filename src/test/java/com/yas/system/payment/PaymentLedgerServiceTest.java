@@ -2,10 +2,10 @@ package com.yas.system.payment;
 
 import com.yas.system.payment.internal.entity.Payment;
 import com.yas.system.payment.internal.entity.PaymentLedger;
-import com.yas.system.payment.internal.enumeration.BalanceType;
-import com.yas.system.payment.internal.enumeration.LedgerEntryType;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.BalanceType;
+import com.yas.system.payment.enumeration.LedgerEntryType;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
 import com.yas.system.payment.internal.repository.PaymentLedgerRepository;
 import com.yas.system.payment.internal.service.impl.PaymentLedgerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

@@ -9,7 +9,7 @@ import com.yas.system.order.internal.dto.response.OrderCreateResponse;
 import com.yas.system.order.internal.dto.response.OrderDetailResponse;
 import com.yas.system.order.internal.dto.response.OrderSummaryResponse;
 import com.yas.system.order.internal.enumeration.OrderStatus;
-import com.yas.system.order.internal.service.OrderService;
+import com.yas.system.order.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,7 @@ package com.yas.system.payment.internal.dto.request;
 import com.yas.system.common.response.ParamError;
 import com.yas.system.common.validation.annotation.ValidateEnum;
 import com.yas.system.payment.internal.constant.PaymentConstant;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentMethod;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

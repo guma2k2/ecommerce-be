@@ -2,8 +2,8 @@ package com.yas.system.order.internal.entity;
 
 import com.yas.system.common.entity.BaseUuidEntity;
 import com.yas.system.order.internal.enumeration.OrderStatus;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,7 +1,7 @@
 package com.yas.system.payment.internal.repository;
 
 import com.yas.system.payment.internal.entity.Payment;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

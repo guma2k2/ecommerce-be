@@ -1,5 +1,8 @@
-package com.yas.system.catalog.internal.service.impl;
+package com.yas.system.catalog.service.impl;
 
+import com.yas.system.catalog.api.dto.ProductOptionPublicDto;
+import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
+import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.catalog.internal.dto.request.ProductAttributeValueCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductAttributeValueUpdateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductCreateRequest;
@@ -56,14 +59,14 @@ import com.yas.system.catalog.internal.repository.ProductRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantAttributeValueRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
 import com.yas.system.catalog.internal.repository.VariantOptionValueRepository;
-import com.yas.system.catalog.internal.service.ProductService;
+import com.yas.system.catalog.service.ProductService;
 import com.yas.system.catalog.internal.validator.ProductValidator;
 import com.yas.system.catalog.internal.specification.ProductSpecification;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
-import com.yas.system.inventory.api.InventoryPublicService;
-import com.yas.system.media.api.MediaPublicService;
+import com.yas.system.inventory.service.InventoryService;
+import com.yas.system.media.service.MediaService;
 import com.yas.system.media.api.dto.MediaPublicDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +82,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -107,13 +112,13 @@ public class ProductServiceImpl implements ProductService {
     CategoryRepository categoryRepository;
     BrandRepository brandRepository;
     ProductMediaRepository productMediaRepository;
-    MediaPublicService mediaPublicService;
+    MediaService mediaService;
     ProductHelper productHelper;
     ProductVariantHelper productVariantHelper;
     ProductMediaHelper productMediaHelper;
     ProductOptionCombinationHelper productOptionCombinationHelper;
     ApplicationEventPublisher eventPublisher;
-    InventoryPublicService inventoryPublicService;
+    InventoryService inventoryService;
     ProductValidator productValidator;
 
     @Override
@@ -154,7 +159,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Created {} variants for product ID: {}", savedVariants.size(), savedProduct.getId());
 
         for (ProductVariant variant : savedVariants) {
-            inventoryPublicService.initializeInventory(
+            inventoryService.initializeInventory(
                     variant.getId(),
                     variant.getSku(),
                     variant.getQuantity() != null ? variant.getQuantity() : 0
@@ -166,7 +171,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Step 9: Fetch media details via public Media service
         List<String> mediaIds = productMediaHelper.extractAllMediaIds(savedMedias, savedVariants);
-        Map<String, MediaPublicDto> mediaMap = mediaPublicService.getMediaDetails(mediaIds);
+        Map<String, MediaPublicDto> mediaMap = mediaService.getMediaDetails(mediaIds);
 
         // Step 10: Build and return ProductResponse
         log.info("Publishing ProductSyncEvent(UPSERT) for newly created product ID: {} with {} variants",
@@ -241,7 +246,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Updated {} variants, option values, and attribute values for product ID: {}", savedVariants.size(), productId);
 
         for (ProductVariant variant : savedVariants) {
-            inventoryPublicService.initializeInventory(
+            inventoryService.initializeInventory(
                     variant.getId(),
                     variant.getSku(),
                     variant.getQuantity() != null ? variant.getQuantity() : 0
@@ -256,7 +261,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Step 10: Fetch media details via public Media service
         List<String> mediaIds = productMediaHelper.extractAllMediaIds(savedMedias, savedVariants);
-        Map<String, MediaPublicDto> mediaMap = mediaPublicService.getMediaDetails(mediaIds);
+        Map<String, MediaPublicDto> mediaMap = mediaService.getMediaDetails(mediaIds);
 
         // Step 11: Build and return updated ProductResponse
         log.info("Publishing ProductSyncEvent(UPSERT) for updated product ID: {} (active variants: {}, removed variants: {})",
@@ -311,7 +316,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
-        Map<String, String> mediaUrls = allMediaIds.isEmpty() ? Map.of() : mediaPublicService.getMediaUrls(allMediaIds);
+        Map<String, String> mediaUrls = allMediaIds.isEmpty() ? Map.of() : mediaService.getMediaUrls(allMediaIds);
 
         // Batch resolve variant prices & defaultVariantId
         List<ProductVariant> variants = productVariantRepository.findByProductIdIn(productIds);
@@ -368,7 +373,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductOptionCombinationResponse> options = productOptionCombinationHelper.buildOptionCombinationResponses(combinations, optionValues);
 
         List<String> mediaIds = productMediaHelper.extractAllMediaIds(medias, variants);
-        Map<String, MediaPublicDto> mediaMap = mediaPublicService.getMediaDetails(mediaIds);
+        Map<String, MediaPublicDto> mediaMap = mediaService.getMediaDetails(mediaIds);
 
         return ProductResponse.from(product, medias, mediaMap, attributes, options, variants, variantOptionValues, variantAttributeValues);
     }
@@ -807,7 +812,7 @@ public class ProductServiceImpl implements ProductService {
     /**
      * Creates and persists all variant entities for a product creation operation.
      * All {@link ProductVariant} entities are resolved first, then batch-saved via {@code saveAll}.
-     * Returns a {@link VariantCreateResult} â€” no mutable out-parameters.
+     * Returns a {@link VariantCreateResult} Ã¢â‚¬â€ no mutable out-parameters.
      */
     private VariantCreateResult saveVariants(
             ProductCreateRequest request,
@@ -829,7 +834,7 @@ public class ProductServiceImpl implements ProductService {
                 ? Map.of()
                 : findProductAttributes(allVariantAttributeIds);
 
-        // Resolve all variants, then batch-save â€” avoids N individual INSERT statements
+        // Resolve all variants, then batch-save Ã¢â‚¬â€ avoids N individual INSERT statements
         List<ProductVariant> resolvedVariants = request.variants().stream()
                 .map(variantRequest -> productVariantHelper.createVariant(variantRequest, product))
                 .toList();
@@ -935,7 +940,7 @@ public class ProductServiceImpl implements ProductService {
      * Resolves, creates, and persists all variant entities for an update operation.
      * Lookup maps are built once via {@link ProductVariantHelper#buildVariantUpdateContext} before the loop.
      * All {@link ProductVariant} entities are batch-saved after resolution.
-     * Returns a {@link VariantUpdateResult} with the saved entities and processed ID sets â€” no mutable out-parameters.
+     * Returns a {@link VariantUpdateResult} with the saved entities and processed ID sets Ã¢â‚¬â€ no mutable out-parameters.
      */
     private VariantUpdateResult processUpdatedVariantRelations(
             ProductUpdateRequest request,
@@ -958,13 +963,13 @@ public class ProductServiceImpl implements ProductService {
                 ? Map.of()
                 : findProductAttributes(allVariantAttributeIds);
 
-        // Build all lookup maps in one place via helper â€” keeps this method free of data-preparation noise
+        // Build all lookup maps in one place via helper Ã¢â‚¬â€ keeps this method free of data-preparation noise
         VariantUpdateContext ctx = productVariantHelper.buildVariantUpdateContext(
                 productOptionValues, povByOptionAndValue, currentVariants,
                 currentOptionValues, currentVariantAttributes, productAttributeById
         );
 
-        // Resolve all variants first, then batch-save â€” avoids N individual INSERT/UPDATE statements
+        // Resolve all variants first, then batch-save Ã¢â‚¬â€ avoids N individual INSERT/UPDATE statements
         List<ProductVariant> resolvedVariants = request.variants().stream()
                 .map(variantRequest -> resolveVariant(variantRequest, product, ctx.currentVariantById()))
                 .toList();
@@ -1186,4 +1191,188 @@ public class ProductServiceImpl implements ProductService {
         return productOptionById;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ProductVariantPublicDto getProductVariantById(Long variantId) {
+        ProductVariant variant = productVariantRepository.findByIdWithProduct(variantId)
+                .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
+
+        Product product = variant.getProduct();
+        if (product == null || product.getStatus() != ProductStatus.ACTIVE) {
+            throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
+        }
+
+        String mediaId = variant.getMediaId();
+        if (mediaId == null) {
+            List<ProductMedia> medias = productMediaRepository.findByProductIdOrderByPositionAsc(product.getId());
+            if (!medias.isEmpty()) {
+                mediaId = medias.getFirst().getMediaId();
+            }
+        }
+
+        String thumbnailUrl = mediaId != null ? mediaService.getMediaUrl(mediaId) : null;
+
+        List<VariantOptionValue> optionValues = variantOptionValueRepository.findByProductVariantIdInWithDetails(List.of(variantId));
+        List<ProductOptionPublicDto> options = optionValues.stream()
+                .map(this::mapToProductOptionPublicDto)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new ProductVariantPublicDto(
+                variant.getId(),
+                product.getId(),
+                product.getName(),
+                product.getSlug(),
+                product.getCategory() != null ? Long.valueOf(product.getCategory().getId()) : null,
+                product.getBrand() != null ? Long.valueOf(product.getBrand().getId()) : null,
+                thumbnailUrl,
+                variant.getQuantity() != null ? variant.getQuantity() : 0,
+                variant.getSku(),
+                variant.getPrice(),
+                options,
+                variant.getStripeProductId(),
+                variant.getStripePriceId()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, ProductVariantPublicDto> getProductVariantsByIds(Collection<Long> variantIds) {
+        if (variantIds == null || variantIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<ProductVariant> variants = productVariantRepository.findByIdInWithProduct(variantIds);
+        if (variants.isEmpty()) {
+            return Map.of();
+        }
+
+        for (ProductVariant variant : variants) {
+            Product product = variant.getProduct();
+            if (product == null || product.getStatus() != ProductStatus.ACTIVE) {
+                throw new ApplicationException(ErrorCode.PRODUCT_INACTIVE);
+            }
+        }
+
+        List<Long> productIdsNeedingMedia = variants.stream()
+                .filter(v -> v.getMediaId() == null && v.getProduct() != null)
+                .map(v -> v.getProduct().getId())
+                .distinct()
+                .toList();
+
+        Map<Long, String> productFirstMediaMap = new HashMap<>();
+        if (!productIdsNeedingMedia.isEmpty()) {
+            List<ProductMedia> productMedias = productMediaRepository.findByProductIdInOrderByPositionAsc(productIdsNeedingMedia);
+            for (ProductMedia pm : productMedias) {
+                if (pm.getProduct() != null) {
+                    productFirstMediaMap.putIfAbsent(pm.getProduct().getId(), pm.getMediaId());
+                }
+            }
+        }
+
+        Map<Long, String> variantMediaIdMap = new HashMap<>();
+        Set<String> allMediaIds = new HashSet<>();
+
+        for (ProductVariant variant : variants) {
+            String mediaId = variant.getMediaId();
+            if (mediaId == null && variant.getProduct() != null) {
+                mediaId = productFirstMediaMap.get(variant.getProduct().getId());
+            }
+            if (mediaId != null) {
+                variantMediaIdMap.put(variant.getId(), mediaId);
+                allMediaIds.add(mediaId);
+            }
+        }
+
+        Map<String, String> mediaUrls = allMediaIds.isEmpty()
+                ? Map.of()
+                : mediaService.getMediaUrls(new ArrayList<>(allMediaIds));
+
+        List<VariantOptionValue> allOptionValues = variantOptionValueRepository.findByProductVariantIdInWithDetails(variantIds);
+        Map<Long, List<ProductOptionPublicDto>> variantOptionsMap = allOptionValues.stream()
+                .filter(vov -> vov.getProductVariant() != null)
+                .collect(Collectors.groupingBy(
+                        vov -> vov.getProductVariant().getId(),
+                        Collectors.mapping(
+                                this::mapToProductOptionPublicDto,
+                                Collectors.filtering(Objects::nonNull, Collectors.toList())
+                        )
+                ));
+
+        return variants.stream().collect(Collectors.toMap(
+                ProductVariant::getId,
+                variant -> {
+                    Product product = variant.getProduct();
+                    String mediaId = variantMediaIdMap.get(variant.getId());
+                    String thumbnailUrl = mediaId != null ? mediaUrls.get(mediaId) : null;
+                    List<ProductOptionPublicDto> options = variantOptionsMap.getOrDefault(variant.getId(), List.of());
+
+                    return new ProductVariantPublicDto(
+                            variant.getId(),
+                            product != null ? product.getId() : null,
+                            product != null ? product.getName() : null,
+                            product != null ? product.getSlug() : null,
+                            product != null && product.getCategory() != null ? Long.valueOf(product.getCategory().getId()) : null,
+                            product != null && product.getBrand() != null ? Long.valueOf(product.getBrand().getId()) : null,
+                            thumbnailUrl,
+                            variant.getQuantity() != null ? variant.getQuantity() : 0,
+                            variant.getSku(),
+                            variant.getPrice(),
+                            options,
+                            variant.getStripeProductId(),
+                            variant.getStripePriceId()
+                    );
+                }
+        ));
+    }
+
+    @Override
+    @Transactional
+    public void deductStock(Map<Long, Integer> variantQuantities) {
+        if (variantQuantities == null || variantQuantities.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<Long, Integer> entry : variantQuantities.entrySet()) {
+            ProductVariant variant = productVariantRepository.findById(entry.getKey())
+                    .orElseThrow(() -> new ApplicationException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
+
+            int currentStock = variant.getQuantity() != null ? variant.getQuantity() : 0;
+            int deductQty = entry.getValue();
+            if (currentStock < deductQty) {
+                throw new ApplicationException(ErrorCode.INSUFFICIENT_STOCK, deductQty, currentStock);
+            }
+            variant.setQuantity(currentStock - deductQty);
+            productVariantRepository.save(variant);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void restoreStock(Map<Long, Integer> variantQuantities) {
+        if (variantQuantities == null || variantQuantities.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<Long, Integer> entry : variantQuantities.entrySet()) {
+            productVariantRepository.findById(entry.getKey()).ifPresent(variant -> {
+                int currentStock = variant.getQuantity() != null ? variant.getQuantity() : 0;
+                variant.setQuantity(currentStock + entry.getValue());
+                productVariantRepository.save(variant);
+            });
+        }
+    }
+
+    private ProductOptionPublicDto mapToProductOptionPublicDto(VariantOptionValue vov) {
+        if (vov == null || vov.getProductOptionValue() == null) {
+            return null;
+        }
+        var pov = vov.getProductOptionValue();
+        var poc = pov.getProductOptionCombination();
+        var po = poc != null ? poc.getProductOption() : null;
+        return new ProductOptionPublicDto(
+                po != null ? po.getId() : null,
+                po != null ? po.getName() : null,
+                pov.getValue()
+        );
+    }
+ 
 }

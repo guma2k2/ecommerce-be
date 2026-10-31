@@ -1,8 +1,8 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.response.FacebookTokenResponse;
 import com.yas.system.auth.internal.dto.response.FacebookUserInfoResponse;
-import com.yas.system.auth.internal.service.FacebookOauthService;
+import com.yas.system.auth.service.FacebookOauthService;
 import com.yas.system.common.config.AppProperties;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

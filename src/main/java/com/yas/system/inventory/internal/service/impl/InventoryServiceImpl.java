@@ -12,8 +12,11 @@ import com.yas.system.inventory.internal.enumeration.MovementReason;
 import com.yas.system.inventory.internal.enumeration.MovementType;
 import com.yas.system.inventory.internal.helper.InventoryHelper;
 import com.yas.system.inventory.internal.repository.InventoryRepository;
-import com.yas.system.inventory.internal.service.InventoryService;
-import com.yas.system.inventory.internal.service.StockMovementService;
+import com.yas.system.inventory.api.dto.StockReservationItemDto;
+import com.yas.system.inventory.service.InventoryService;
+import com.yas.system.inventory.service.StockReservationService;
+import java.time.Duration;
+import com.yas.system.inventory.service.StockMovementService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -35,6 +38,7 @@ public class InventoryServiceImpl implements InventoryService {
     InventoryRepository inventoryRepository;
     InventoryHelper inventoryHelper;
     StockMovementService stockMovementService;
+    StockReservationService stockReservationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -160,5 +164,59 @@ public class InventoryServiceImpl implements InventoryService {
                 variantId, physicalCount, delta, performedBy);
 
         return InventoryResponse.from(updated);
+    }
+
+    @Override
+    @Transactional
+    public void initializeInventory(Long productVariantId, String sku, int initialStock) {
+        if (inventoryRepository.findByProductVariantId(productVariantId).isPresent()) {
+            log.info("Inventory already exists for variant ID: {}", productVariantId);
+            return;
+        }
+
+        Inventory inventory = Inventory.builder()
+                .productVariantId(productVariantId)
+                .sku(sku)
+                .onHand(Math.max(0, initialStock))
+                .reserved(0)
+                .build();
+
+        Inventory saved = inventoryRepository.save(inventory);
+
+        if (initialStock > 0) {
+            stockMovementService.recordMovement(
+                    saved.getId(),
+                    productVariantId,
+                    initialStock,
+                    0,
+                    initialStock,
+                    MovementType.INITIALIZATION,
+                    MovementReason.INITIAL_STOCK,
+                    null,
+                    InventoryConstant.ReasonDefaultNote.INITIAL_STOCK,
+                    InventoryConstant.SYSTEM_USER
+            );
+        }
+
+        log.info("Initialized inventory for variant ID: {} with SKU {} and stock {}",
+                productVariantId, sku, initialStock);
+    }
+
+    @Override
+    @Transactional
+    public void reserveStock(String orderId, List<StockReservationItemDto> items, Duration ttl) {
+        stockReservationService.reserveStock(orderId, items, ttl);
+    }
+
+    @Override
+    @Transactional
+    public void confirmDeductions(String orderId) {
+        stockReservationService.confirmDeductions(orderId);
+    }
+
+    @Override
+    @Transactional
+    public void releaseReservations(String orderId) {
+        stockReservationService.releaseReservations(orderId);
     }
 }

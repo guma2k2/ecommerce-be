@@ -10,8 +10,8 @@ import com.yas.system.catalog.internal.listener.StripeProductSyncEventListener;
 import com.yas.system.catalog.internal.repository.ProductMediaRepository;
 import com.yas.system.catalog.internal.repository.ProductRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
-import com.yas.system.media.api.MediaPublicService;
-import com.yas.system.payment.api.StripeCatalogPublicService;
+import com.yas.system.media.service.MediaService;
+import com.yas.system.payment.service.StripeCatalogSyncService;
 import com.yas.system.payment.api.dto.StripeVariantSyncCommand;
 import com.yas.system.payment.api.dto.StripeVariantSyncResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,10 +45,10 @@ class StripeProductSyncEventListenerTest {
     ProductMediaRepository productMediaRepository;
 
     @Mock
-    MediaPublicService mediaPublicService;
+    MediaService mediaService;
 
     @Mock
-    StripeCatalogPublicService stripeCatalogPublicService;
+    StripeCatalogSyncService stripeCatalogSyncService;
 
     StripeProductSyncEventListener listener;
 
@@ -58,8 +58,8 @@ class StripeProductSyncEventListenerTest {
                 productRepository,
                 productVariantRepository,
                 productMediaRepository,
-                mediaPublicService,
-                stripeCatalogPublicService
+                mediaService,
+                stripeCatalogSyncService
         );
     }
 
@@ -71,7 +71,7 @@ class StripeProductSyncEventListenerTest {
 
         listener.handleStripeSync(event);
 
-        verify(stripeCatalogPublicService).archiveVariant("prod_del_1", "price_del_1");
+        verify(stripeCatalogSyncService).archiveVariant("prod_del_1", "price_del_1");
         verifyNoInteractions(productRepository);
     }
 
@@ -100,17 +100,17 @@ class StripeProductSyncEventListenerTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productVariantRepository.findByProductId(1L)).thenReturn(List.of(variant));
         when(productMediaRepository.findByProductIdOrderByPositionAsc(1L)).thenReturn(List.of());
-        when(mediaPublicService.getMediaUrls(any())).thenReturn(Map.of("media-1", "http://media.com/mbp.png"));
-        when(stripeCatalogPublicService.syncVariant(any())).thenReturn(
+        when(mediaService.getMediaUrls(any())).thenReturn(Map.of("media-1", "http://media.com/mbp.png"));
+        when(stripeCatalogSyncService.syncVariant(any())).thenReturn(
                 new StripeVariantSyncResult(101L, "prod_stripe_new", "price_stripe_new")
         );
 
         listener.handleStripeSync(event);
 
-        verify(stripeCatalogPublicService).archiveVariant("prod_old", "price_old");
+        verify(stripeCatalogSyncService).archiveVariant("prod_old", "price_old");
 
         ArgumentCaptor<StripeVariantSyncCommand> cmdCaptor = ArgumentCaptor.forClass(StripeVariantSyncCommand.class);
-        verify(stripeCatalogPublicService).syncVariant(cmdCaptor.capture());
+        verify(stripeCatalogSyncService).syncVariant(cmdCaptor.capture());
         StripeVariantSyncCommand capturedCmd = cmdCaptor.getValue();
         assertThat(capturedCmd.name()).isEqualTo("MacBook Pro - 16-inch 1TB");
         assertThat(capturedCmd.price()).isEqualByComparingTo(BigDecimal.valueOf(2499.00));

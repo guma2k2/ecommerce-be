@@ -1,6 +1,6 @@
 package com.yas.system.common.config;
 
-import com.yas.system.inventory.internal.constant.InventoryConstant;
+import com.yas.system.common.constant.AppConstant;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -20,7 +20,7 @@ public class JpaConfig {
         return () -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
-                return Optional.of(InventoryConstant.SYSTEM_USER);
+                return Optional.of(AppConstant.SYSTEM_USER);
             }
             return Optional.ofNullable(authentication.getName());
         };

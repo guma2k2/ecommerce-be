@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.service.impl;
+package com.yas.system.catalog.service.impl;
 
 import com.yas.system.catalog.internal.dto.request.ProductAttributeCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductAttributeUpdateRequest;
@@ -6,7 +6,7 @@ import com.yas.system.catalog.internal.dto.response.ProductAttributeResponse;
 import com.yas.system.catalog.internal.entity.attribute.ProductAttribute;
 import com.yas.system.catalog.internal.helper.ProductAttributeHelper;
 import com.yas.system.catalog.internal.repository.ProductAttributeRepository;
-import com.yas.system.catalog.internal.service.ProductAttributeService;
+import com.yas.system.catalog.service.ProductAttributeService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;

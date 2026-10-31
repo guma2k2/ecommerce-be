@@ -7,7 +7,7 @@ import com.yas.system.order.internal.dto.response.*;
 import com.yas.system.order.internal.entity.Order;
 import com.yas.system.order.internal.entity.OrderDetail;
 import com.yas.system.order.internal.enumeration.OrderStatus;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentStatus;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
