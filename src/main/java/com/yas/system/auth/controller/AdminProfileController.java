@@ -2,7 +2,7 @@ package com.yas.system.auth.controller;
 
 import com.yas.system.auth.internal.dto.request.AdminProfileRequest;
 import com.yas.system.auth.internal.dto.response.AdminProfileResponse;
-import com.yas.system.auth.internal.service.AdminProfileService;
+import com.yas.system.auth.service.AdminProfileService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.security.annotation.ActiveUser;
 import com.yas.system.common.security.annotation.AuthUser;

@@ -1,7 +1,7 @@
 package com.yas.system.order.event;
 
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.util.UUID;

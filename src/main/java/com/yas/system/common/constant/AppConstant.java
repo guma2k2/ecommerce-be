@@ -3,6 +3,7 @@ package com.yas.system.common.constant;
 public class AppConstant {
 
     public static final String BEARER  = "Bearer ";
+    public static final String SYSTEM_USER = "SYSTEM";
     public static final String PRODUCT_VARIANT_DEFAULT_TITLE = "Default Title";
     public static final String DEFAULT_LANGUAGE = "en";
 

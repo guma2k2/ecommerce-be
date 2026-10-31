@@ -1,7 +1,7 @@
 package com.yas.system.order.internal.dto.response;
 
 import com.yas.system.order.internal.enumeration.OrderStatus;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.util.UUID;

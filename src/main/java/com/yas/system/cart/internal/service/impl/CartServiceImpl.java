@@ -1,14 +1,15 @@
 package com.yas.system.cart.internal.service.impl;
 
+import com.yas.system.cart.api.dto.CartItemPublicDto;
 import com.yas.system.cart.internal.dto.request.AddToCartRequest;
 import com.yas.system.cart.internal.dto.request.UpdateCartQuantityRequest;
 import com.yas.system.cart.internal.dto.response.CartResponse;
 import com.yas.system.cart.internal.entity.Cart;
 import com.yas.system.cart.internal.helper.CartHelper;
 import com.yas.system.cart.internal.repository.CartRepository;
-import com.yas.system.cart.internal.service.CartService;
+import com.yas.system.cart.service.CartService;
 import com.yas.system.cart.internal.validator.CartValidator;
-import com.yas.system.catalog.api.CatalogPublicService;
+import com.yas.system.catalog.service.ProductService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
@@ -30,7 +31,7 @@ public class CartServiceImpl implements CartService {
 
     CartRepository cartRepository;
     CartHelper cartHelper;
-    CatalogPublicService catalogPublicService;
+    ProductService productService;
     CartValidator cartValidator;
 
     @Override
@@ -47,7 +48,7 @@ public class CartServiceImpl implements CartService {
                 .distinct()
                 .toList();
 
-        Map<Long, ProductVariantPublicDto> variantMap = catalogPublicService.getProductVariantsByIds(variantIds);
+        Map<Long, ProductVariantPublicDto> variantMap = productService.getProductVariantsByIds(variantIds);
         return cartHelper.buildCartResponse(cartList, variantMap);
     }
 
@@ -56,7 +57,7 @@ public class CartServiceImpl implements CartService {
     public CartResponse addToCart(AuthUser customer, AddToCartRequest request) {
         String customerId = resolveCustomerId(customer);
 
-        ProductVariantPublicDto variant = catalogPublicService.getProductVariantById(request.productVariantId());
+        ProductVariantPublicDto variant = productService.getProductVariantById(request.productVariantId());
 
         Optional<Cart> existingCartOpt = cartRepository.findByCustomerIdAndProductVariantId(
                 customerId,
@@ -92,7 +93,7 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findByIdAndCustomerId(cartId, customerId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.CART_ITEM_NOT_FOUND));
 
-        ProductVariantPublicDto variant = catalogPublicService.getProductVariantById(cart.getProductVariantId());
+        ProductVariantPublicDto variant = productService.getProductVariantById(cart.getProductVariantId());
 
         cartValidator.validateStockAvailability(request.quantity(), variant);
 
@@ -116,6 +117,26 @@ public class CartServiceImpl implements CartService {
     public void clearCart(AuthUser customer) {
         String customerId = resolveCustomerId(customer);
         cartRepository.deleteByCustomerId(customerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CartItemPublicDto> getCartItemsByCustomerId(String customerId) {
+        if (customerId == null) {
+            return List.of();
+        }
+        return cartRepository.findByCustomerId(customerId)
+                .stream()
+                .map(cart -> new CartItemPublicDto(cart.getId(), cart.getProductVariantId(), cart.getQuantity()))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void clearCart(String customerId) {
+        if (customerId != null) {
+            cartRepository.deleteByCustomerId(customerId);
+        }
     }
 
     private String resolveCustomerId(AuthUser customer) {

@@ -1,18 +1,10 @@
 package com.yas.system.common.security.annotation;
 
-import com.yas.system.auth.internal.entity.Role;
-import com.yas.system.auth.internal.entity.Permission;
-import com.yas.system.auth.internal.entity.User;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public record AuthUser(
         String id,
@@ -24,27 +16,6 @@ public record AuthUser(
 
     public AuthUser(String email, String roleName, String password, Collection<? extends GrantedAuthority> authorities) {
         this(null, email, roleName, password, authorities);
-    }
-
-    public static AuthUser fromUser(User user) {
-        String roleName = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.joining(","));
-
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        if (user.getRoles() != null) {
-            for (Role role : user.getRoles()) {
-                authorities.add(new SimpleGrantedAuthority(role.getName()));
-                if (role.getPermissions() != null) {
-                    for (Permission perm : role.getPermissions()) {
-                        authorities.add(new SimpleGrantedAuthority(perm.getName()));
-                    }
-                }
-            }
-        }
-
-        String userId = user.getId() != null ? user.getId().toString() : null;
-        return new AuthUser(userId, user.getEmail(), roleName, user.getPassword(), authorities);
     }
 
     @Override

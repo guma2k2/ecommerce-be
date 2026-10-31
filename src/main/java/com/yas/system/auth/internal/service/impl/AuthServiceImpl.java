@@ -1,4 +1,4 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.request.*;
 import com.yas.system.auth.internal.dto.response.*;
@@ -16,11 +16,11 @@ import com.yas.system.auth.internal.redis.service.RefreshTokenService;
 import com.yas.system.auth.internal.redis.service.VerifyEmailService;
 import com.yas.system.auth.internal.repository.CustomerProfileRepository;
 import com.yas.system.auth.internal.repository.UserRepository;
-import com.yas.system.auth.internal.service.AuthService;
+import com.yas.system.auth.service.AuthService;
 import com.yas.system.auth.internal.validator.AuthValidator;
-import com.yas.system.auth.internal.service.FacebookOauthService;
-import com.yas.system.auth.internal.service.GithubOauthService;
-import com.yas.system.auth.internal.service.GoogleOauthService;
+import com.yas.system.auth.service.FacebookOauthService;
+import com.yas.system.auth.service.GithubOauthService;
+import com.yas.system.auth.service.GoogleOauthService;
 import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.auth.internal.util.CookieUtil;
 import com.yas.system.common.config.AppProperties;
@@ -188,7 +188,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
-        AuthUser userDetails = AuthUser.fromUser(user);
+        AuthUser userDetails = userHelper.toAuthUser(user);
         return jwtService.generateAccessToken(userDetails);
     }
 
@@ -268,7 +268,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ApplicationException(ErrorCode.INVALID_PROVIDER);
         }
 
-        AuthUser userDetails = AuthUser.fromUser(activeUser);
+        AuthUser userDetails = userHelper.toAuthUser(activeUser);
         String accessToken = jwtService.generateAccessToken(userDetails);
         responseRefreshToken(response, userDetails);
 

@@ -8,7 +8,7 @@ import com.yas.system.cart.internal.helper.CartHelper;
 import com.yas.system.cart.internal.validator.CartValidator;
 import com.yas.system.cart.internal.repository.CartRepository;
 import com.yas.system.cart.internal.service.impl.CartServiceImpl;
-import com.yas.system.catalog.api.CatalogPublicService;
+import com.yas.system.catalog.service.ProductService;
 import com.yas.system.catalog.api.dto.ProductOptionPublicDto;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.catalog.api.enumeration.ProductStatus;
@@ -40,7 +40,7 @@ class CartServiceTest {
     CartRepository cartRepository;
 
     @Mock
-    CatalogPublicService catalogPublicService;
+    ProductService productService;
 
     CartHelper cartHelper;
     CartValidator cartValidator;
@@ -53,7 +53,7 @@ class CartServiceTest {
     void setUp() {
         cartHelper = new CartHelper();
         cartValidator = new CartValidator();
-        cartService = new CartServiceImpl(cartRepository, cartHelper, catalogPublicService, cartValidator);
+        cartService = new CartServiceImpl(cartRepository, cartHelper, productService, cartValidator);
         testUser = new AuthUser(customerId, "test@example.com", "CUSTOMER", "password", List.of());
     }
 
@@ -84,7 +84,7 @@ class CartServiceTest {
                 List.of(new ProductOptionPublicDto(1L, "Color", "Black")));
 
         when(cartRepository.findByCustomerId(customerId)).thenReturn(List.of(cart));
-        when(catalogPublicService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
+        when(productService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
 
         CartResponse response = cartService.getCart(testUser);
 
@@ -103,13 +103,13 @@ class CartServiceTest {
     void addToCart_newItem() {
         ProductVariantPublicDto variantDto = createVariantDto(100L, 10, List.of());
 
-        when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
+        when(productService.getProductVariantById(100L)).thenReturn(variantDto);
         when(cartRepository.findByCustomerIdAndProductVariantId(customerId, 100L)).thenReturn(Optional.empty());
 
         Cart cart = Cart.builder().customerId(customerId).productVariantId(100L).quantity(2).build();
         cart.setId(1L);
         when(cartRepository.findByCustomerId(customerId)).thenReturn(List.of(cart));
-        when(catalogPublicService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
+        when(productService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
 
         AddToCartRequest request = new AddToCartRequest(100L, 2);
         CartResponse response = cartService.addToCart(testUser, request);
@@ -133,13 +133,13 @@ class CartServiceTest {
                 .build();
         existingCart.setId(1L);
 
-        when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
+        when(productService.getProductVariantById(100L)).thenReturn(variantDto);
         when(cartRepository.findByCustomerIdAndProductVariantId(customerId, 100L)).thenReturn(Optional.of(existingCart));
 
         Cart cartUpdated = Cart.builder().customerId(customerId).productVariantId(100L).quantity(5).build();
         cartUpdated.setId(1L);
         when(cartRepository.findByCustomerId(customerId)).thenReturn(List.of(cartUpdated));
-        when(catalogPublicService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
+        when(productService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
 
         AddToCartRequest request = new AddToCartRequest(100L, 2);
         CartResponse response = cartService.addToCart(testUser, request);
@@ -154,7 +154,7 @@ class CartServiceTest {
     void addToCart_insufficientStock() {
         ProductVariantPublicDto variantDto = createVariantDto(100L, 3, List.of());
 
-        when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
+        when(productService.getProductVariantById(100L)).thenReturn(variantDto);
         when(cartRepository.findByCustomerIdAndProductVariantId(customerId, 100L)).thenReturn(Optional.empty());
 
         AddToCartRequest request = new AddToCartRequest(100L, 5);
@@ -169,7 +169,7 @@ class CartServiceTest {
     @Test
     @DisplayName("addToCart should throw PRODUCT_INACTIVE when variant product status is INACTIVE")
     void addToCart_inactiveVariant() {
-        when(catalogPublicService.getProductVariantById(100L))
+        when(productService.getProductVariantById(100L))
                 .thenThrow(new ApplicationException(ErrorCode.PRODUCT_INACTIVE));
 
         AddToCartRequest request = new AddToCartRequest(100L, 1);
@@ -194,12 +194,12 @@ class CartServiceTest {
         ProductVariantPublicDto variantDto = createVariantDto(100L, 10, List.of());
 
         when(cartRepository.findByIdAndCustomerId(5L, customerId)).thenReturn(Optional.of(cart));
-        when(catalogPublicService.getProductVariantById(100L)).thenReturn(variantDto);
+        when(productService.getProductVariantById(100L)).thenReturn(variantDto);
 
         Cart cartUpdated = Cart.builder().customerId(customerId).productVariantId(100L).quantity(4).build();
         cartUpdated.setId(5L);
         when(cartRepository.findByCustomerId(customerId)).thenReturn(List.of(cartUpdated));
-        when(catalogPublicService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
+        when(productService.getProductVariantsByIds(List.of(100L))).thenReturn(Map.of(100L, variantDto));
 
         UpdateCartQuantityRequest request = new UpdateCartQuantityRequest(4);
         CartResponse response = cartService.updateQuantity(testUser, 5L, request);

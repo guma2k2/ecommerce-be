@@ -2,8 +2,8 @@ package com.yas.system.payment.internal.dto.response;
 
 import com.yas.system.common.util.DateTimeUtils;
 import com.yas.system.payment.internal.entity.Payment;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.util.UUID;

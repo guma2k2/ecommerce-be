@@ -5,7 +5,7 @@ import com.yas.system.common.response.PageResponse;
 import com.yas.system.inventory.internal.dto.request.StockAdjustmentRequest;
 import com.yas.system.inventory.internal.dto.request.StockCycleCountRequest;
 import com.yas.system.inventory.internal.dto.response.InventoryResponse;
-import com.yas.system.inventory.internal.service.InventoryService;
+import com.yas.system.inventory.service.InventoryService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

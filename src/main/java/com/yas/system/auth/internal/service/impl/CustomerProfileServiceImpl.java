@@ -1,11 +1,11 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.response.CustomerProfileResponse;
 import com.yas.system.auth.internal.entity.CustomerProfile;
 import com.yas.system.auth.internal.entity.User;
 import com.yas.system.auth.internal.repository.CustomerProfileRepository;
 import com.yas.system.auth.internal.repository.UserRepository;
-import com.yas.system.auth.internal.service.CustomerProfileService;
+import com.yas.system.auth.service.CustomerProfileService;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.security.annotation.AuthUser;

@@ -1,6 +1,6 @@
 package com.yas.system.payment.internal.gateway.dto;
 
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
+import com.yas.system.payment.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
 

@@ -1,6 +1,7 @@
 package com.yas.system.payment.internal.service.impl;
 
 import com.yas.system.common.exception.ApplicationException;
+import com.yas.system.payment.api.dto.CheckoutItemDto;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.security.annotation.AuthUser;
 import com.yas.system.payment.internal.dto.request.CreateCheckoutSessionRequest;
@@ -9,21 +10,21 @@ import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
 import com.yas.system.payment.internal.dto.response.PaymentLedgerResponse;
 import com.yas.system.payment.internal.dto.response.PaymentResponse;
 import com.yas.system.payment.internal.entity.Payment;
-import com.yas.system.payment.internal.enumeration.BalanceType;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
-import com.yas.system.payment.internal.event.PaymentCompletedEvent;
+import com.yas.system.payment.enumeration.BalanceType;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
+import com.yas.system.payment.event.PaymentCompletedEvent;
 import com.yas.system.payment.internal.gateway.PaymentGateway;
 import com.yas.system.payment.internal.gateway.PaymentGatewayResolver;
 import com.yas.system.payment.internal.gateway.dto.PaymentCheckoutContext;
 import com.yas.system.payment.internal.gateway.dto.RefundResult;
 import com.yas.system.payment.internal.gateway.dto.WebhookResult;
 import com.yas.system.payment.internal.repository.PaymentRepository;
-import com.yas.system.payment.internal.service.PaymentIdempotencyService;
-import com.yas.system.payment.internal.service.PaymentLedgerService;
-import com.yas.system.payment.internal.service.PaymentService;
+import com.yas.system.payment.service.PaymentIdempotencyService;
+import com.yas.system.payment.service.PaymentLedgerService;
+import com.yas.system.payment.service.PaymentService;
 import com.yas.system.payment.internal.validator.PaymentValidator;
-import com.yas.system.payment.internal.event.RefundCompletedEvent;
+import com.yas.system.payment.event.RefundCompletedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -270,5 +271,103 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail,
+                                           String orderId, BigDecimal amount, String currency,
+                                           List<CheckoutItemDto> items,
+                                           String stripePromotionCodeId, String stripeCouponId) {
+        PaymentMethod method = paymentMethod != null ? paymentMethod : PaymentMethod.STRIPE;
+
+        Payment payment = Payment.builder()
+                .customerId(customerId)
+                .orderId(orderId)
+                .amount(amount)
+                .refundedAmount(BigDecimal.ZERO)
+                .currency(currency.toUpperCase())
+                .status(PaymentStatus.PENDING)
+                .method(method)
+                .idempotencyKey(UUID.randomUUID().toString())
+                .build();
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        PaymentGateway gateway = paymentGatewayResolver.resolve(method);
+        PaymentCheckoutContext context = new PaymentCheckoutContext(
+                customerEmail, items, null, null, stripePromotionCodeId, stripeCouponId
+        );
+        var sessionResponse = gateway.createCheckoutSession(savedPayment, context);
+
+        savedPayment.setGatewaySessionId(sessionResponse.sessionId());
+        paymentRepository.save(savedPayment);
+
+        paymentLedgerService.recordInitialization(savedPayment);
+
+        return sessionResponse.checkoutUrl();
+    }
+
+    @Override
+    @Transactional
+    public void refundByOrderId(String orderId, String customerEmail, String reason) {
+        Optional<Payment> paymentOpt = paymentRepository.findByOrderId(orderId);
+        if (paymentOpt.isEmpty()) {
+            log.info("No payment found for orderId {}. Skipping auto-refund.", orderId);
+            return;
+        }
+
+        Payment payment = paymentOpt.get();
+
+        if (payment.getStatus() != PaymentStatus.SUCCEEDED
+                && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED) {
+            log.info("Payment {} for order {} is in status {}. No refund needed.",
+                    payment.getId(), orderId, payment.getStatus());
+            return;
+        }
+
+        BigDecimal refundableAmount = payment.getRefundableAmount();
+        if (refundableAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            log.info("Payment {} for order {} has no remaining refundable amount. Skipping.", payment.getId(), orderId);
+            return;
+        }
+
+        String idempotencyKey = "cancel-refund-" + orderId;
+        PaymentGateway gateway = paymentGatewayResolver.resolve(payment.getMethod());
+
+        RefundResult refundResult = gateway.refund(
+                payment,
+                refundableAmount,
+                reason,
+                idempotencyKey
+        );
+
+        BigDecimal previousRefunded = payment.getRefundedAmount() != null ? payment.getRefundedAmount() : BigDecimal.ZERO;
+        BigDecimal newRefunded = previousRefunded.add(refundResult.refundedAmount());
+        payment.setRefundedAmount(newRefunded);
+
+        if (newRefunded.compareTo(payment.getAmount()) >= 0) {
+            payment.setStatus(PaymentStatus.REFUNDED);
+        } else {
+            payment.setStatus(PaymentStatus.PARTIALLY_REFUNDED);
+        }
+
+        paymentRepository.save(payment);
+        paymentLedgerService.recordRefund(payment, refundResult.refundedAmount(), refundResult.gatewayRefundId(), reason);
+
+        eventPublisher.publishEvent(new RefundCompletedEvent(
+                payment.getId(),
+                orderId,
+                payment.getCustomerId(),
+                customerEmail,
+                refundResult.refundedAmount(),
+                payment.getAmount(),
+                payment.getCurrency(),
+                payment.getStatus(),
+                reason
+        ));
+
+        log.info("Auto-refund completed for order {}: refundedAmount={}, newStatus={}",
+                orderId, refundResult.refundedAmount(), payment.getStatus());
     }
 }

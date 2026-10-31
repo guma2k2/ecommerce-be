@@ -6,7 +6,7 @@ import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.payment.internal.constant.PaymentConstant;
 import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
-import com.yas.system.payment.internal.service.PaymentIdempotencyService;
+import com.yas.system.payment.service.PaymentIdempotencyService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

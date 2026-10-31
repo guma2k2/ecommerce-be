@@ -2,7 +2,7 @@ package com.yas.system.auth.controller;
 
 import com.yas.system.auth.internal.dto.request.*;
 import com.yas.system.auth.internal.dto.response.AuthenticationResponse;
-import com.yas.system.auth.internal.service.AuthService;
+import com.yas.system.auth.service.AuthService;
 import com.yas.system.auth.internal.util.Constant;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.security.annotation.AuthUser;

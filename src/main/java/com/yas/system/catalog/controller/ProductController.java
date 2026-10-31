@@ -5,7 +5,7 @@ import com.yas.system.catalog.internal.dto.request.ProductUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductResponse;
 import com.yas.system.catalog.internal.dto.response.ProductSearchItemResponse;
 import com.yas.system.catalog.internal.dto.response.ProductThumbnailResponse;
-import com.yas.system.catalog.internal.service.ProductService;
+import com.yas.system.catalog.service.ProductService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;

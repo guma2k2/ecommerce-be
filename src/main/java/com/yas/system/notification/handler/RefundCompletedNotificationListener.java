@@ -1,8 +1,8 @@
 package com.yas.system.notification.handler;
 
 import com.yas.system.notification.mail.service.MailService;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
-import com.yas.system.payment.internal.event.RefundCompletedEvent;
+import com.yas.system.payment.enumeration.PaymentStatus;
+import com.yas.system.payment.event.RefundCompletedEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

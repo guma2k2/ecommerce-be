@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.service.search.impl;
+package com.yas.system.catalog.service.search.impl;
 
 import com.yas.system.catalog.internal.dto.request.ProductSearchQuery;
 import com.yas.system.catalog.internal.dto.request.ProductSearchRequest;
@@ -16,10 +16,10 @@ import com.yas.system.catalog.internal.repository.projection.AttributeFacetProje
 import com.yas.system.catalog.internal.repository.projection.BrandFacetProjection;
 import com.yas.system.catalog.internal.repository.projection.PriceRangeProjection;
 import com.yas.system.catalog.internal.repository.projection.ProductSuggestionProjection;
-import com.yas.system.catalog.internal.service.search.ProductSearchService;
+import com.yas.system.catalog.service.search.ProductSearchService;
 import com.yas.system.catalog.internal.specification.ProductSearchSpecification;
 import com.yas.system.common.response.PageResponse;
-import com.yas.system.media.api.MediaPublicService;
+import com.yas.system.media.service.MediaService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -48,7 +48,7 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
     CategoryRepository categoryRepository;
     ProductMediaRepository productMediaRepository;
     ProductVariantRepository productVariantRepository;
-    MediaPublicService mediaPublicService;
+    MediaService mediaService;
 
     @Override
     @Transactional(readOnly = true)
@@ -70,7 +70,7 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
                 .distinct()
                 .toList();
 
-        Map<String, String> mediaUrls = mediaIds.isEmpty() ? Map.of() : mediaPublicService.getMediaUrls(mediaIds);
+        Map<String, String> mediaUrls = mediaIds.isEmpty() ? Map.of() : mediaService.getMediaUrls(mediaIds);
 
         return projections.stream()
                 .map(p -> new ProductSuggestionResponse(
@@ -191,7 +191,7 @@ public class PostgreSqlProductSearchServiceImpl implements ProductSearchService 
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
-        Map<String, String> mediaUrls = allMediaIds.isEmpty() ? Map.of() : mediaPublicService.getMediaUrls(allMediaIds);
+        Map<String, String> mediaUrls = allMediaIds.isEmpty() ? Map.of() : mediaService.getMediaUrls(allMediaIds);
 
         // Batch resolve variant prices (minPrice, maxPrice)
         List<ProductVariant> variants = productVariantRepository.findByProductIdIn(productIds);

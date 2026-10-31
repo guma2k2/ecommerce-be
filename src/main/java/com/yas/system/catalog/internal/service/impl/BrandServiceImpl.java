@@ -1,4 +1,4 @@
-package com.yas.system.catalog.internal.service.impl;
+package com.yas.system.catalog.service.impl;
 
 import com.yas.system.catalog.internal.dto.request.BrandCreateRequest;
 import com.yas.system.catalog.internal.dto.request.BrandUpdateRequest;
@@ -6,7 +6,7 @@ import com.yas.system.catalog.internal.dto.response.BrandResponse;
 import com.yas.system.catalog.internal.entity.Brand;
 import com.yas.system.catalog.internal.helper.BrandHelper;
 import com.yas.system.catalog.internal.repository.BrandRepository;
-import com.yas.system.catalog.internal.service.BrandService;
+import com.yas.system.catalog.service.BrandService;
 import com.yas.system.catalog.internal.validator.BrandValidator;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;

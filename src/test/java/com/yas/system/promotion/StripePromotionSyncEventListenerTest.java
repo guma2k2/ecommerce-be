@@ -1,6 +1,6 @@
 package com.yas.system.promotion;
 
-import com.yas.system.payment.api.StripePromotionPublicService;
+import com.yas.system.payment.service.StripePromotionSyncService;
 import com.yas.system.payment.api.dto.StripePromotionSyncCommand;
 import com.yas.system.payment.api.dto.StripePromotionSyncResult;
 import com.yas.system.promotion.events.PromotionSyncEvent;
@@ -35,7 +35,7 @@ class StripePromotionSyncEventListenerTest {
     private PromotionRepository promotionRepository;
 
     @Mock
-    private StripePromotionPublicService stripePromotionPublicService;
+    private StripePromotionSyncService stripePromotionSyncService;
 
     @InjectMocks
     private StripePromotionSyncEventListener listener;
@@ -60,7 +60,7 @@ class StripePromotionSyncEventListenerTest {
         promotion.setId(5L);
 
         when(promotionRepository.findById(5L)).thenReturn(Optional.of(promotion));
-        when(stripePromotionPublicService.syncPromotion(any(StripePromotionSyncCommand.class)))
+        when(stripePromotionSyncService.syncPromotion(any(StripePromotionSyncCommand.class)))
                 .thenReturn(new StripePromotionSyncResult(5L, "cou_winter123", "promo_winter456"));
 
         PromotionSyncEvent event = new PromotionSyncEvent(5L, SyncAction.UPSERT);
@@ -71,7 +71,7 @@ class StripePromotionSyncEventListenerTest {
         verify(promotionRepository).save(promotion);
 
         ArgumentCaptor<StripePromotionSyncCommand> captor = ArgumentCaptor.forClass(StripePromotionSyncCommand.class);
-        verify(stripePromotionPublicService).syncPromotion(captor.capture());
+        verify(stripePromotionSyncService).syncPromotion(captor.capture());
         assertThat(captor.getValue().couponCode()).isEqualTo("WINTER25");
         assertThat(captor.getValue().discountPercentage()).isEqualByComparingTo(BigDecimal.valueOf(25.00));
     }
@@ -82,7 +82,7 @@ class StripePromotionSyncEventListenerTest {
         PromotionSyncEvent event = new PromotionSyncEvent(10L, SyncAction.DELETE, "cou_del123", "promo_del456");
         listener.handlePromotionSync(event);
 
-        verify(stripePromotionPublicService).archivePromotion("cou_del123", "promo_del456");
+        verify(stripePromotionSyncService).archivePromotion("cou_del123", "promo_del456");
         verify(promotionRepository, never()).findById(any());
         verify(promotionRepository, never()).save(any());
     }
@@ -95,7 +95,7 @@ class StripePromotionSyncEventListenerTest {
         PromotionSyncEvent event = new PromotionSyncEvent(99L, SyncAction.UPSERT);
         listener.handlePromotionSync(event);
 
-        verify(stripePromotionPublicService, never()).syncPromotion(any());
+        verify(stripePromotionSyncService, never()).syncPromotion(any());
         verify(promotionRepository, never()).save(any());
     }
 }

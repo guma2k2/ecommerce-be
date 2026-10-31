@@ -1,6 +1,6 @@
 package com.yas.system.payment.internal.job;
 
-import com.yas.system.payment.internal.service.PaymentReconciliationService;
+import com.yas.system.payment.service.PaymentReconciliationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

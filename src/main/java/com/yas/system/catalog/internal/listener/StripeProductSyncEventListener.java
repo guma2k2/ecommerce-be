@@ -9,9 +9,9 @@ import com.yas.system.catalog.internal.entity.variant.ProductVariant;
 import com.yas.system.catalog.internal.repository.ProductMediaRepository;
 import com.yas.system.catalog.internal.repository.ProductRepository;
 import com.yas.system.catalog.internal.repository.ProductVariantRepository;
-import com.yas.system.media.api.MediaPublicService;
+import com.yas.system.media.service.MediaService;
 import com.yas.system.common.util.StringUtils;
-import com.yas.system.payment.api.StripeCatalogPublicService;
+import com.yas.system.payment.service.StripeCatalogSyncService;
 import com.yas.system.payment.api.dto.StripeVariantSyncCommand;
 import com.yas.system.payment.api.dto.StripeVariantSyncResult;
 import lombok.AccessLevel;
@@ -36,8 +36,8 @@ public class StripeProductSyncEventListener {
     ProductRepository productRepository;
     ProductVariantRepository productVariantRepository;
     ProductMediaRepository productMediaRepository;
-    MediaPublicService mediaPublicService;
-    StripeCatalogPublicService stripeCatalogPublicService;
+    MediaService mediaService;
+    StripeCatalogSyncService stripeCatalogSyncService;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -70,7 +70,7 @@ public class StripeProductSyncEventListener {
             for (VariantStripeInfo info : event.removedVariants()) {
                 log.debug("Archiving variant ID: {}, stripeProductId: {}, stripePriceId: {}",
                         info.variantId(), info.stripeProductId(), info.stripePriceId());
-                stripeCatalogPublicService.archiveVariant(info.stripeProductId(), info.stripePriceId());
+                stripeCatalogSyncService.archiveVariant(info.stripeProductId(), info.stripePriceId());
             }
         }
         log.info("Completed archiving variants in Stripe for deleted product ID: {}", event.productId());
@@ -83,7 +83,7 @@ public class StripeProductSyncEventListener {
             for (VariantStripeInfo info : event.removedVariants()) {
                 log.debug("Archiving omitted variant ID: {}, stripeProductId: {}, stripePriceId: {}",
                         info.variantId(), info.stripeProductId(), info.stripePriceId());
-                stripeCatalogPublicService.archiveVariant(info.stripeProductId(), info.stripePriceId());
+                stripeCatalogSyncService.archiveVariant(info.stripeProductId(), info.stripePriceId());
             }
         }
 
@@ -120,7 +120,7 @@ public class StripeProductSyncEventListener {
 
         Map<String, String> mediaUrls = mediaIdsToFetch.isEmpty()
                 ? Map.of()
-                : mediaPublicService.getMediaUrls(new ArrayList<>(mediaIdsToFetch));
+                : mediaService.getMediaUrls(new ArrayList<>(mediaIdsToFetch));
         log.debug("Resolved {} media URLs for product ID: {}", mediaUrls.size(), product.getId());
 
         List<ProductVariant> variantsToSave = new ArrayList<>();
@@ -157,7 +157,7 @@ public class StripeProductSyncEventListener {
                     active
             );
 
-            StripeVariantSyncResult result = stripeCatalogPublicService.syncVariant(command);
+            StripeVariantSyncResult result = stripeCatalogSyncService.syncVariant(command);
 
             log.debug("Stripe sync result for variant ID {}: stripeProductId='{}', stripePriceId='{}'",
                     variant.getId(), result.stripeProductId(), result.stripePriceId());

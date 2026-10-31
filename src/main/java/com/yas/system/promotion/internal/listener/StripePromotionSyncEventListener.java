@@ -1,6 +1,6 @@
 package com.yas.system.promotion.internal.listener;
 
-import com.yas.system.payment.api.StripePromotionPublicService;
+import com.yas.system.payment.service.StripePromotionSyncService;
 import com.yas.system.payment.api.dto.StripePromotionSyncCommand;
 import com.yas.system.payment.api.dto.StripePromotionSyncResult;
 import com.yas.system.promotion.events.PromotionSyncEvent;
@@ -29,7 +29,7 @@ import java.util.Optional;
 public class StripePromotionSyncEventListener {
 
     PromotionRepository promotionRepository;
-    StripePromotionPublicService stripePromotionPublicService;
+    StripePromotionSyncService stripePromotionSyncService;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -56,7 +56,7 @@ public class StripePromotionSyncEventListener {
     private void handleDeleteSync(PromotionSyncEvent event) {
         log.info("Archiving promotion in Stripe: promotionId={}, stripeCouponId={}, stripePromotionCodeId={}",
                 event.promotionId(), event.stripeCouponId(), event.stripePromotionCodeId());
-        stripePromotionPublicService.archivePromotion(event.stripeCouponId(), event.stripePromotionCodeId());
+        stripePromotionSyncService.archivePromotion(event.stripeCouponId(), event.stripePromotionCodeId());
         log.info("Completed archiving promotion in Stripe: promotionId={}", event.promotionId());
     }
 
@@ -88,7 +88,7 @@ public class StripePromotionSyncEventListener {
                 promotion.getStripePromotionCodeId()
         );
 
-        StripePromotionSyncResult result = stripePromotionPublicService.syncPromotion(command);
+        StripePromotionSyncResult result = stripePromotionSyncService.syncPromotion(command);
 
         log.debug("Stripe sync result for promotion ID {}: stripeCouponId='{}', stripePromotionCodeId='{}'",
                 promotion.getId(), result.stripeCouponId(), result.stripePromotionCodeId());

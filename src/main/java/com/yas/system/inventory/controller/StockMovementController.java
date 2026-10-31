@@ -3,7 +3,7 @@ package com.yas.system.inventory.controller;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.inventory.internal.dto.response.StockMovementResponse;
-import com.yas.system.inventory.internal.service.StockMovementService;
+import com.yas.system.inventory.service.StockMovementService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

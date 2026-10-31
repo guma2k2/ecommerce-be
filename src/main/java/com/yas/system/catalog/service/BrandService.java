@@ -1,0 +1,16 @@
+package com.yas.system.catalog.service;
+
+
+import com.yas.system.catalog.internal.dto.request.BrandCreateRequest;
+import com.yas.system.catalog.internal.dto.request.BrandUpdateRequest;
+import com.yas.system.catalog.internal.dto.response.BrandResponse;
+import com.yas.system.common.response.PageResponse;
+
+public interface BrandService {
+    BrandResponse createBrand(BrandCreateRequest request);
+    BrandResponse updateBrand(BrandUpdateRequest request, Integer brandId);
+    void deleteBrandById(Integer brandId);
+    BrandResponse getById(Integer brandId);
+    PageResponse<BrandResponse> getBrandPage(Integer pageNumber, Integer pageSize);
+}
+

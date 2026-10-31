@@ -3,7 +3,7 @@ package com.yas.system.catalog.controller;
 import com.yas.system.catalog.internal.dto.request.ProductTemplateCreateRequest;
 import com.yas.system.catalog.internal.dto.request.ProductTemplateUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.ProductTemplateResponse;
-import com.yas.system.catalog.internal.service.ProductTemplateService;
+import com.yas.system.catalog.service.ProductTemplateService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;

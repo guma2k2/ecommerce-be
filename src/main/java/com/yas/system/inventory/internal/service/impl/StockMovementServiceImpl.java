@@ -6,7 +6,7 @@ import com.yas.system.inventory.internal.entity.StockMovement;
 import com.yas.system.inventory.internal.enumeration.MovementReason;
 import com.yas.system.inventory.internal.enumeration.MovementType;
 import com.yas.system.inventory.internal.repository.StockMovementRepository;
-import com.yas.system.inventory.internal.service.StockMovementService;
+import com.yas.system.inventory.service.StockMovementService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

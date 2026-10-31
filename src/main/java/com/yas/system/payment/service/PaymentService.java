@@ -1,0 +1,42 @@
+package com.yas.system.payment.service;
+
+import com.yas.system.common.security.annotation.AuthUser;
+import com.yas.system.payment.api.dto.CheckoutItemDto;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.internal.dto.request.CreateCheckoutSessionRequest;
+import com.yas.system.payment.internal.dto.request.RefundPaymentRequest;
+import com.yas.system.payment.internal.dto.response.CheckoutSessionResponse;
+import com.yas.system.payment.internal.dto.response.PaymentLedgerResponse;
+import com.yas.system.payment.internal.dto.response.PaymentResponse;
+import com.yas.system.payment.internal.gateway.dto.RefundResult;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public interface PaymentService {
+
+    CheckoutSessionResponse createCheckoutSession(AuthUser customer, String idempotencyKey, CreateCheckoutSessionRequest request);
+
+    void handleWebhookEvent(PaymentMethod provider, Map<String, String> headers, String payload);
+
+    RefundResult refundPayment(AuthUser customer, UUID paymentId, RefundPaymentRequest request, String idempotencyKey);
+
+    PaymentResponse getPaymentById(AuthUser customer, UUID paymentId);
+
+    List<PaymentResponse> getCustomerPayments(AuthUser customer);
+
+    List<PaymentLedgerResponse> getPaymentLedger(AuthUser customer, UUID paymentId);
+
+    default String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail,
+                                            String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items) {
+        return createCheckoutSessionUrl(paymentMethod, customerId, customerEmail, orderId, amount, currency, items, null, null);
+    }
+
+    String createCheckoutSessionUrl(PaymentMethod paymentMethod, String customerId, String customerEmail,
+                                    String orderId, BigDecimal amount, String currency, List<CheckoutItemDto> items,
+                                    String stripePromotionCodeId, String stripeCouponId);
+
+    void refundByOrderId(String orderId, String customerEmail, String reason);
+}

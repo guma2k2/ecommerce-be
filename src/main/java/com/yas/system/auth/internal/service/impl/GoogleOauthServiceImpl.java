@@ -1,8 +1,8 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.response.GoogleTokenResponse;
 import com.yas.system.auth.internal.dto.response.GoogleUserInfoResponse;
-import com.yas.system.auth.internal.service.GoogleOauthService;
+import com.yas.system.auth.service.GoogleOauthService;
 import com.yas.system.common.config.AppProperties;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

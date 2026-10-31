@@ -3,7 +3,7 @@ package com.yas.system.catalog.controller;
 import com.yas.system.catalog.internal.dto.request.BrandCreateRequest;
 import com.yas.system.catalog.internal.dto.request.BrandUpdateRequest;
 import com.yas.system.catalog.internal.dto.response.BrandResponse;
-import com.yas.system.catalog.internal.service.BrandService;
+import com.yas.system.catalog.service.BrandService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
 import jakarta.validation.Valid;

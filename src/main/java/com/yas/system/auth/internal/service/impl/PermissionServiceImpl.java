@@ -1,9 +1,9 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.response.PermissionResponse;
 import com.yas.system.auth.internal.entity.Permission;
 import com.yas.system.auth.internal.repository.PermissionRepository;
-import com.yas.system.auth.internal.service.PermissionService;
+import com.yas.system.auth.service.PermissionService;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.response.PageResponse;

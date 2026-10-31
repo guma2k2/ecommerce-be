@@ -1,9 +1,9 @@
-package com.yas.system.auth.internal.service.impl;
+package com.yas.system.auth.service.impl;
 
 import com.yas.system.auth.internal.dto.response.GithubEmailResponse;
 import com.yas.system.auth.internal.dto.response.GithubTokenResponse;
 import com.yas.system.auth.internal.dto.response.GithubUserInfoResponse;
-import com.yas.system.auth.internal.service.GithubOauthService;
+import com.yas.system.auth.service.GithubOauthService;
 import com.yas.system.common.config.AppProperties;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

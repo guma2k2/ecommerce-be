@@ -1,7 +1,7 @@
 package com.yas.system.auth.controller;
 
 import com.yas.system.auth.internal.dto.response.PermissionResponse;
-import com.yas.system.auth.internal.service.PermissionService;
+import com.yas.system.auth.service.PermissionService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.response.PageResponse;
 import lombok.AccessLevel;

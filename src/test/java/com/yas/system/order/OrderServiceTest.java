@@ -1,8 +1,8 @@
 package com.yas.system.order;
 
-import com.yas.system.cart.api.CartPublicService;
+import com.yas.system.cart.service.CartService;
 import com.yas.system.cart.api.dto.CartItemPublicDto;
-import com.yas.system.catalog.api.CatalogPublicService;
+import com.yas.system.catalog.service.ProductService;
 import com.yas.system.catalog.api.dto.ProductVariantPublicDto;
 import com.yas.system.catalog.api.enumeration.ProductStatus;
 import com.yas.system.common.config.AppProperties;
@@ -10,7 +10,7 @@ import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.common.response.PageResponse;
 import com.yas.system.common.security.annotation.AuthUser;
-import com.yas.system.inventory.api.InventoryPublicService;
+import com.yas.system.inventory.service.InventoryService;
 import com.yas.system.order.internal.dto.request.CreateOrderRequest;
 import com.yas.system.order.internal.dto.request.OrderItemRequest;
 import com.yas.system.order.internal.dto.request.ShippingAddressRequest;
@@ -26,10 +26,10 @@ import com.yas.system.order.internal.validator.OrderValidator;
 import com.yas.system.order.internal.repository.OrderDetailRepository;
 import com.yas.system.order.internal.repository.OrderRepository;
 import com.yas.system.order.internal.service.impl.OrderServiceImpl;
-import com.yas.system.payment.api.PaymentPublicService;
-import com.yas.system.payment.internal.enumeration.PaymentMethod;
-import com.yas.system.payment.internal.enumeration.PaymentStatus;
-import com.yas.system.promotion.api.PromotionPublicService;
+import com.yas.system.payment.service.PaymentService;
+import com.yas.system.payment.enumeration.PaymentMethod;
+import com.yas.system.payment.enumeration.PaymentStatus;
+import com.yas.system.promotion.service.PromotionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,25 +58,25 @@ class OrderServiceTest {
     OrderDetailRepository orderDetailRepository;
 
     @Mock
-    CatalogPublicService catalogPublicService;
+    ProductService productService;
 
     @Mock
-    CartPublicService cartPublicService;
+    CartService cartService;
 
     @Mock
-    PaymentPublicService paymentPublicService;
+    PaymentService paymentService;
 
     @Mock
     ApplicationEventPublisher eventPublisher;
 
     @Mock
-    InventoryPublicService inventoryPublicService;
+    InventoryService inventoryService;
 
     @Mock
     AppProperties appProperties;
 
     @Mock
-    PromotionPublicService promotionPublicService;
+    PromotionService promotionService;
 
     OrderHelper orderHelper;
     OrderValidator orderValidator;
@@ -93,13 +93,13 @@ class OrderServiceTest {
                 orderRepository,
                 orderDetailRepository,
                 orderHelper,
-                catalogPublicService,
-                cartPublicService,
-                paymentPublicService,
+                productService,
+                cartService,
+                paymentService,
                 eventPublisher,
-                inventoryPublicService,
+                inventoryService,
                 appProperties,
-                promotionPublicService,
+                promotionService,
         orderValidator
         );
         testUser = new AuthUser(customerId, "customer@example.com", "CUSTOMER", "password", List.of());
@@ -124,7 +124,7 @@ class OrderServiceTest {
                 BigDecimal.valueOf(100.00)
         );
 
-        when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
+        when(productService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order o = invocation.getArgument(0);
             if (o.getId() == null) {
@@ -141,7 +141,7 @@ class OrderServiceTest {
         assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.COD);
         assertThat(response.checkoutUrl()).isNull();
 
-        verify(catalogPublicService).deductStock(Map.of(10L, 2));
+        verify(productService).deductStock(Map.of(10L, 2));
         verify(orderDetailRepository).saveAll(anyList());
         verify(eventPublisher).publishEvent(any(OrderCreatedEvent.class));
     }
@@ -165,7 +165,7 @@ class OrderServiceTest {
                 BigDecimal.valueOf(150.00)
         );
 
-        when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
+        when(productService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order o = invocation.getArgument(0);
             if (o.getId() == null) {
@@ -173,7 +173,7 @@ class OrderServiceTest {
             }
             return o;
         });
-        when(paymentPublicService.createCheckoutSessionUrl(eq(PaymentMethod.STRIPE), eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any(), any(), any()))
+        when(paymentService.createCheckoutSessionUrl(eq(PaymentMethod.STRIPE), eq(customerId), eq("customer@example.com"), any(), any(), eq("USD"), any(), any(), any()))
                 .thenReturn("https://checkout.stripe.com/test-session");
 
         OrderCreateResponse response = orderService.createOrder(testUser, request);
@@ -196,7 +196,7 @@ class OrderServiceTest {
                 List.of()
         );
 
-        when(cartPublicService.getCartItemsByCustomerId(customerId))
+        when(cartService.getCartItemsByCustomerId(customerId))
                 .thenReturn(List.of(new CartItemPublicDto(1L, 20L, 3)));
 
         ProductVariantPublicDto variantDto = createVariantDto(
@@ -204,7 +204,7 @@ class OrderServiceTest {
                 BigDecimal.valueOf(500.00)
         );
 
-        when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(20L, variantDto));
+        when(productService.getProductVariantsByIds(any())).thenReturn(Map.of(20L, variantDto));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order o = invocation.getArgument(0);
             if (o.getId() == null) {
@@ -217,7 +217,7 @@ class OrderServiceTest {
 
         assertThat(response).isNotNull();
         assertThat(response.totalAmount()).isEqualByComparingTo(BigDecimal.valueOf(1500.00));
-        verify(cartPublicService).clearCart(customerId);
+        verify(cartService).clearCart(customerId);
     }
 
     @Test
@@ -248,7 +248,7 @@ class OrderServiceTest {
                 BigDecimal.valueOf(100.00)
         );
 
-        when(catalogPublicService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
+        when(productService.getProductVariantsByIds(any())).thenReturn(Map.of(10L, variantDto));
 
         assertThatThrownBy(() -> orderService.createOrder(testUser, request))
                 .isInstanceOf(ApplicationException.class)
@@ -265,7 +265,7 @@ class OrderServiceTest {
                 address, PaymentMethod.COD, null, false, List.of(new OrderItemRequest(10L, 1))
         );
 
-        when(catalogPublicService.getProductVariantsByIds(any()))
+        when(productService.getProductVariantsByIds(any()))
                 .thenThrow(new ApplicationException(ErrorCode.PRODUCT_INACTIVE));
 
         assertThatThrownBy(() -> orderService.createOrder(testUser, request))
@@ -367,7 +367,8 @@ class OrderServiceTest {
         orderService.cancelOrder(testUser, orderId);
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
-        verify(catalogPublicService).restoreStock(Map.of(10L, 4));
+        verify(productService).restoreStock(Map.of(10L, 4));
+        verify(promotionService).revertPromotionUsage(orderId);
         verify(orderRepository).save(order);
     }
 

@@ -3,7 +3,7 @@ package com.yas.system.cart.controller;
 import com.yas.system.cart.internal.dto.request.AddToCartRequest;
 import com.yas.system.cart.internal.dto.request.UpdateCartQuantityRequest;
 import com.yas.system.cart.internal.dto.response.CartResponse;
-import com.yas.system.cart.internal.service.CartService;
+import com.yas.system.cart.service.CartService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.security.annotation.ActiveUser;
 import com.yas.system.common.security.annotation.AuthUser;

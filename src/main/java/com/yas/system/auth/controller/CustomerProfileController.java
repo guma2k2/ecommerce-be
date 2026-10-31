@@ -1,7 +1,7 @@
 package com.yas.system.auth.controller;
 
 import com.yas.system.auth.internal.dto.response.CustomerProfileResponse;
-import com.yas.system.auth.internal.service.CustomerProfileService;
+import com.yas.system.auth.service.CustomerProfileService;
 import com.yas.system.common.response.ApiResponse;
 import com.yas.system.common.security.annotation.ActiveUser;
 import com.yas.system.common.security.annotation.AuthUser;
