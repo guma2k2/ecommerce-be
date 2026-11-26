@@ -7,7 +7,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Locale;
 
@@ -75,6 +77,13 @@ public class MediaHelper {
                 .duration(duration)
                 .active(true)
                 .build();
+    }
+
+    public static String formatUrl(String url) {
+        if (url != null && url.startsWith("/") && RequestContextHolder.getRequestAttributes() != null) {
+            return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + url;
+        }
+        return url;
     }
 
     private String truncate(String value, int maxLength) {

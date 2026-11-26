@@ -39,5 +39,5 @@ build/
 ### AI AGENTS ###
 .agents/
 Tasks/
-
+graphify-out/
 docs/
