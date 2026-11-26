@@ -6,6 +6,7 @@ import com.yas.system.common.response.PageResponse;
 import com.yas.system.media.api.dto.MediaPublicDto;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
+import com.yas.system.media.internal.helper.MediaHelper;
 import com.yas.system.media.internal.repository.MediaRepository;
 import com.yas.system.media.service.MediaService;
 import lombok.AccessLevel;
@@ -16,12 +17,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -34,12 +34,8 @@ public class MediaServiceImpl implements MediaService {
     @Override
     @Transactional(readOnly = true)
     public MediaResponse getById(String id) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            throw new ApplicationException(ErrorCode.MEDIA_NOT_FOUND);
-        }
+        UUID uuid = parseUuid(id)
+                .orElseThrow(() -> new ApplicationException(ErrorCode.MEDIA_NOT_FOUND));
         Media media = mediaRepository.findById(uuid)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.MEDIA_NOT_FOUND));
         return MediaResponse.fromModel(media);
@@ -67,17 +63,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     @Transactional(readOnly = true)
     public String getMediaUrl(String mediaId) {
-        if (mediaId == null || mediaId.isBlank()) {
-            return null;
-        }
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(mediaId);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-        return mediaRepository.findById(uuid)
-                .map(this::formatUrl)
+        return parseUuid(mediaId)
+                .flatMap(mediaRepository::findById)
+                .map(media -> MediaHelper.formatUrl(media.getUrl()))
                 .orElse(null);
     }
 
@@ -95,7 +83,7 @@ public class MediaServiceImpl implements MediaService {
         List<Media> medias = mediaRepository.findAllById(uuids);
         Map<String, String> urlMap = new HashMap<>();
         for (Media media : medias) {
-            urlMap.put(media.getId().toString(), formatUrl(media));
+            urlMap.put(media.getId().toString(), MediaHelper.formatUrl(media.getUrl()));
         }
         return urlMap;
     }
@@ -116,7 +104,7 @@ public class MediaServiceImpl implements MediaService {
         for (Media media : medias) {
             detailMap.put(media.getId().toString(), new MediaPublicDto(
                     media.getId().toString(),
-                    formatUrl(media),
+                    MediaHelper.formatUrl(media.getUrl()),
                     media.getType() != null ? media.getType().name() : null,
                     media.getAltText(),
                     media.getDuration()
@@ -127,27 +115,19 @@ public class MediaServiceImpl implements MediaService {
 
     private List<UUID> parseUuids(List<String> mediaIds) {
         return mediaIds.stream()
-                .filter(id -> id != null && !id.isBlank())
-                .map(id -> {
-                    try {
-                        return UUID.fromString(id);
-                    } catch (IllegalArgumentException e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
+                .map(this::parseUuid)
+                .flatMap(Optional::stream)
                 .toList();
     }
 
-    private String formatUrl(Media media) {
-        String url = media.getUrl();
-        if (url != null && url.startsWith("/")) {
-            try {
-                url = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + url;
-            } catch (IllegalStateException e) {
-                // Fallback for non-request context (e.g. background tasks or unit tests)
-            }
+    private Optional<UUID> parseUuid(String id) {
+        if (id == null || id.isBlank()) {
+            return Optional.empty();
         }
-        return url;
+        try {
+            return Optional.of(UUID.fromString(id));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 }

@@ -37,30 +37,37 @@ public class PaymentIdempotencyServiceImpl implements PaymentIdempotencyService 
 
         String cacheKey = PaymentConstant.IDEMPOTENCY_CACHE_PREFIX + idempotencyKey;
 
+        Object existingValue;
         try {
-            Object existingValue = redisTemplate.opsForValue().get(cacheKey);
-            if (existingValue != null) {
-                String valStr = existingValue.toString();
-                if (PaymentConstant.IDEMPOTENCY_IN_PROGRESS.equalsIgnoreCase(valStr)) {
-                    log.warn("Concurrent duplicate payment request detected for idempotency key: {}", idempotencyKey);
-                    throw new ApplicationException(ErrorCode.CONCURRENT_PAYMENT_REQUEST);
-                }
-                return deserializeResponse(valStr);
-            }
-
-            Boolean acquired = redisTemplate.opsForValue().setIfAbsent(cacheKey, PaymentConstant.IDEMPOTENCY_IN_PROGRESS, LOCK_TTL);
-            if (Boolean.FALSE.equals(acquired)) {
-                log.warn("Failed to acquire idempotency lock for key: {}", idempotencyKey);
-                throw new ApplicationException(ErrorCode.CONCURRENT_PAYMENT_REQUEST);
-            }
-
-            return Optional.empty();
-        } catch (ApplicationException ae) {
-            throw ae;
+            existingValue = redisTemplate.opsForValue().get(cacheKey);
         } catch (Exception e) {
             log.error("Redis error while checking idempotency lock for key {}: {}", idempotencyKey, e.getMessage(), e);
             throw new ApplicationException(ErrorCode.PAYMENT_GATEWAY_ERROR, "Idempotency service temporarily unavailable");
         }
+
+        if (existingValue != null) {
+            String valStr = existingValue.toString();
+            if (PaymentConstant.IDEMPOTENCY_IN_PROGRESS.equalsIgnoreCase(valStr)) {
+                log.warn("Concurrent duplicate payment request detected for idempotency key: {}", idempotencyKey);
+                throw new ApplicationException(ErrorCode.CONCURRENT_PAYMENT_REQUEST);
+            }
+            return deserializeResponse(valStr);
+        }
+
+        Boolean acquired;
+        try {
+            acquired = redisTemplate.opsForValue().setIfAbsent(cacheKey, PaymentConstant.IDEMPOTENCY_IN_PROGRESS, LOCK_TTL);
+        } catch (Exception e) {
+            log.error("Redis error while acquiring idempotency lock for key {}: {}", idempotencyKey, e.getMessage(), e);
+            throw new ApplicationException(ErrorCode.PAYMENT_GATEWAY_ERROR, "Idempotency service temporarily unavailable");
+        }
+
+        if (Boolean.FALSE.equals(acquired)) {
+            log.warn("Failed to acquire idempotency lock for key: {}", idempotencyKey);
+            throw new ApplicationException(ErrorCode.CONCURRENT_PAYMENT_REQUEST);
+        }
+
+        return Optional.empty();
     }
 
     @Override

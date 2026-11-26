@@ -15,9 +15,7 @@ import org.springframework.stereotype.Component;
 public class CartValidator {
 
     public void validateCustomer(AuthUser customer) {
-        if (customer == null || customer.id() == null) {
-            throw new ApplicationException(ErrorCode.UNAUTHENTICATED);
-        }
+        AuthUser.requireAuthenticated(customer);
     }
 
     public void validateStockAvailability(int requestedQuantity, ProductVariantPublicDto variant) {

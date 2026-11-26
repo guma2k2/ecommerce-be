@@ -20,9 +20,7 @@ import java.util.UUID;
 public class PaymentValidator {
 
     public void validateCustomer(AuthUser customer) {
-        if (customer == null || customer.id() == null) {
-            throw new ApplicationException(ErrorCode.UNAUTHENTICATED);
-        }
+        AuthUser.requireAuthenticated(customer);
     }
 
     public void validateRefund(Payment payment, BigDecimal refundAmount, UUID paymentId) {

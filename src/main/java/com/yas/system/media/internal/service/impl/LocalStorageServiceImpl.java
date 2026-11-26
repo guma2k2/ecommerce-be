@@ -1,5 +1,6 @@
 package com.yas.system.media.internal.service.impl;
 
+import com.yas.system.common.exception.ApplicationException;
 import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
@@ -8,6 +9,7 @@ import com.yas.system.media.internal.helper.MediaHelper;
 import com.yas.system.media.internal.repository.MediaRepository;
 import com.yas.system.media.service.UploadService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+@Slf4j
 @ConditionalOnProperty(name = "app.upload.location", havingValue = "local", matchIfMissing = true)
 @Service
 @RequiredArgsConstructor
@@ -73,7 +76,8 @@ public class LocalStorageServiceImpl implements UploadService {
             media = mediaRepository.save(media);
             return MediaResponse.fromModel(media);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file locally", e);
+            log.error("Failed to upload file locally", e);
+            throw new ApplicationException(ErrorCode.MEDIA_UPLOAD_FAILED);
         }
     }
 }

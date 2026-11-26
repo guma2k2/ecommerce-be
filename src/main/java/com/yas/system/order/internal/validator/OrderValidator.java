@@ -21,9 +21,7 @@ import java.util.UUID;
 public class OrderValidator {
 
     public void validateCustomer(AuthUser customer) {
-        if (customer == null || customer.id() == null) {
-            throw new ApplicationException(ErrorCode.UNAUTHENTICATED);
-        }
+        AuthUser.requireAuthenticated(customer);
     }
 
     public void validateItemQuantities(Map<Long, Integer> itemQuantities) {

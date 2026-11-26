@@ -33,6 +33,7 @@ public enum ErrorCode {
     PRODUCT_TEMPLATE_ALREADY_EXISTS("product_template_already_exists", "Product template already exists"),
     INVALID_MEDIA_TYPE("invalid_media_type", "Invalid media type: %s"),
     MEDIA_NOT_FOUND("media_not_found", "Media not found"),
+    MEDIA_UPLOAD_FAILED("media_upload_failed", "Failed to upload media file"),
     ROLE_NOT_FOUND("role_not_found", "Role not found"),
     ROLE_ALREADY_EXISTS("role_already_exists", "Role already exists"),
     ROLE_CANNOT_BE_DELETED("role_cannot_be_deleted", "Role cannot be deleted"),

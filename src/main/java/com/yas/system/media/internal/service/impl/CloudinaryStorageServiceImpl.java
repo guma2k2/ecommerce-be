@@ -1,6 +1,8 @@
 package com.yas.system.media.internal.service.impl;
 
 import com.cloudinary.Cloudinary;
+import com.yas.system.common.exception.ApplicationException;
+import com.yas.system.common.exception.ErrorCode;
 import com.yas.system.media.internal.dto.response.MediaResponse;
 import com.yas.system.media.internal.entity.Media;
 import com.yas.system.media.internal.enums.MediaType;
@@ -10,6 +12,7 @@ import com.yas.system.media.service.UploadService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Map;
 
+@Slf4j
 @ConditionalOnProperty(name = "app.upload.location", havingValue = "cloudinary")
 @Service
 @RequiredArgsConstructor
@@ -63,7 +67,8 @@ public class CloudinaryStorageServiceImpl implements UploadService {
             media = mediaRepository.save(media);
             return MediaResponse.fromModel(media);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file to Cloudinary", e);
+            log.error("Failed to upload file to Cloudinary", e);
+            throw new ApplicationException(ErrorCode.MEDIA_UPLOAD_FAILED);
         }
     }
 }
